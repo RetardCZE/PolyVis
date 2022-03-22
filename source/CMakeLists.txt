@@ -19,6 +19,7 @@ include_directories(
         ${POLYANYA_DIR}/utils
         ${CMAKE_SOURCE_DIR}
         draw_lib
+        include
 )
 
 ## Using threads
@@ -33,7 +34,7 @@ add_subdirectory(draw_lib)
 add_subdirectory(polyanya)
 
 add_executable(${PROJECT_NAME}
-        main.cpp
+        src/visualization.cpp
         )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE

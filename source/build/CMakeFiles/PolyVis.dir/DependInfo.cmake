@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/jakub/Projects/PolyVis/source/main.cpp" "CMakeFiles/PolyVis.dir/main.cpp.o" "gcc" "CMakeFiles/PolyVis.dir/main.cpp.o.d"
+  "/home/jakub/Projects/PolyVis/source/src/visualization.cpp" "CMakeFiles/PolyVis.dir/src/visualization.cpp.o" "gcc" "CMakeFiles/PolyVis.dir/src/visualization.cpp.o.d"
   )
 
 # Targets to which this target links.

@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/PolyVis.dir/main.cpp.o"
-  "CMakeFiles/PolyVis.dir/main.cpp.o.d"
+  "CMakeFiles/PolyVis.dir/src/visualization.cpp.o"
+  "CMakeFiles/PolyVis.dir/src/visualization.cpp.o.d"
   "PolyVis"
   "PolyVis.pdb"
 )

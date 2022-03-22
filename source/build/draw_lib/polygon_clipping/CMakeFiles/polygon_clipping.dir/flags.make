@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/jakub/Projects/PolyVis/source/polyanya -I/home/jakub/Projects/PolyVis/source/polyanya/utils -I/home/jakub/Projects/PolyVis/source -I/home/jakub/Projects/PolyVis/source/draw_lib -I/home/jakub/Projects/PolyVis/source/draw_lib/polygon_clipping/clipper
+CXX_INCLUDES = -I/home/jakub/Projects/PolyVis/source/polyanya -I/home/jakub/Projects/PolyVis/source/polyanya/utils -I/home/jakub/Projects/PolyVis/source -I/home/jakub/Projects/PolyVis/source/draw_lib -I/home/jakub/Projects/PolyVis/source/include -I/home/jakub/Projects/PolyVis/source/draw_lib/polygon_clipping/clipper
 
 CXX_FLAGS =  -pthread -std=c++17 -Wall -O3
 

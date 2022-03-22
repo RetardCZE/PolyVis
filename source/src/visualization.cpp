@@ -1,24 +1,15 @@
-#include "draw_lib/geom/geom.h"
-#include "draw_lib/geom/utils.h"
-#include "draw_lib/cairo_geom_drawer/cairo_geom_drawer.h"
-#include "draw_lib/polygon_clipping/polygon_clipping.h"
-#include "draw_lib/polygonal_map/polygonal_map.h"
+#include "visualization.h"
 
-//include "polyanya"
-#include "polyanya/helpers/scenario.h"
-
-#include <string>
-#include <iostream>
-
-namespace clip = polygon_clipping;
-namespace cgm = cairo_geom_drawer;
-namespace map = polygonal_map;
-namespace draw = map::draw;
 int main(int argc, const char *const *argv)
 {
-    std::cout << "Hello world!\n";
+    std::ifstream my_file("mesh.txt", std::ios::binary);
 
-    /// Basics of geometry.
+    std::stringstream buffer;
+    buffer << my_file.rdbuf();
+    std::string contents(buffer.str());
+    std::cout << contents;
+	my_file.close();
+	/// Basics of geometry.
     geom::Point<double> p1 = {0, 1};
     geom::Point<double> p2 = {1, 0};
 //    double dist = p1.DistanceTo(p2);
@@ -131,5 +122,5 @@ int main(int argc, const char *const *argv)
     drawer.DrawObstacles(draw::kColorLimeGreen);
     // drawer.DrawMap();
     drawer.Close();
-    return 0;
+	return 0;
 }

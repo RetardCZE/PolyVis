@@ -69,28 +69,28 @@ include CMakeFiles/PolyVis.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/PolyVis.dir/flags.make
 
-CMakeFiles/PolyVis.dir/main.cpp.o: CMakeFiles/PolyVis.dir/flags.make
-CMakeFiles/PolyVis.dir/main.cpp.o: ../main.cpp
-CMakeFiles/PolyVis.dir/main.cpp.o: CMakeFiles/PolyVis.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jakub/Projects/PolyVis/source/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/PolyVis.dir/main.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/PolyVis.dir/main.cpp.o -MF CMakeFiles/PolyVis.dir/main.cpp.o.d -o CMakeFiles/PolyVis.dir/main.cpp.o -c /home/jakub/Projects/PolyVis/source/main.cpp
+CMakeFiles/PolyVis.dir/src/visualization.cpp.o: CMakeFiles/PolyVis.dir/flags.make
+CMakeFiles/PolyVis.dir/src/visualization.cpp.o: ../src/visualization.cpp
+CMakeFiles/PolyVis.dir/src/visualization.cpp.o: CMakeFiles/PolyVis.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jakub/Projects/PolyVis/source/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/PolyVis.dir/src/visualization.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/PolyVis.dir/src/visualization.cpp.o -MF CMakeFiles/PolyVis.dir/src/visualization.cpp.o.d -o CMakeFiles/PolyVis.dir/src/visualization.cpp.o -c /home/jakub/Projects/PolyVis/source/src/visualization.cpp
 
-CMakeFiles/PolyVis.dir/main.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/PolyVis.dir/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/jakub/Projects/PolyVis/source/main.cpp > CMakeFiles/PolyVis.dir/main.cpp.i
+CMakeFiles/PolyVis.dir/src/visualization.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/PolyVis.dir/src/visualization.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/jakub/Projects/PolyVis/source/src/visualization.cpp > CMakeFiles/PolyVis.dir/src/visualization.cpp.i
 
-CMakeFiles/PolyVis.dir/main.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PolyVis.dir/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/jakub/Projects/PolyVis/source/main.cpp -o CMakeFiles/PolyVis.dir/main.cpp.s
+CMakeFiles/PolyVis.dir/src/visualization.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PolyVis.dir/src/visualization.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/jakub/Projects/PolyVis/source/src/visualization.cpp -o CMakeFiles/PolyVis.dir/src/visualization.cpp.s
 
 # Object files for target PolyVis
 PolyVis_OBJECTS = \
-"CMakeFiles/PolyVis.dir/main.cpp.o"
+"CMakeFiles/PolyVis.dir/src/visualization.cpp.o"
 
 # External object files for target PolyVis
 PolyVis_EXTERNAL_OBJECTS =
 
-PolyVis: CMakeFiles/PolyVis.dir/main.cpp.o
+PolyVis: CMakeFiles/PolyVis.dir/src/visualization.cpp.o
 PolyVis: CMakeFiles/PolyVis.dir/build.make
 PolyVis: draw_lib/polygon_clipping/libpolygon_clipping.a
 PolyVis: draw_lib/polygonal_map/libpolygonal_map.a

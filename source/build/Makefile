@@ -181,29 +181,29 @@ polyanya/fast:
 	$(MAKE) $(MAKESILENT) -f polyanya/CMakeFiles/polyanya.dir/build.make polyanya/CMakeFiles/polyanya.dir/build
 .PHONY : polyanya/fast
 
-main.o: main.cpp.o
-.PHONY : main.o
+src/visualization.o: src/visualization.cpp.o
+.PHONY : src/visualization.o
 
 # target to build an object file
-main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PolyVis.dir/build.make CMakeFiles/PolyVis.dir/main.cpp.o
-.PHONY : main.cpp.o
+src/visualization.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PolyVis.dir/build.make CMakeFiles/PolyVis.dir/src/visualization.cpp.o
+.PHONY : src/visualization.cpp.o
 
-main.i: main.cpp.i
-.PHONY : main.i
+src/visualization.i: src/visualization.cpp.i
+.PHONY : src/visualization.i
 
 # target to preprocess a source file
-main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PolyVis.dir/build.make CMakeFiles/PolyVis.dir/main.cpp.i
-.PHONY : main.cpp.i
+src/visualization.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PolyVis.dir/build.make CMakeFiles/PolyVis.dir/src/visualization.cpp.i
+.PHONY : src/visualization.cpp.i
 
-main.s: main.cpp.s
-.PHONY : main.s
+src/visualization.s: src/visualization.cpp.s
+.PHONY : src/visualization.s
 
 # target to generate assembly for a file
-main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PolyVis.dir/build.make CMakeFiles/PolyVis.dir/main.cpp.s
-.PHONY : main.cpp.s
+src/visualization.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PolyVis.dir/build.make CMakeFiles/PolyVis.dir/src/visualization.cpp.s
+.PHONY : src/visualization.cpp.s
 
 # Help Target
 help:
@@ -218,9 +218,9 @@ help:
 	@echo "... polyanya"
 	@echo "... polygon_clipping"
 	@echo "... polygonal_map"
-	@echo "... main.o"
-	@echo "... main.i"
-	@echo "... main.s"
+	@echo "... src/visualization.o"
+	@echo "... src/visualization.i"
+	@echo "... src/visualization.s"
 .PHONY : help
 
 
