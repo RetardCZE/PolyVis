@@ -17,4 +17,18 @@ namespace cgm = cairo_geom_drawer;
 namespace map = polygonal_map;
 namespace draw = map::draw;
 
+class MapVisualizer{
+    public:
+        MapVisualizer(char* file);
+        ~MapVisualizer();
+        void draw();
+    private:
+        void parse_mesh();
+        geom::Polygons<double> obstacles;
+        geom::Polygons<double> free;
+        geom::Points<double> vertices;
+        std::ifstream my_file;
+
+};
+
 int main(int argc, const char *const *argv);
