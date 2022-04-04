@@ -1,6 +1,6 @@
 #include "visualization.h"
 
-MapVisualizer::MapVisualizer(char* file){
+MapVisualizer::MapVisualizer(std::string file){
     this->my_file = std::ifstream(file, std::ios::binary);
 }
 
@@ -35,7 +35,7 @@ MapVisualizer::parse_mesh(){
             polygon_count = std::stoi(numbers[1]);
             vertex_count = std::stoi(numbers[0]);
         }else if(line <= vertex_count + 3 && line > 3){
-            vertex = {(double)std::stoi(numbers[1]), (double)std::stoi(numbers[0])};
+            vertex = {(double)std::stoi(numbers[0]), (double)std::stoi(numbers[1])};
             this->vertices.push_back(vertex);
         }else if(line > 3){
             polygon.clear();
@@ -46,18 +46,13 @@ MapVisualizer::parse_mesh(){
             this->free.push_back(polygon);
         }
     }
-    std::cout << this->vertices.size() << std::endl;
-    std::cout << this->free.size() << std::endl;
 }
 
 void
-MapVisualizer::draw(){
-    this->parse_mesh();
-    geom::Polygons<double> obstacles = this->free;
-
+MapVisualizer::redraw(){
     /// Create draw_lib
     double x_min, x_max, y_min, y_max;
-    geom::ComputeLimits(obstacles, x_min, x_max, y_min, y_max);
+    geom::ComputeLimits(this->free, x_min, x_max, y_min, y_max);
     geom::Polygon<double> border = {
                                     {x_min, y_min},
                                     {x_min, y_max+1},
@@ -70,14 +65,27 @@ MapVisualizer::draw(){
     cgm_drawer.OpenPDF("simple_map.pdf");
     cgm_drawer.DrawPlane(cgm::kColorBlack);
     cgm_drawer.DrawPolygon(border, cgm::kColorBlack);
-    cgm_drawer.DrawPolygons(obstacles, cgm::kColorWhite);
+    cgm_drawer.DrawPolygons(this->free, cgm::kColorWhite);
+    cgm_drawer.DrawPoints(this->visibility, 0.2, cgm::kColorGreen);
+    cgm_drawer.DrawPolygon(this->visibility, cgm::kColorLightGreen);
+    cgm_drawer.DrawPoint(this->seeker, 0.5, cgm::kColorRed);
     cgm_drawer.Close();
-
+    cgm_drawer.OpenPDF("simple_map2.pdf");
+    cgm_drawer.DrawPlane(cgm::kColorBlack);
+    cgm_drawer.DrawPolygon(border, cgm::kColorBlack);
+    cgm_drawer.DrawPolygons(this->free, cgm::kColorWhite);
+    cgm_drawer.DrawPoint(this->seeker, 0.5, cgm::kColorRed);
+    cgm_drawer.Close();
 }
 
-int main(int argc, const char *const *argv)
-{
-    MapVisualizer drawer("mesh.txt");
-    drawer.draw();
-	return 0;
+void MapVisualizer::set_visible_polygon(polyanya::Point p, std::vector<polyanya::Point> polygon){
+    this->seeker.y = p.y;
+    this->seeker.x = p.x;
+    this->visibility.clear();
+    for(auto v: polygon){
+        geom::Point<double> vertex;
+        vertex.x = v.x;
+        vertex.y = v.y;
+        this->visibility.push_back(vertex);
+    }
 }
