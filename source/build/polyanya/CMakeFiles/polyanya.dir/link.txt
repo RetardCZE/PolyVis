@@ -1,2 +1,0 @@
-/usr/bin/ar qc libpolyanya.a CMakeFiles/polyanya.dir/helpers/cfg.cpp.o CMakeFiles/polyanya.dir/helpers/geometry.cpp.o CMakeFiles/polyanya.dir/helpers/scenario.cpp.o CMakeFiles/polyanya.dir/helpers/timer.cpp.o CMakeFiles/polyanya.dir/search/expansion.cpp.o CMakeFiles/polyanya.dir/search/searchinstance.cpp.o CMakeFiles/polyanya.dir/structs/mesh.cpp.o CMakeFiles/polyanya.dir/utils/fadeutils/polymap.cpp.o
-/usr/bin/ranlib libpolyanya.a

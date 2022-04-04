@@ -1,2 +1,0 @@
-/usr/bin/ar qc libpolygon_clipping.a CMakeFiles/polygon_clipping.dir/polygon_clipping.cc.o CMakeFiles/polygon_clipping.dir/clipper/clipper.cpp.o
-/usr/bin/ranlib libpolygon_clipping.a

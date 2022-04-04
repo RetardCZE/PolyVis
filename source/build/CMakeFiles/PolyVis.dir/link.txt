@@ -1,1 +1,0 @@
-/usr/bin/c++  -pthread -rdynamic CMakeFiles/PolyVis.dir/src/visualization.cpp.o -o PolyVis  draw_lib/polygon_clipping/libpolygon_clipping.a draw_lib/polygonal_map/libpolygonal_map.a -lcairo -lstdc++fs polyanya/libpolyanya.a -lstdc++fs 
