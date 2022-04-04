@@ -187,6 +187,233 @@ void SearchInstance::set_end_polygon()
     end_polygon = get_point_location(goal).poly1;
 }
 
+int SearchInstance::succ_to_node2(
+    SearchNodePtr parent, Successor* successors, int num_succ,
+    SearchNode* nodes
+)
+{
+    // CUSTOM
+    assert(mesh != nullptr);
+    const Polygon& polygon = mesh->mesh_polygons[parent->next_polygon];
+    const std::vector<int>& V = polygon.vertices;
+    const std::vector<int>& P = polygon.polygons;
+
+    double right_g = -1, left_g = -1;
+
+    int out = 0;
+    for (int i = 0; i < num_succ; i++)
+    {
+        const Successor& succ = successors[i];
+        const int next_polygon = P[succ.poly_left_ind];
+        /*
+        if (next_polygon == -1)
+        {
+            continue;
+        }
+        */
+        const int left_vertex  = V[succ.poly_left_ind];
+        const int right_vertex = succ.poly_left_ind ?
+                                 V[succ.poly_left_ind - 1] :
+                                 V.back();
+
+        // Note that g is evaluated twice here. (But this is a lambda!)
+        // Always try to precompute before using this macro.
+        // We implicitly set h to be zero and let search() update it.
+        const auto p = [&](const int root, const double g)
+        {
+
+            if (root != -1)
+            {
+                assert(root >= 0 && root < (int) root_g_values.size());
+                // Can POSSIBLY prune?
+                if (root_search_ids[root] != search_id)
+                {
+                    // First time reaching root
+                    root_search_ids[root] = search_id;
+                    root_g_values[root] = g;
+                }
+                else
+                {
+                    // We've been here before!
+                    // Check whether we've done better.
+                    if (root_g_values[root] + EPSILON < g)
+                    {
+                        // We've done better!
+                        return;
+                    }
+                    else
+                    {
+                        // This is better.
+                        root_g_values[root] = g;
+                    }
+                }
+            }
+            nodes[out++] = {nullptr, root, succ.left, succ.right, left_vertex,
+                right_vertex, next_polygon, g, g};
+        };
+
+        const Point& parent_root = (parent->root == -1 ?
+                                    start :
+                                    mesh->mesh_vertices[parent->root].p);
+        #define get_g(new_root) parent->g + parent_root.distance(new_root)
+
+        switch (succ.type)
+        {
+            case Successor::RIGHT_NON_OBSERVABLE:
+                if (right_g == -1)
+                {
+                    right_g = get_g(parent->right);
+                }
+                p(parent->right_vertex, right_g);
+                break;
+
+            case Successor::OBSERVABLE:
+                p(parent->root, parent->g);
+                break;
+
+            case Successor::LEFT_NON_OBSERVABLE:
+                if (left_g == -1)
+                {
+                    left_g = get_g(parent->left);
+                }
+                p(parent->left_vertex, left_g);
+                break;
+
+            default:
+                assert(false);
+                break;
+        }
+        #undef get_h
+        #undef get_g
+    }
+
+    return out;
+}
+
+std::vector<SearchNodePtr> SearchInstance::gen_initial_nodes2()
+{
+    // CUSTOm
+    std::vector<SearchNodePtr> list;
+    const PointLocation pl = get_point_location(start);
+    const double h = start.distance(goal);
+    #define get_lazy(next, left, right) new (node_pool->allocate()) SearchNode \
+        {nullptr, -1, start, start, left, right, next, h, 0}
+
+    #define v(vertex) mesh->mesh_vertices[vertex]
+    const auto push_lazy = [&](SearchNodePtr lazy)
+    {
+        const int poly = lazy->next_polygon;
+        if (poly == -1)
+        {
+            return;
+        }
+
+        // iterate over poly, throwing away vertices if needed
+        const std::vector<int>& vertices =
+            mesh->mesh_polygons[poly].vertices;
+        Successor* successors = new Successor [vertices.size()];
+        int last_vertex = vertices.back();
+        int num_succ = 0;
+        for (int i = 0; i < (int) vertices.size(); i++)
+        {
+            const int vertex = vertices[i];
+            if (vertex == lazy->right_vertex ||
+                last_vertex == lazy->left_vertex)
+            {
+                last_vertex = vertex;
+                continue;
+            }
+            successors[num_succ++] =
+                {Successor::OBSERVABLE, v(vertex).p,
+                 v(last_vertex).p, i};
+            last_vertex = vertex;
+        }
+        SearchNode* nodes = new SearchNode [num_succ];
+        // needs to remove some pruning
+        const int num_nodes = succ_to_node2(lazy, successors,
+                                           num_succ, nodes);
+        delete[] successors;
+
+        for (int i = 0; i < num_nodes; i++)
+        {
+            SearchNodePtr n = new (node_pool->allocate())
+                SearchNode(nodes[i]);
+            const Point& n_root = (n->root == -1 ? start :
+                                   mesh->mesh_vertices[n->root].p);
+            n->parent = lazy;
+            list.push_back(n);
+        }
+        delete[] nodes;
+        nodes_generated += num_nodes;
+        nodes_pushed += num_nodes;
+    };
+    switch (pl.type)
+    {
+        // Don't bother.
+        case PointLocation::NOT_ON_MESH:
+            break;
+
+        // Generate all in an arbirary polygon.
+        case PointLocation::ON_CORNER_VERTEX_AMBIG:
+            // It's possible that it's -1!
+            if (pl.poly1 == -1)
+            {
+                break;
+            }
+        case PointLocation::ON_CORNER_VERTEX_UNAMBIG:
+        // Generate all in the polygon.
+        case PointLocation::IN_POLYGON:
+        case PointLocation::ON_MESH_BORDER:
+        {
+            SearchNodePtr lazy = get_lazy(pl.poly1, -1, -1);
+            push_lazy(lazy);
+            nodes_generated++;
+        }
+            break;
+
+        case PointLocation::ON_EDGE:
+            // Generate all in both polygons except for the shared side.
+        {
+            SearchNodePtr lazy1 = get_lazy(pl.poly2, pl.vertex1, pl.vertex2);
+            SearchNodePtr lazy2 = get_lazy(pl.poly1, pl.vertex2, pl.vertex1);
+            push_lazy(lazy1);
+            nodes_generated++;
+            if (final_node)
+            {
+                return list;
+            }
+            push_lazy(lazy2);
+            nodes_generated++;
+        }
+            break;
+
+
+        case PointLocation::ON_NON_CORNER_VERTEX:
+        {
+            for (int& poly : v(pl.vertex1).polygons)
+            {
+                SearchNodePtr lazy = get_lazy(poly, pl.vertex1, pl.vertex1);
+                push_lazy(lazy);
+                nodes_generated++;
+                if (final_node)
+                {
+                    return list;
+                }
+            }
+        }
+            break;
+
+
+        default:
+            assert(false);
+            break;
+    }
+    #undef v
+    #undef get_lazy
+    return list;
+}
+
+
 void SearchInstance::gen_initial_nodes()
 {
     // {parent, root, left, right, next_polygon, right_vertex, f, g}

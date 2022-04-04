@@ -83,7 +83,7 @@ class SearchInstance
         }
         PointLocation get_point_location(Point p);
         void set_end_polygon();
-        void gen_initial_nodes();
+
         int succ_to_node(
             SearchNodePtr parent, Successor* successors,
             int num_succ, SearchNode* nodes
@@ -97,6 +97,14 @@ class SearchInstance
         int nodes_pruned_post_pop;  // Nodes we prune right after popping off
         int successor_calls;        // Times we call get_successors
         bool verbose;
+
+        void gen_initial_nodes();
+        std::vector<SearchNodePtr> gen_initial_nodes2();
+        int succ_to_node2(
+            SearchNodePtr parent, Successor* successors,
+            int num_succ, SearchNode* nodes
+        );
+
 
         SearchInstance() { }
         SearchInstance(MeshPtr m) : mesh(m) { init(); }
