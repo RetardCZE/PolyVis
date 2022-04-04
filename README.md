@@ -3,11 +3,14 @@ Repository for calculating polygon of visibility using polygons.
 
 ## Status
  
- - Currently playing with drawing some meshes generated from polyanya. 
+ - Polyanya can be used to find visibility polygon with successors related to root.
+ - Algorithm stops at some polygons on mesh for some reason - need to be investigated.
+   Maybe badly implemented recursion.
 
 ## TODOs
 
- - Find how far can one get with polyanya successors.
+ - Find why polyanya stops at some point. Successors are find well I think, but are not
+   Transformed to nodes to continue search - WHY?
 
 ## Setup
 Git is currently not well managed, but for current functionality can be already tested.

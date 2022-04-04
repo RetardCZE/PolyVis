@@ -6,3 +6,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
  - Added MapVisualizer class for drawing maps based on meshes from polyanya.
+ - Added PolyVis class for computing polygon of visibility using polyanya.

@@ -33,8 +33,11 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 add_subdirectory(draw_lib)
 add_subdirectory(polyanya)
 
+FILE(GLOB SRC src/*.cpp)
+set(SOURCES ${SRC})
 add_executable(${PROJECT_NAME}
-        src/visualization.cpp
+        main.cpp
+        ${SOURCES}
         )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
