@@ -12,6 +12,11 @@ PolyVis::~PolyVis(){
 
 void PolyVis::expand_edge(polyanya::SearchNodePtr n, polyanya::Point root, int level){
 
+    if(n->next_polygon == -1){
+        this->vertices.push_back(n->right);
+        this->vertices.push_back(n->left);
+        return;
+    }
 
     polyanya::Successor* successors = new polyanya::Successor [this->mesh->max_poly_sides + 2];
     polyanya::Successor* obs_successors = new polyanya::Successor [this->mesh->max_poly_sides + 2];
@@ -22,9 +27,8 @@ void PolyVis::expand_edge(polyanya::SearchNodePtr n, polyanya::Point root, int l
     int num_succ = polyanya::get_successors2(*n, root, *(this->mesh), successors);
     int num_obs_succ = 0;
     if(num_succ == 0){
-        //std::cout << "no successors\n\n";
-        this->vertices.push_back(this->mesh->mesh_vertices[n->right_vertex].p);
-        this->vertices.push_back(this->mesh->mesh_vertices[n->left_vertex].p);
+        this->vertices.push_back(n->right);
+        this->vertices.push_back(n->left);
         return;
     }
     for(int i = 0; i < num_succ; i++){
