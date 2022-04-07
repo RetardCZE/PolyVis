@@ -205,86 +205,16 @@ int SearchInstance::succ_to_node2(
     {
         const Successor& succ = successors[i];
         const int next_polygon = P[succ.poly_left_ind];
-        /*
-        if (next_polygon == -1)
-        {
-            continue;
-        }
-        */
+
         const int left_vertex  = V[succ.poly_left_ind];
         const int right_vertex = succ.poly_left_ind ?
                                  V[succ.poly_left_ind - 1] :
                                  V.back();
 
-        // Note that g is evaluated twice here. (But this is a lambda!)
-        // Always try to precompute before using this macro.
-        // We implicitly set h to be zero and let search() update it.
-        const auto p = [&](const int root, const double g)
-        {
 
-            if (root != -1)
-            {
-                assert(root >= 0 && root < (int) root_g_values.size());
-                // Can POSSIBLY prune?
-                if (root_search_ids[root] != search_id)
-                {
-                    // First time reaching root
-                    root_search_ids[root] = search_id;
-                    root_g_values[root] = g;
-                }
-                else
-                {
-                    // We've been here before!
-                    // Check whether we've done better.
-                    if (root_g_values[root] + EPSILON < g)
-                    {
-                        // We've done better!
-                        return;
-                    }
-                    else
-                    {
-                        // This is better.
-                        root_g_values[root] = g;
-                    }
-                }
-            }
-            nodes[out++] = {nullptr, root, succ.left, succ.right, left_vertex,
-                right_vertex, next_polygon, g, g};
-        };
+        nodes[out++] = {nullptr, parent->root, succ.left, succ.right, left_vertex,
+                        right_vertex, next_polygon, 0, 0};
 
-        const Point& parent_root = (parent->root == -1 ?
-                                    start :
-                                    mesh->mesh_vertices[parent->root].p);
-        #define get_g(new_root) parent->g + parent_root.distance(new_root)
-
-        switch (succ.type)
-        {
-            case Successor::RIGHT_NON_OBSERVABLE:
-                if (right_g == -1)
-                {
-                    right_g = get_g(parent->right);
-                }
-                p(parent->right_vertex, right_g);
-                break;
-
-            case Successor::OBSERVABLE:
-                p(parent->root, parent->g);
-                break;
-
-            case Successor::LEFT_NON_OBSERVABLE:
-                if (left_g == -1)
-                {
-                    left_g = get_g(parent->left);
-                }
-                p(parent->left_vertex, left_g);
-                break;
-
-            default:
-                assert(false);
-                break;
-        }
-        #undef get_h
-        #undef get_g
     }
 
     return out;
