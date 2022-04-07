@@ -16,4 +16,7 @@ double get_h_value(const Point& root, Point goal,
 // vector. Returns number of successors generated.
 int get_successors(SearchNode& node, const Point& start, const Mesh& mesh,
                    Successor* successors);
+
+int get_successors2(SearchNode& node, const Point& start, const Mesh& mesh,
+                   Successor* successors);
 }
