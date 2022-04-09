@@ -47,7 +47,7 @@ void PolyVis::expand_edge(polyanya::SearchNodePtr n, polyanya::Point root, int l
     Transforms successors to proper nodes
     */
     polyanya::SearchNode* nodes = new polyanya::SearchNode [num_obs_succ];
-    const int num_nodes = this->si->succ_to_node2(n, successors, num_obs_succ, nodes);
+    const int num_nodes = this->si->succ_to_node2(n, obs_successors, num_obs_succ, nodes);
     std::cout << num_nodes - num_obs_succ << "\n";
     for(int i = 0; i < num_nodes; i++){
         n = &nodes[i];
