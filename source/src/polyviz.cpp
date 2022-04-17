@@ -33,27 +33,20 @@ void PolyVis::expand_edge(polyanya::SearchNodePtr n, polyanya::Point root, int l
     }
     for(int i = 0; i < num_succ; i++){
         if(successors[i].type == polyanya::Successor::OBSERVABLE){
-            std::string stuff(4*level, ' ');
-            std::cout << stuff << successors[i] << "\n\n";
             obs_successors[num_obs_succ] = successors[i];
             num_obs_succ++;
         }
     }
-    //std::cout << "_________________\n" <<num_obs_succ << "\n\n";
-    if(num_obs_succ == 0){
-    std::cout << "\nno successors\n";
-    }
+
     /*
     Transforms successors to proper nodes
     */
     polyanya::SearchNode* nodes = new polyanya::SearchNode [num_obs_succ];
     const int num_nodes = this->si->succ_to_node2(n, obs_successors, num_obs_succ, nodes);
-    std::cout << num_nodes - num_obs_succ << "\n";
     for(int i = 0; i < num_nodes; i++){
         n = &nodes[i];
         std::string stuff(4*level+2, ' ');
-        std::cout << stuff << *n <<"\n";
-        //std::cout << num_nodes -i << " : " << *n <<"\n";
+
         this->expand_edge(n, root, level + 1);
     }
     return;
@@ -68,7 +61,6 @@ PolyVis::get_visibility_polygon(polyanya::Point position){
     polyanya::SearchNodePtr n;
     while(!list.empty()){
         n = list.front();
-        std::cout << "\n-------------------------------------------------------------------\n\n";std::cout << *n <<"\n";
         list.erase(list.begin());
         this->expand_edge(n, position, 0);
     }
