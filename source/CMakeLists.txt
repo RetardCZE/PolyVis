@@ -30,6 +30,14 @@ set(CMAKE_USE_WIN32_THREADS_INIT 0)
 set(CMAKE_USE_PTHREADS_INIT 1)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
+find_library(FADE2D_LIBRARY NAMES fade2d PATHS /usr/local/lib/FADE2D)
+# Check if fade2d library was found
+if (NOT FADE2D_LIBRARY)
+    MESSAGE(STATUS "WARNING: Library FADE2D not found! Running script '${CMAKE_SOURCE_DIR}/pathfinding/polyanya/utils/scripts/install_fade2d.sh' solve the problem.")
+else ()
+    MESSAGE(STATUS "Found FADE2D")
+endif ()
+
 add_subdirectory(draw_lib)
 add_subdirectory(polyanya)
 
@@ -50,7 +58,9 @@ target_link_libraries(${PROJECT_NAME}
         polygonal_map
         cairo
         stdc++fs
+        polyanya_map_parser_library
         polyanya
+        ${FADE2D_LIBRARY}
         ${GTKMM_LIBRARIES}
         ${Boost_LIBRARIES}
         stdc++fs)
