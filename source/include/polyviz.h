@@ -12,7 +12,11 @@
 #include <fstream>
 #include <sstream>
 #include <chrono>
+#include <random>
 
+/**
+* https://stackoverflow.com/questions/20656129/generate-pointsx-y-on-rectangle-uniformly
+*/
 
 class PolyVis{
     public:
@@ -22,6 +26,8 @@ class PolyVis{
         std::vector<polyanya::Point> get_visibility_polygon(polyanya::Point position);
         bool switch_measurement(bool on, bool reset);
         std::vector<int> read_measurements();
+        std::vector<polyanya::Point> generate_points(int n);
+
     private:
         void expand_edge(polyanya::SearchNodePtr, polyanya::Point root, int level);
 

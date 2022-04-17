@@ -193,6 +193,8 @@ namespace polyanya {
         std::vector<Polygon> mesh_polygons;
         int max_poly_sides;
 
+        void get_bounding_box(double *min_x, double *max_x, double *min_y, double *max_y);
+
         void read(std::istream &infile);
 
         void read(const parsers::GeomMesh &geomMesh);

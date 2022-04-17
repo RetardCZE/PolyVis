@@ -8,6 +8,13 @@
 #include <algorithm>
 
 namespace polyanya {
+    void
+    Mesh::get_bounding_box(double *min_x, double *max_x, double *min_y, double *max_y){
+        *min_x = this->min_x;
+        *max_x = this->max_x;
+        *min_y = this->min_y;
+        *max_y = this->max_y;
+    }
 
     Mesh::Mesh(std::istream &infile) {
         read(infile);

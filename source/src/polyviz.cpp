@@ -72,6 +72,7 @@ void PolyVis::expand_edge(polyanya::SearchNodePtr n, polyanya::Point root, int l
 
 std::vector<polyanya::Point>
 PolyVis::get_visibility_polygon(polyanya::Point position){
+    this->vertices.clear();
     if(this->measure){
         start = std::chrono::high_resolution_clock::now();
     }
@@ -93,4 +94,30 @@ PolyVis::get_visibility_polygon(polyanya::Point position){
     }
     return this->vertices;
 
+}
+
+double drand(const double min = 0., const double max = 1.)
+{
+    return (max - min) * static_cast<double>(rand()) / static_cast<double> (RAND_MAX)+min;
+}
+
+std::vector<polyanya::Point>
+PolyVis::generate_points(int n){
+    std::vector<polyanya::Point> points;
+    polyanya::Point p;
+    double min_x, max_x, min_y, max_y;
+    this->mesh->get_bounding_box(&min_x, &max_x, &min_y, &max_y);
+
+    for(; n > 0; n--)
+    {
+        p.x = drand(min_x, max_x);
+        p.y = drand(min_y, max_y);
+        polyanya::PointLocation loc = this->mesh->get_point_location(p);
+        if(loc.type == polyanya::PointLocation::NOT_ON_MESH){
+            n++;
+        }else{
+            points.push_back(p);
+        }
+    }
+    return points;
 }
