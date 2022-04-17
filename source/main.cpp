@@ -21,7 +21,7 @@ int main(int argc, const char *const *argv)
     mapParser.convertMapToFade2DMesh(potholeName, fade2DMesh);
     mapParser.convertMapToMergedMesh(potholeName, mergedMesh);
     mapParser.convertMergedMeshToGeomMesh(mergedMesh, geomMesh);
-    mapParser.convertFade2DMeshToGeomMesh(fade2DMesh, geomMesh);
+    //mapParser.convertFade2DMeshToGeomMesh(fade2DMesh, geomMesh);
 
     std::vector<polyanya::Point> vertices;
 
@@ -33,14 +33,19 @@ int main(int argc, const char *const *argv)
     }
 
     std::vector<int> m = solver.read_measurements();
-
+    float sum = 0;
     for (auto s : m){
-        std::cout << s << ", ";
+        sum = sum + s;
     }
-    std::cout << std::endl;
+    std::cout << sum / 1000 << std::endl;
 
+    polyanya::Point p;
+
+    p.x = 18.87969970703125;
+    p.y = 28.160797119140625;
+    vertices = solver.get_visibility_polygon(p);
     MapVisualizer drawer(geomMesh);
-    drawer.set_visible_polygon(positions.back(), vertices);
+    drawer.set_visible_polygon(p, vertices);
     drawer.redraw();
 
 	return 0;

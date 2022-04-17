@@ -291,6 +291,21 @@ std::vector<SearchNodePtr> SearchInstance::gen_initial_nodes2()
                 break;
             }
         case PointLocation::ON_CORNER_VERTEX_UNAMBIG:
+        {
+            std::vector<SearchNodePtr> lazies;
+            for(int p : this->mesh->mesh_vertices[pl.vertex1].polygons){
+                lazies.push_back(get_lazy(p, -1, -1));
+            }
+            for (SearchNodePtr l : lazies){
+                push_lazy(l);
+                nodes_generated++;
+                if (final_node)
+                {
+                    return list;
+                }
+            }
+        }
+            break;
         // Generate all in the polygon.
         case PointLocation::IN_POLYGON:
         case PointLocation::ON_MESH_BORDER:
