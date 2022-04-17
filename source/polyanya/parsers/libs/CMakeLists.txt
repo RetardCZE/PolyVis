@@ -1,0 +1,1 @@
+add_library(polyanya_map_parser_library utils.cpp map_parser.cpp)

@@ -9,9 +9,8 @@ void fail(const string& message)
     exit(1);
 }
 
-vector<Polygon> *read_polys(istream& infile)
+void read_polys(istream& infile, vector<Polygon> &polygons)
 {
-    vector<Polygon> *polygons = new vector<Polygon>;
     string header;
     int version;
 
@@ -68,7 +67,7 @@ vector<Polygon> *read_polys(istream& infile)
             }
             cur_poly.push_back(Point2(x, y));
         }
-        polygons->push_back(cur_poly);
+        polygons.push_back(cur_poly);
     }
 
     int temp;
@@ -76,8 +75,42 @@ vector<Polygon> *read_polys(istream& infile)
     {
         fail("Error parsing map (read too much)");
     }
-    return polygons;
 }
+
+void load_map(const std::string &filename, vector<Polygon> &polygons) {
+        std::ifstream ifs(filename.c_str());
+        if (ifs.fail()) {
+            std::cout << "File " << filename << " cannot be opened or found." << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        Polygon cur_poly;
+        /// Load the map:
+        std::string token;
+        bool isBorder = false;
+        double scale = 1.0;
+        while (!ifs.eof()) {
+            ifs >> token;
+            if (token == "[SCALE]") {
+                ifs >> scale;
+            } else if (token == "[BORDER]") {
+                isBorder = true;
+            } else if (token == "[OBSTACLE]") {
+                polygons.push_back(cur_poly);
+                cur_poly.clear();
+            } else {
+                if (!ifs.eof()) {
+                    double x, y;
+                    x = stod(token) * scale;
+                    ifs >> y;
+                    y *= scale;
+                    cur_poly.push_back(Point2(x, y));
+                }
+            }
+        }
+        /// Last obstacle:
+        polygons.push_back(cur_poly);
+    }
 
 vector<ConstraintGraph2*> *create_constraint_graphs(const vector<Polygon> &polygons, Fade_2D &dt)
 {
@@ -98,10 +131,9 @@ vector<ConstraintGraph2*> *create_constraint_graphs(const vector<Polygon> &polyg
     return constraint_graphs;
 }
 
-Zone2* create_traversable_zone(istream& infile, Fade_2D &dt)
+Zone2 *create_traversable_zone(const vector<Polygon> &polygons, Fade_2D &dt)
 {
-    vector<Polygon> *polygons = read_polys(infile);
-    vector<ConstraintGraph2*> *cgs = create_constraint_graphs(*polygons, dt);
+    vector<ConstraintGraph2*> *cgs = create_constraint_graphs(polygons, dt);
     dt.applyConstraintsAndZones();
 
     #ifndef NDEBUG
@@ -111,7 +143,6 @@ Zone2* create_traversable_zone(istream& infile, Fade_2D &dt)
     }
     #endif
 
-    // TODO: Merge the two for loops together
     vector<Zone2*> zones;
     zones.push_back(dt.createZone(nullptr, ZL_GLOBAL));
     for (auto x : *cgs)
@@ -126,7 +157,25 @@ Zone2* create_traversable_zone(istream& infile, Fade_2D &dt)
     {
         traversable = zoneSymmetricDifference(traversable, zones[i]);
     }
+    // Free pointer to vector
+    delete cgs;
     return traversable;
+}
+
+Zone2* create_traversable_zone_istream(istream& infile, Fade_2D &dt, vector<Polygon> &obstacles)
+{
+    vector<Polygon> polygons;
+    read_polys(infile, polygons);
+    if ((int)polygons.size() > 1) obstacles.insert(obstacles.end(), polygons.begin() + 1, polygons.end());
+    return create_traversable_zone(polygons,dt);
+}
+
+Zone2 *create_traversable_zone_filename(const string &filename, Fade_2D &dt, vector<Polygon> &obstacles)
+{
+    vector<Polygon> polygons;
+    load_map(filename, polygons);
+    if ((int)polygons.size() > 1) obstacles.insert(obstacles.end(), polygons.begin() + 1, polygons.end());
+    return create_traversable_zone(polygons,dt);
 }
 
 }
