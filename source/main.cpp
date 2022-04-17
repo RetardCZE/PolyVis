@@ -10,7 +10,6 @@ int main(int argc, const char *const *argv)
     parsers::Fade2DMesh fade2DMesh;
     parsers::MergedMesh mergedMesh;
     parsers::GeomMesh geomMesh;
-
     // Define paths
     std::string fade2dMeshPath = "";
     std::string mergedMeshPath = "";
@@ -18,19 +17,16 @@ int main(int argc, const char *const *argv)
     // Convert map to fade2d mesh
     mapParser.convertMapToFade2DMesh(potholeName, fade2DMesh);
     mapParser.convertMapToMergedMesh(potholeName, mergedMesh);
-
-
-    std::string file = "../polyanya/meshes/arena-merged.mesh";
-    std::ifstream meshfile(file);
+    mapParser.convertMergedMeshToGeomMesh(mergedMesh, geomMesh);
 
     polyanya::Point p;
     p.x = 10;
     p.y = 10;
-    PolyVis solver(file);
+    PolyVis solver(geomMesh);
     std::vector<polyanya::Point> vertices = solver.get_visibility_polygon(p);
 
-    MapVisualizer drawer(file);
-    drawer.parse_mesh();
+    MapVisualizer drawer(geomMesh);
+    //drawer.parse_mesh();
     drawer.set_visible_polygon(p, vertices);
     drawer.redraw();
 

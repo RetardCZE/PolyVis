@@ -5,6 +5,7 @@
 #include "polyanya/search/searchinstance.h"
 #include "polyanya/structs/point.h"
 #include "polyanya/search/expansion.h"
+#include "polyanya/parsers/libs/map_parser.h"
 
 #include <string>
 #include <iostream>
@@ -15,6 +16,7 @@
 class PolyVis{
     public:
         PolyVis(std::string file);
+        PolyVis(parsers::GeomMesh &mesh);
         ~PolyVis();
         std::vector<polyanya::Point> get_visibility_polygon(polyanya::Point position);
     private:

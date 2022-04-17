@@ -12,6 +12,7 @@
 #include "polyanya/search/searchinstance.h"
 #include "polyanya/structs/point.h"
 #include "polyanya/search/expansion.h"
+#include "polyanya/parsers/libs/map_parser.h"
 
 #include <string>
 #include <iostream>
@@ -54,7 +55,7 @@ class MapVisualizer{
             ON_NON_CORNER_VERTEX, // vertex: all polygons are traversable
         };
     public:
-        MapVisualizer(std::string file);
+        MapVisualizer(parsers::GeomMesh &mesh);
         ~MapVisualizer();
 
         void redraw();

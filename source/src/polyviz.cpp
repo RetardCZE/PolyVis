@@ -6,6 +6,12 @@ PolyVis::PolyVis(std::string file){
     this->mesh->precalc_point_location();
 }
 
+PolyVis::PolyVis(parsers::GeomMesh &mesh){
+    this->mesh = new polyanya::Mesh;
+    this->mesh->read(mesh);
+    this->mesh->precalc_point_location();
+}
+
 PolyVis::~PolyVis(){
     this->my_file.close();
 }
