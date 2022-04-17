@@ -16,6 +16,18 @@ PolyVis::~PolyVis(){
     this->my_file.close();
 }
 
+bool
+PolyVis::switch_measurement(bool on, bool reset){
+    this->measure = on;
+    if(reset)this->measurements.clear();
+    return this->measure;
+}
+
+std::vector<int>
+PolyVis::read_measurements(){
+    return this->measurements;
+}
+
 void PolyVis::expand_edge(polyanya::SearchNodePtr n, polyanya::Point root, int level){
 
     if(n->next_polygon == -1){
@@ -60,6 +72,10 @@ void PolyVis::expand_edge(polyanya::SearchNodePtr n, polyanya::Point root, int l
 
 std::vector<polyanya::Point>
 PolyVis::get_visibility_polygon(polyanya::Point position){
+    if(this->measure){
+        start = std::chrono::high_resolution_clock::now();
+    }
+
     si = new polyanya::SearchInstance(this->mesh);
     this->si->set_start_goal(position, position); //TODO: reimplement SearchInstance to get rid of useless parts
     std::vector<polyanya::SearchNodePtr> list = this->si->gen_initial_nodes2(); // custom version - minor updates
@@ -69,6 +85,11 @@ PolyVis::get_visibility_polygon(polyanya::Point position){
         n = list.front();
         list.erase(list.begin());
         this->expand_edge(n, position, 0);
+    }
+    if(this->measure){
+        stop = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+        this->measurements.push_back(duration.count());
     }
     return this->vertices;
 

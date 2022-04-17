@@ -11,6 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <chrono>
 
 
 class PolyVis{
@@ -19,9 +20,14 @@ class PolyVis{
         PolyVis(parsers::GeomMesh &mesh);
         ~PolyVis();
         std::vector<polyanya::Point> get_visibility_polygon(polyanya::Point position);
+        bool switch_measurement(bool on, bool reset);
+        std::vector<int> read_measurements();
     private:
         void expand_edge(polyanya::SearchNodePtr, polyanya::Point root, int level);
 
+        bool measure = false;
+        std::chrono::time_point<std::chrono::high_resolution_clock> start, stop;
+        std::vector<int> measurements;
         std::vector<polyanya::Point> vertices;
         polyanya::SearchInstance* si;
         polyanya::Mesh* mesh;

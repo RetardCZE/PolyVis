@@ -2,6 +2,9 @@
 #include "polyviz.h"
 #include "polyanya/parsers/libs/map_parser.h"
 
+#include <chrono>
+
+
 int main(int argc, const char *const *argv)
 {
     std::string potholeName = "../maps/potholes/potholes.txt";
@@ -23,7 +26,11 @@ int main(int argc, const char *const *argv)
     p.x = 10;
     p.y = 10;
     PolyVis solver(geomMesh);
+    solver.switch_measurement(true, true);
     std::vector<polyanya::Point> vertices = solver.get_visibility_polygon(p);
+
+    std::vector<int> m = solver.read_measurements();
+    std::cout << m[0] << std::endl;
 
     MapVisualizer drawer(geomMesh);
     //drawer.parse_mesh();
