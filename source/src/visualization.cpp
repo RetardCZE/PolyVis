@@ -33,7 +33,7 @@ MapVisualizer::redraw(){
     cgm_drawer.DrawPolygon(border, cgm::kColorBlack);
     cgm_drawer.DrawPolygons(this->free, cgm::kColorWhite);
     cgm_drawer.DrawPoints(this->visibility, 0.2, cgm::kColorGreen);
-    cgm_drawer.DrawPolygon(this->visibility, cgm::kColorLightGreen);
+    cgm_drawer.DrawPolygon(this->visibility, cgm::kColorLightGreen, 0.5);
     cgm_drawer.DrawPoint(this->seeker, 0.2, cgm::kColorRed);
     cgm_drawer.Close();
     cgm_drawer.OpenPDF("simple_map2.pdf");

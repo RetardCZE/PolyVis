@@ -1,1 +1,0 @@
-/usr/bin/c++ -rdynamic CMakeFiles/draw_lib_example.dir/example.cc.o -o draw_lib_example  polygon_clipping/libpolygon_clipping.a polygonal_map/libpolygonal_map.a -lcairo -lstdc++fs 

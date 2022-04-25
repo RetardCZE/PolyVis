@@ -1,9 +1,0 @@
-/home/jakub/Projects/PolyVis/source/draw_lib/build/CMakeFiles/draw_lib_example.dir
-/home/jakub/Projects/PolyVis/source/draw_lib/build/CMakeFiles/edit_cache.dir
-/home/jakub/Projects/PolyVis/source/draw_lib/build/CMakeFiles/rebuild_cache.dir
-/home/jakub/Projects/PolyVis/source/draw_lib/build/polygon_clipping/CMakeFiles/polygon_clipping.dir
-/home/jakub/Projects/PolyVis/source/draw_lib/build/polygon_clipping/CMakeFiles/edit_cache.dir
-/home/jakub/Projects/PolyVis/source/draw_lib/build/polygon_clipping/CMakeFiles/rebuild_cache.dir
-/home/jakub/Projects/PolyVis/source/draw_lib/build/polygonal_map/CMakeFiles/polygonal_map.dir
-/home/jakub/Projects/PolyVis/source/draw_lib/build/polygonal_map/CMakeFiles/edit_cache.dir
-/home/jakub/Projects/PolyVis/source/draw_lib/build/polygonal_map/CMakeFiles/rebuild_cache.dir

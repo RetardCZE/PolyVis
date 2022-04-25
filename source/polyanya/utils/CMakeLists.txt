@@ -1,5 +1,0 @@
-FILE(GLOB SRCFILES_FADE2D fade2d/*.cpp)
-
-set(FADE_2D_FILES ${SRCFILES_FADE2D})
-
-add_library(fade_2d ${FADE_2D_FILES})

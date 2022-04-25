@@ -1,3 +1,0 @@
-project(polygon_clipping)
-add_library(polygon_clipping polygon_clipping.cc clipper/clipper.cpp)
-target_include_directories(polygon_clipping PUBLIC clipper)

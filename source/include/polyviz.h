@@ -5,7 +5,7 @@
 #include "polyanya/search/searchinstance.h"
 #include "polyanya/structs/point.h"
 #include "polyanya/search/expansion.h"
-#include "polyanya/parsers/libs/map_parser.h"
+#include "polyanya/parsers/map_parser.h"
 
 #include <string>
 #include <iostream>

@@ -1,0 +1,3 @@
+add_subdirectory(clipper)
+add_subdirectory(predicates)
+add_subdirectory(triangle)

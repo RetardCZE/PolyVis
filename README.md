@@ -3,24 +3,21 @@ Repository for calculating polygon of visibility using polygons.
 
 ## Status
  
- - Polyanya can be used to find visibility polygon with successors related to root.
- - Algorithm stops at some polygons on mesh for some reason - need to be investigated.
-   Maybe badly implemented recursion.
+ - Polyanya can be used to find visibility polygon, but takes more than TriVis.
 
 ## TODOs
 
- - Find why polyanya stops at some point. Successors are find well I think, but are not
-   Transformed to nodes to continue search - WHY?
+ - Measure time for current Polyanya and TriVis. Apply known optimization for polyanya.
+ - Implement computation of polygon of visibility from line.
 
 ## Setup
 Git is currently not well managed, but for current functionality can be already tested.
 
 In source folder make build folder (unless its already there) and use cmake and make there.
 ```commandline
-cd source
 mkdir build
 cd build
-cmake ..
+cmake ../source
 make
 ```
 Currently only compiled example is visualization of mesh from polyanya.

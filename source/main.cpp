@@ -1,13 +1,17 @@
 #include "visualization.h"
 #include "polyviz.h"
-#include "polyanya/parsers/libs/map_parser.h"
+#include "polyanya/parsers/map_parser.h"
 
 #include <chrono>
-
+#ifndef INPUT_MAPS_DIR
+#define INPUT_MAPS_DIR "."
+#endif
 
 int main(int argc, const char *const *argv)
 {
-    std::string potholeName = "../maps/potholes/potholes.txt";
+    std::string map_name = "/potholes.txt";
+    std::string map_directory = INPUT_MAPS_DIR;
+    std::string potholeName = map_directory + map_name;
     // Define map parser class
     parsers::MapParser mapParser;
     parsers::Fade2DMesh fade2DMesh;

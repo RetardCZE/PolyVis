@@ -1,2 +1,0 @@
-/usr/bin/ar qc libpolygonal_map.a CMakeFiles/polygonal_map.dir/polygonal_map.cc.o
-/usr/bin/ranlib libpolygonal_map.a

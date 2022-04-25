@@ -1,36 +1,11 @@
-cmake_minimum_required(VERSION 3.0.2)
-project(PolyVis)
+cmake_minimum_required(VERSION 3.0.0)
+project(trivis_examples)
 
-add_compile_options(-std=c++17)
-add_compile_options(-Wall)
-add_compile_options(-O3)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
 
-## Set up optimization -  profiler flags
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
-
-set(ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:/usr/lib/x86_64-linux-gnu/pkgconfig")
-set(POLYANYA_DIR "polyanya")
-
-include_directories(
-        ${GTKMM_INCLUDE_DIRS}
-        ${Boost_INCLUDE_DIRS}
-        ${POLYANYA_DIR}
-        ${POLYANYA_DIR}/utils
-        ${CMAKE_SOURCE_DIR}
-        draw_lib
-        include
-)
-
-## Using threads
-set(CMAKE_THREAD_LIBS_INIT "-lpthread")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-set(CMAKE_HAVE_THREADS_LIBRARY 1)
-set(CMAKE_USE_WIN32_THREADS_INIT 0)
-set(CMAKE_USE_PTHREADS_INIT 1)
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-
-find_library(FADE2D_LIBRARY NAMES fade2d PATHS /usr/local/lib/FADE2D)
+find_library(FADE2D_LIBRARY NAMES fade2d PATHS libs/polyanya/include/fade2D/lib/ubuntu16.10_x86_64/)
 # Check if fade2d library was found
 if (NOT FADE2D_LIBRARY)
     MESSAGE(STATUS "WARNING: Library FADE2D not found! Running script '${CMAKE_SOURCE_DIR}/pathfinding/polyanya/utils/scripts/install_fade2d.sh' solve the problem.")
@@ -38,28 +13,54 @@ else ()
     MESSAGE(STATUS "Found FADE2D")
 endif ()
 
-add_subdirectory(draw_lib)
-add_subdirectory(polyanya)
+message("CMAKE_BUILD_TYPE is: ${CMAKE_BUILD_TYPE}")
+
+add_subdirectory(libs) # include trivis and polyanya
+
+# include boost:
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+add_definitions(-DBOOST_LOG_DYN_LINK)
+find_package(Boost 1.65 REQUIRED COMPONENTS program_options system filesystem log_setup log)
+
+include_directories(
+        include
+)
+
+set(${PROJECT_NAME}_SRC
+        src/data_loading/load_map.cc
+        src/drawing/random_colors.cc
+        src/drawing/drawing.cc
+        src/logging/logging.cc
+        )
+
+set(${PROJECT_NAME}_COMPILE_DEFINITIONS
+        -DINPUT_MAPS_DIR="${PROJECT_SOURCE_DIR}/data/maps"
+        )
+
+add_executable(trivis_debug trivis_debug.cc ${${PROJECT_NAME}_SRC})
+target_compile_definitions(trivis_debug PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
+target_link_libraries(trivis_debug TriVis ${Boost_LIBRARIES} cairo)
+
+add_executable(trivis_examples trivis_examples.cc ${${PROJECT_NAME}_SRC})
+target_compile_definitions(trivis_examples PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
+target_link_libraries(trivis_examples TriVis ${Boost_LIBRARIES} cairo)
 
 FILE(GLOB SRC src/*.cpp)
 set(SOURCES ${SRC})
-add_executable(${PROJECT_NAME}
+add_executable(PolyVis
         main.cpp
         ${SOURCES}
         )
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-        MAP_DATA_DIR="${PROJECT_SOURCE_DIR}/draw_lib/data/maps"
-        PRIVATE -DTRILIBRARY -DANSI_DECLARATORS -DNO_TIMER
-        )
+target_compile_definitions(PolyVis PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
 
-target_link_libraries(${PROJECT_NAME}
-        polygon_clipping
-        polygonal_map
+target_link_libraries(PolyVis
+        TriVis
         cairo
         stdc++fs
-        polyanya_map_parser_library
-        polyanya
+        PolyAnya
         ${FADE2D_LIBRARY}
         ${GTKMM_LIBRARIES}
         ${Boost_LIBRARIES}

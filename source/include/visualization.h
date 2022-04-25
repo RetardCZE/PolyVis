@@ -1,8 +1,6 @@
-#include "draw_lib/geom/geom.h"
-#include "draw_lib/geom/utils.h"
-#include "draw_lib/cairo_geom_drawer/cairo_geom_drawer.h"
-#include "draw_lib/polygon_clipping/polygon_clipping.h"
-#include "draw_lib/polygonal_map/polygonal_map.h"
+#include "geom/geom.h"
+#include "geom/utils.h"
+#include "geom/cairo_geom_drawer.h"
 
 //include "polyanya"
 #include "polyanya/helpers/scenario.h"
@@ -12,17 +10,16 @@
 #include "polyanya/search/searchinstance.h"
 #include "polyanya/structs/point.h"
 #include "polyanya/search/expansion.h"
-#include "polyanya/parsers/libs/map_parser.h"
+#include "polyanya/parsers/map_parser.h"
+
 
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 
-namespace clip = polygon_clipping;
 namespace cgm = cairo_geom_drawer;
-namespace map = polygonal_map;
-namespace draw = map::draw;
+
 struct Line{
     geom::Point<double> left;
     geom::Point<double> right;
