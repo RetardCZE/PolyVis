@@ -198,25 +198,19 @@ int SearchInstance::succ_to_node2(
     const std::vector<int>& V = polygon.vertices;
     const std::vector<int>& P = polygon.polygons;
 
-    double right_g = -1, left_g = -1;
-
     int out = 0;
     for (int i = 0; i < num_succ; i++)
     {
         const Successor& succ = successors[i];
         const int next_polygon = P[succ.poly_left_ind];
-
         const int left_vertex  = V[succ.poly_left_ind];
         const int right_vertex = succ.poly_left_ind ?
                                  V[succ.poly_left_ind - 1] :
                                  V.back();
 
-
         nodes[out++] = {nullptr, parent->root, succ.left, succ.right, left_vertex,
                         right_vertex, next_polygon, 0, 0};
-
     }
-
     return out;
 }
 
@@ -294,7 +288,7 @@ std::vector<SearchNodePtr> SearchInstance::gen_initial_nodes2()
         {
             std::vector<SearchNodePtr> lazies;
             for(int p : this->mesh->mesh_vertices[pl.vertex1].polygons){
-                lazies.push_back(get_lazy(p, -1, -1));
+                lazies.push_back(get_lazy(p, pl.vertex1, pl.vertex1));
             }
             for (SearchNodePtr l : lazies){
                 push_lazy(l);

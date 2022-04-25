@@ -29,42 +29,22 @@ PolyVis::read_measurements(){
 }
 
 void PolyVis::expand_edge(polyanya::SearchNodePtr n, polyanya::Point root, int level){
-
     if(n->next_polygon == -1){
         this->vertices.push_back(n->right);
         this->vertices.push_back(n->left);
         return;
     }
-
+    this->expansions++;
     polyanya::Successor* successors = new polyanya::Successor [this->mesh->max_poly_sides + 2];
-    polyanya::Successor* obs_successors = new polyanya::Successor [this->mesh->max_poly_sides + 2];
-
     /*
     Get all observable successors of the node. (Edges visible from root through edge)
     */
-    int num_succ = polyanya::get_successors2(*n, root, *(this->mesh), successors);
-    int num_obs_succ = 0;
-    if(num_succ == 0){
-        this->vertices.push_back(n->right);
-        this->vertices.push_back(n->left);
-        return;
-    }
-    for(int i = 0; i < num_succ; i++){
-        if(successors[i].type == polyanya::Successor::OBSERVABLE){
-            obs_successors[num_obs_succ] = successors[i];
-            num_obs_succ++;
-        }
-    }
 
-    /*
-    Transforms successors to proper nodes
-    */
-    polyanya::SearchNode* nodes = new polyanya::SearchNode [num_obs_succ];
-    const int num_nodes = this->si->succ_to_node2(n, obs_successors, num_obs_succ, nodes);
+    int num_succ = polyanya::get_successors2(*n, root, *(this->mesh), successors);
+    polyanya::SearchNode* nodes = new polyanya::SearchNode [num_succ];
+    const int num_nodes = this->si->succ_to_node2(n, successors, num_succ, nodes);
     for(int i = 0; i < num_nodes; i++){
         n = &nodes[i];
-        std::string stuff(4*level+2, ' ');
-
         this->expand_edge(n, root, level + 1);
     }
     return;
@@ -72,6 +52,7 @@ void PolyVis::expand_edge(polyanya::SearchNodePtr n, polyanya::Point root, int l
 
 std::vector<polyanya::Point>
 PolyVis::get_visibility_polygon(polyanya::Point position){
+    this->expansions = 0;
     this->vertices.clear();
     if(this->measure){
         start = std::chrono::high_resolution_clock::now();
@@ -91,7 +72,9 @@ PolyVis::get_visibility_polygon(polyanya::Point position){
         stop = std::chrono::high_resolution_clock::now();
         auto duration = static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count()) * 1e-9;
         this->measurements.push_back(duration);
+        //std::cout << "Expanded edges " << expansions << " times." << std::endl;
     }
+    delete si;
     return this->vertices;
 
 }

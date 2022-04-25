@@ -30,7 +30,7 @@ class PolyVis{
 
     private:
         void expand_edge(polyanya::SearchNodePtr, polyanya::Point root, int level);
-
+        int expansions = 0;
         bool measure = false;
         std::chrono::time_point<std::chrono::high_resolution_clock> start, stop;
         std::vector<double> measurements;
