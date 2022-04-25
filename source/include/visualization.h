@@ -55,7 +55,7 @@ class MapVisualizer{
         MapVisualizer(parsers::GeomMesh &mesh);
         ~MapVisualizer();
 
-        void redraw();
+        void redraw(std::string pdf);
         void parse_mesh();
         void set_visible_polygon(polyanya::Point p, std::vector<polyanya::Point> polygon);
     private:
