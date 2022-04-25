@@ -23,7 +23,7 @@ PolyVis::switch_measurement(bool on, bool reset){
     return this->measure;
 }
 
-std::vector<int>
+std::vector<double>
 PolyVis::read_measurements(){
     return this->measurements;
 }
@@ -89,8 +89,8 @@ PolyVis::get_visibility_polygon(polyanya::Point position){
     }
     if(this->measure){
         stop = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-        this->measurements.push_back(duration.count());
+        auto duration = static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count()) * 1e-9;
+        this->measurements.push_back(duration);
     }
     return this->vertices;
 

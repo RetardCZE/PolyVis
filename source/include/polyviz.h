@@ -25,7 +25,7 @@ class PolyVis{
         ~PolyVis();
         std::vector<polyanya::Point> get_visibility_polygon(polyanya::Point position);
         bool switch_measurement(bool on, bool reset);
-        std::vector<int> read_measurements();
+        std::vector<double> read_measurements();
         std::vector<polyanya::Point> generate_points(int n);
 
     private:
@@ -33,7 +33,7 @@ class PolyVis{
 
         bool measure = false;
         std::chrono::time_point<std::chrono::high_resolution_clock> start, stop;
-        std::vector<int> measurements;
+        std::vector<double> measurements;
         std::vector<polyanya::Point> vertices;
         polyanya::SearchInstance* si;
         polyanya::Mesh* mesh;

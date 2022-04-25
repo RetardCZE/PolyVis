@@ -52,6 +52,7 @@ set(SOURCES ${SRC})
 add_executable(PolyVis
         main.cpp
         ${SOURCES}
+        ${${PROJECT_NAME}_SRC}
         )
 
 target_compile_definitions(PolyVis PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
@@ -59,9 +60,6 @@ target_compile_definitions(PolyVis PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS
 target_link_libraries(PolyVis
         TriVis
         cairo
-        stdc++fs
         PolyAnya
         ${FADE2D_LIBRARY}
-        ${GTKMM_LIBRARIES}
-        ${Boost_LIBRARIES}
-        stdc++fs)
+        ${Boost_LIBRARIES})
