@@ -24,18 +24,14 @@ class PolyVis{
         PolyVis(parsers::GeomMesh &mesh);
         ~PolyVis();
         std::vector<polyanya::Point> get_visibility_polygon(polyanya::Point position);
-        bool switch_measurement(bool on, bool reset);
-        std::vector<double> read_measurements();
         std::vector<polyanya::Point> generate_points(int n);
 
     private:
         void expand_edge(polyanya::SearchNodePtr, polyanya::Point root, int level);
         int expansions = 0;
-        bool measure = false;
-        std::chrono::time_point<std::chrono::high_resolution_clock> start, stop;
-        std::vector<double> measurements;
         std::vector<polyanya::Point> vertices;
         polyanya::SearchInstance* si;
         polyanya::Mesh* mesh;
         std::ifstream my_file;
+        polyanya::Successor* successors;
 };

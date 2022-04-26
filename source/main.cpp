@@ -187,25 +187,33 @@ int body(ProgramOptionVariables pov)
     polyanya::Point p;
     PolyVis solverTri(geomMeshTri);
     PolyVis solverPoly(geomMeshPoly);
-    solverPoly.switch_measurement(true, true);
-    solverTri.switch_measurement(true, true);
 
     std::optional<double> vis_radius = pov.vis_radius > 0.0 ? std::make_optional(pov.vis_radius) : std::nullopt;
     std::vector<tvg::RadialVisibilityRegion> regions;
     regions.reserve(random_points.size());
 
     std::vector<double> TriTime;
+    std::vector<double> PolyTimeTri;
+    std::vector<double> PolyTimePoly;
     MapVisualizer drawerTri(geomMeshTri);
     MapVisualizer drawerPoly(geomMeshPoly);
     tvc::utils::SimpleClock clock;
+    int c = 0;
     for (auto pos : random_points){
+        std::cout << c++ << "          \r";
         p.x = pos.x;
         p.y = pos.y;
         clock.Restart();
         ComputeVisibilityRegion(pos, vis, vis_radius, 1e-6);
         TriTime.push_back(clock.TimeInSeconds());
-        verticesPoly = solverPoly.get_visibility_polygon(p);
+
+        clock.Restart();
         verticesTri = solverTri.get_visibility_polygon(p);
+        PolyTimeTri.push_back(clock.TimeInSeconds());
+        clock.Restart();
+        verticesPoly = solverPoly.get_visibility_polygon(p);
+        PolyTimePoly.push_back(clock.TimeInSeconds());
+
     }
 
     drawerTri.set_visible_polygon(p, verticesTri);
@@ -213,15 +221,13 @@ int body(ProgramOptionVariables pov)
     drawerPoly.set_visible_polygon(p, verticesPoly);
     drawerPoly.redraw("polygons.pdf");
 
-    std::vector<double> mp = solverPoly.read_measurements();
-    std::vector<double> mt = solverTri.read_measurements();
     float sumTrivis = 0;
     float sumPolyVisTri = 0;
     float sumPolyVisPoly = 0;
     for (int i = 0; i < pov.n_random_samples; i++){
         sumTrivis = sumTrivis + TriTime[i];
-        sumPolyVisTri = sumPolyVisTri + mt[i];
-        sumPolyVisPoly = sumPolyVisPoly + mp[i];
+        sumPolyVisTri = sumPolyVisTri + PolyTimeTri[i];
+        sumPolyVisPoly = sumPolyVisPoly + PolyTimePoly[i];
     }
     std::cout << "Trivis mean time: " << sumTrivis / (pov.n_random_samples) << std::endl;
     std::cout << "Polyvis mean time on triangles: "<< sumPolyVisTri / (pov.n_random_samples) << std::endl;
