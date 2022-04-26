@@ -143,6 +143,7 @@ tvg::RadialVisibilityRegion ComputeVisibilityRegion(
 
 int body(ProgramOptionVariables pov)
 {
+    std::cout << "Preparing meshes, initializing TriVis and PolyVis solvers.\n";
     parsers::MapParser mapParser;
     parsers::Fade2DMesh fade2DMesh;
     parsers::MergedMesh mergedMesh;
@@ -178,61 +179,68 @@ int body(ProgramOptionVariables pov)
     std::vector<double> triangle_accum_areas; // auxiliary structure to improve speed
     std::mt19937 rng(pov.random_seed); // random generator
     tvg::FPoints random_points(pov.n_random_samples);
-    for (auto &rp: random_points) {
-        rp = tv::map_coverage::UniformRandomPointInRandomTriangle(vis.triangles(), triangle_accum_areas, rng);
-    }
 
     std::vector<polyanya::Point> verticesTri;
     std::vector<polyanya::Point> verticesPoly;
+    std::vector<polyanya::Point> r_points;
     polyanya::Point p;
     PolyVis solverTri(geomMeshTri);
     PolyVis solverPoly(geomMeshPoly);
 
     std::optional<double> vis_radius = pov.vis_radius > 0.0 ? std::make_optional(pov.vis_radius) : std::nullopt;
-    std::vector<tvg::RadialVisibilityRegion> regions;
-    regions.reserve(random_points.size());
+    std::cout << "Generating points. (TriVis feature, points are converted for polyanya)\n";
+    for (auto &rp: random_points) {
+        rp = tv::map_coverage::UniformRandomPointInRandomTriangle(vis.triangles(), triangle_accum_areas, rng);
+        p.x = rp.x;
+        p.y = rp.y;
+        r_points.push_back(p);
+    }
 
-    std::vector<double> TriTime;
-    std::vector<double> PolyTimeTri;
-    std::vector<double> PolyTimePoly;
     MapVisualizer drawerTri(geomMeshTri);
     MapVisualizer drawerPoly(geomMeshPoly);
     tvc::utils::SimpleClock clock;
-    int c = 0;
-    for (auto pos : random_points){
-        std::cout << c++ << "          \r";
-        p.x = pos.x;
-        p.y = pos.y;
-        clock.Restart();
-        ComputeVisibilityRegion(pos, vis, vis_radius, 1e-6);
-        TriTime.push_back(clock.TimeInSeconds());
+    double time;
+    std::cout << "\nComputing polygon of visibility on map "<< pov.input_map_name <<".\n";
 
-        clock.Restart();
-        verticesTri = solverTri.get_visibility_polygon(p);
-        PolyTimeTri.push_back(clock.TimeInSeconds());
-        clock.Restart();
-        verticesPoly = solverPoly.get_visibility_polygon(p);
-        PolyTimePoly.push_back(clock.TimeInSeconds());
+    std::cout << "\nRunning TriVis.\n";
+    clock.Restart();
+    for (auto pos : random_points){
+        ComputeVisibilityRegion(pos, vis, vis_radius, 1e-6);
 
     }
+    time = clock.TimeInSeconds();
+    std::cout << "Total computation time of "<< pov.n_random_samples << " random points was " <<
+                                                                    time << " seconds.\n";
+    std::cout << "Mean computation time of "<< pov.n_random_samples << " random points was " <<
+              time/pov.n_random_samples << " seconds/point.\n";
+
+    std::cout << "\nRunning PolyVis on triangular mesh.\n";
+    clock.Restart();
+    for (auto pos : r_points){
+        verticesTri = solverTri.get_visibility_polygon(pos);
+    }
+    time = clock.TimeInSeconds();
+    std::cout << "Total computation time of "<< pov.n_random_samples << " random points was " <<
+              time << " seconds.\n";
+    std::cout << "Mean computation time of "<< pov.n_random_samples << " random points was " <<
+              time/pov.n_random_samples << " seconds/point.\n";
+
+    std::cout << "\nRunning PolyVis on polygonal mesh.\n";
+    clock.Restart();
+    for (auto pos : r_points){
+        verticesPoly = solverPoly.get_visibility_polygon(pos);
+    }
+    time = clock.TimeInSeconds();
+    std::cout << "Total computation time of "<< pov.n_random_samples << " random points was " <<
+              time << " seconds.\n";
+    std::cout << "Mean computation time of "<< pov.n_random_samples << " random points was " <<
+              time/pov.n_random_samples << " seconds/point.\n";
+
 
     drawerTri.set_visible_polygon(p, verticesTri);
     drawerTri.redraw("triangles.pdf");
     drawerPoly.set_visible_polygon(p, verticesPoly);
     drawerPoly.redraw("polygons.pdf");
-
-    float sumTrivis = 0;
-    float sumPolyVisTri = 0;
-    float sumPolyVisPoly = 0;
-    for (int i = 0; i < pov.n_random_samples; i++){
-        sumTrivis = sumTrivis + TriTime[i];
-        sumPolyVisTri = sumPolyVisTri + PolyTimeTri[i];
-        sumPolyVisPoly = sumPolyVisPoly + PolyTimePoly[i];
-    }
-    std::cout << "Trivis mean time: " << sumTrivis / (pov.n_random_samples) << std::endl;
-    std::cout << "Polyvis mean time on triangles: "<< sumPolyVisTri / (pov.n_random_samples) << std::endl;
-    std::cout << "Polyvis mean time on polygons: " << sumPolyVisPoly / (pov.n_random_samples) << std::endl;
-
     return 0;
 }
 
