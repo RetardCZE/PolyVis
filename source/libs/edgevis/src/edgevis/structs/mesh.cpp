@@ -325,6 +325,8 @@ namespace edgevis {
                     temp.leftPoly = pc;
                     temp.rightPoly = -1;
                     this->mesh_edges.push_back(temp);
+                    this->mesh_vertices[temp.parent].edges.push_back(this->mesh_edges.size()-1);
+                    this->mesh_vertices[temp.child].edges.push_back(this->mesh_edges.size()-1);
                     p.edges.push_back(this->mesh_edges.size()-1);
                 }
             }
