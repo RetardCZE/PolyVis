@@ -61,5 +61,6 @@ target_link_libraries(PolyVis
         TriVis
         cairo
         PolyAnya
+        EdgeVis
         ${FADE2D_LIBRARY}
         ${Boost_LIBRARIES})

@@ -20,6 +20,8 @@
 #include "logging/logging.h"
 #include "visualization.h"
 #include "polyviz.h"
+#include "edgevis/structs/mesh.h"
+#include "edgevis//structs/edge.h"
 
 #include "polyanya/parsers/map_parser.h"
 
@@ -156,6 +158,18 @@ int body(ProgramOptionVariables pov)
     mapParser.convertMapToMergedMesh(mapName, mergedMesh);
     mapParser.convertMergedMeshToGeomMesh(mergedMesh, geomMeshPoly);
     mapParser.convertFade2DMeshToGeomMesh(fade2DMesh, geomMeshTri);
+    edgevis::Mesh edgemesh;
+    edgemesh.read(geomMeshPoly);
+    edgemesh.calculate_edges();
+    int calc = 0;
+    for (Edge e : edgemesh.mesh_edges){
+        if(e.rightPoly >= 0) {
+            std::cout << e.parent << " | " << e.child << "\n" << e.leftPoly << " | " << e.rightPoly << "\n\n";
+            calc++;
+        }
+
+    }
+    std::cout << calc << std::endl;
 
     // Create and initialize TriVis object.
     tvc::TriVis vis;
