@@ -1,17 +1,4 @@
 
-// === TRIVIS INCLUDES ===
-
-#include "trivis/core/tri_vis.h"
-#include "trivis/core/geom/robust_geometry.h"
-#include "trivis/core/geom/generic_geom_types.h"
-#include "trivis/core/utils/simple_clock.h"
-#include "trivis/core/utils/clipper_utils.h"
-#include "trivis/core/geom/generic_geom_utils.h"
-
-#include "trivis/map_coverage/map_coverage.h"
-#include "trivis/map_coverage/random_points.h"
-#include "trivis/map_coverage/macs.h"
-
 // === THIS PROJECT INCLUDES ===
 
 #include "data_loading/load_map.h"
@@ -21,7 +8,9 @@
 #include "visualization.h"
 #include "polyviz.h"
 #include "edgevis/structs/mesh.h"
-#include "edgevis//structs/edge.h"
+#include "edgevis/structs/edge.h"
+#include "edgevis/structs/searchnode.h"
+#include "edgevis/search/expansion.h"
 
 #include "polyanya/parsers/map_parser.h"
 
@@ -133,16 +122,24 @@ int body(ProgramOptionVariables pov)
     edgevis::Mesh edgemesh;
     edgemesh.read(geomMeshPoly);
     edgemesh.calculate_edges();
-    int calc = 0;
+    int num = 0;
+    Edge spaceEdge;
     for (Edge e : edgemesh.mesh_edges){
         if(e.rightPoly >= 0) {
-            std::cout << e.parent << " | " << e.child << "\n" << e.leftPoly << " | " << e.rightPoly << "\n\n";
-            calc++;
+            spaceEdge = e;
         }
 
     }
-    std::cout << calc << std::endl;
-
+    edgevis::SearchNode* nodes = new edgevis::SearchNode[edgemesh.max_poly_sides + 2];
+    num = edgevis::get_edge_init_nodes(spaceEdge, true, edgemesh, nodes);
+    for(num; num > 0; num--){
+        std::cout << nodes[num-1] << std::endl;
+    }
+    std::cout << std::endl;
+    num = edgevis::get_edge_init_nodes(spaceEdge, false, edgemesh, nodes);
+    for(num; num > 0; num--){
+        std::cout << nodes[num-1] << std::endl;
+    }
     return 0;
 }
 

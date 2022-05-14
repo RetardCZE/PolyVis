@@ -9,7 +9,7 @@ struct Edge
 {
     int parent, child;
     int rightPoly, leftPoly;
-    std::vector<Point> visibility;
+    std::vector<Point> right_visibility, left_visibility;
 
     bool operator==(Edge& A) const {
         if (parent == A.parent && child == A.child) {

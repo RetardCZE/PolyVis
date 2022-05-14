@@ -1,6 +1,5 @@
 #pragma once
 #include "edgevis/structs/point.h"
-#include "edgevis/structs/successor.h"
 
 namespace edgevis
 {
@@ -11,8 +10,8 @@ namespace edgevis
 struct SearchNode
 {
 
-    Point A, B;
-    Successor* window;
+    Point parent, child;  // root
+    Point left, right; // left right based on parent child orientation
 
     // The left vertex of the edge the interval is lying on.
     // When generating the successors of this node, end there.
@@ -29,8 +28,9 @@ struct SearchNode
 
     friend std::ostream& operator<<(std::ostream& stream, const SearchNode& sn)
     {
-        return stream << "SearchNode ([" << sn.A << ", [" << sn.B << ", "
-                      << sn.window << "]],"<< ", poly=" << sn.next_polygon << ")";
+        return stream << "SearchNode - root: " << sn.parent << " | " << sn.child << "\n"
+                                     <<"edge: " << sn.left << " | " << sn.right << "\n"
+                                     <<"next: " << sn.next_polygon << "\n";
     }
 };
 
