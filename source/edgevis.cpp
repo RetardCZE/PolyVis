@@ -11,6 +11,7 @@
 #include "edgevis/structs/edge.h"
 #include "edgevis/structs/searchnode.h"
 #include "edgevis/search/expansion.h"
+#include "edgevis/search/visibility.h"
 
 #include "polyanya/parsers/map_parser.h"
 
@@ -130,16 +131,10 @@ int body(ProgramOptionVariables pov)
         }
 
     }
-    edgevis::SearchNode* nodes = new edgevis::SearchNode[edgemesh.max_poly_sides + 2];
-    num = edgevis::get_edge_init_nodes(spaceEdge, true, edgemesh, nodes);
-    for(num; num > 0; num--){
-        std::cout << nodes[num-1] << std::endl;
-    }
-    std::cout << std::endl;
-    num = edgevis::get_edge_init_nodes(spaceEdge, false, edgemesh, nodes);
-    for(num; num > 0; num--){
-        std::cout << nodes[num-1] << std::endl;
-    }
+    Point* right_side;
+    Point* left_side;
+    edgevis::find_visibility(spaceEdge, edgemesh, right_side, left_side);
+
     return 0;
 }
 

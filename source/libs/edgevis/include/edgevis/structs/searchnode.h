@@ -24,6 +24,7 @@ struct SearchNode
     // Index of the polygon we're going to "push" into.
     // Every successor must lie within this polygon.
     int next_polygon;
+    int coming_from;
 
 
     friend std::ostream& operator<<(std::ostream& stream, const SearchNode& sn)
