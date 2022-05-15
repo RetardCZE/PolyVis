@@ -12,13 +12,13 @@ namespace edgevis
     is_observable(Point left_parent, Point left_child, Point right_parent, Point right_child, Point p){
         Orientation L = get_orientation(left_parent, left_child, p);
         Orientation R = get_orientation(right_parent, right_child, p);
-        bool a = (L == Orientation::CW || L == Orientation::COLLINEAR);
-        bool b = (L == Orientation::CCW || L == Orientation::COLLINEAR);
-        return a || b;
+        bool a = (L == Orientation::CW || L == Orientation::COLLINEAR) && (p != left_child);
+        bool b = (R == Orientation::CCW || R == Orientation::COLLINEAR) && (p != right_child);
+        return a && b;
     }
 
     std::vector<int>
-    normalise_ids(std::vector<int> elements, int new_start){
+    normalise_ids(std::vector<int> elements, int new_start, int& shift){
         std::vector<int> normalised;
         int S = elements.size();
         normalised.resize(S);
@@ -32,6 +32,7 @@ namespace edgevis
         for(int i = 0; i < S; i++){
             normalised[i] = elements[(i+offset) % S];
         }
+        shift = offset;
         return normalised;
     }
 
@@ -42,26 +43,35 @@ namespace edgevis
         SearchNode temp;
         Point A, B;
         int count = 0;
+        int offset;
         std::vector<int> sortedV, sortedP;
         if(side) {
             if(edge.rightPoly == -1) return 0;
             expander = mesh.mesh_polygons[edge.rightPoly];
-            sortedP = normalise_ids(expander.polygons, edge.leftPoly);
-            sortedV = normalise_ids(expander.vertices, edge.parent);
+            //sortedP = normalise_ids(expander.polygons, edge.leftPoly);
+            sortedV = normalise_ids(expander.vertices, edge.parent, offset);
+            int S = sortedV.size();
+            sortedP.resize(S);
+            for(int i = 0; i < S; i++){
+                sortedP[i] = expander.polygons[(i+offset) % S];
+            }
             temp.parent = mesh.mesh_vertices[edge.parent].p;
             temp.child = mesh.mesh_vertices[edge.child].p;
             temp.coming_from = edge.rightPoly;
         }else{
             if(edge.leftPoly == -1) return 0;
             expander = mesh.mesh_polygons[edge.leftPoly];
-            sortedP = normalise_ids(expander.polygons, edge.rightPoly);
-            sortedV = normalise_ids(expander.vertices, edge.child);
+            //sortedP = normalise_ids(expander.polygons, edge.rightPoly);
+            sortedV = normalise_ids(expander.vertices, edge.child, offset);
+            int S = sortedV.size();
+            sortedP.resize(S);
+            for(int i = 0; i < S; i++){
+                sortedP[i] = expander.polygons[(i+offset) % S];
+            }
             temp.parent = mesh.mesh_vertices[edge.child].p;
             temp.child = mesh.mesh_vertices[edge.parent].p;
             temp.coming_from = edge.leftPoly;
         }
-
-
 
         for(int i = 0; i < sortedV.size()-1; i++){
             A = mesh.mesh_vertices[sortedV[i]].p;
@@ -109,7 +119,6 @@ namespace edgevis
 
     int
     expand_searchnode(SearchNode node, const Mesh& mesh, SearchNode* newNodes){
-        std::cout << node << std::endl;
         SearchNode temp;
         temp.coming_from = node.next_polygon;
         temp.parent = node.parent;
@@ -126,30 +135,35 @@ namespace edgevis
         const Polygon& expander = mesh.mesh_polygons[node.next_polygon];
         std::vector<int> sortedV, sortedP;
 
-        sortedP = normalise_ids(expander.polygons, node.coming_from);
-        sortedV = normalise_ids(expander.vertices, node.right_vertex);
+        int offset;
+        //sortedP = normalise_ids(expander.polygons, node.coming_from);
+        sortedV = normalise_ids(expander.vertices, node.right_vertex, offset);
         const int S = sortedV.size();
+        sortedP.resize(S);
+        for(int i = 0; i < S; i++){
+            sortedP[i] = expander.polygons[(i+offset) % S];
+        }
+
         int i = -1;
-        int right_visible, left_visible;
-        while(true){
+        int right_visible = S - 1;
+        int left_visible = S - 1;
+        while(i < S-2){
             if (is_observable(left_parent, left_child, right_parent, right_child, mesh.mesh_vertices[sortedV[++i]].p)){
                 right_visible = i;
                 break;
             }
-            if(i > S) assert(false);
         }
         i = S;
-        while(true){
+        while(i > 0){
             if (is_observable(left_parent, left_child, right_parent, right_child, mesh.mesh_vertices[sortedV[--i]].p)){
                 left_visible = i;
                 break;
             }
-            if(i <= 0) assert(false);
         }
-
         Point right_intersection, left_intersection;
         int count = 0;
         i = right_visible;
+
         if(right_visible > 0){
             right_intersection = line_intersect(mesh.mesh_vertices[sortedV[right_visible-1]].p,
                                                 mesh.mesh_vertices[sortedV[right_visible]].p,

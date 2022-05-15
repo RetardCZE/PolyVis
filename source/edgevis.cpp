@@ -1,10 +1,7 @@
 
 // === THIS PROJECT INCLUDES ===
 
-#include "data_loading/load_map.h"
-#include "drawing/drawing.h"
 #include "drawing/random_colors.h"
-#include "logging/logging.h"
 #include "visualization.h"
 #include "polyviz.h"
 #include "edgevis/structs/mesh.h"
@@ -12,6 +9,10 @@
 #include "edgevis/structs/searchnode.h"
 #include "edgevis/search/expansion.h"
 #include "edgevis/search/visibility.h"
+
+#include "geom/geom.h"
+#include "geom/utils.h"
+#include "geom/cairo_geom_drawer.h"
 
 #include "polyanya/parsers/map_parser.h"
 
@@ -25,11 +26,7 @@
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
-namespace tv = trivis;
-namespace tvc = tv::core;
-namespace tvg = tvc::geom;
-namespace tve = trivis_examples;
-namespace dr = tve::drawing;
+
 
 /*
  * Argument parsing taken from trivis_examples.cc
@@ -104,6 +101,47 @@ char ParseProgramOptions(
     return '0';
 }
 
+void visualise(parsers::GeomMesh &mesh, Edge& edge, std::vector<Point>& P, std::string name){
+    geom::Polygons<double> free;
+    geom::Points<double> vertices;
+    geom::Polygon<double> visibility;
+    geom::Point<double> vertex, vertex2;
+    geom::Polygon<double> polygon;
+    for(auto v : mesh.vertices){
+        vertices.push_back(v.point);
+    }
+    for(auto p : mesh.polygons){
+        free.push_back(p.polygon);
+    }
+    for(auto v : P){
+        vertex.x = v.x;
+        vertex.y = v.y;
+        visibility.push_back(vertex);
+    }
+    double x_min, x_max, y_min, y_max;
+    geom::ComputeLimits(free, x_min, x_max, y_min, y_max);
+    geom::Polygon<double> border = {
+            {x_min, y_min},
+            {x_min, y_max},
+            {x_max, y_max},
+            {x_max, y_min},
+    };
+    cgm::CairoGeomDrawer cgm_drawer(x_max, y_max, 1.0);
+
+    /// Create and save to PDF file
+    cgm_drawer.OpenPDF(name);
+    cgm_drawer.DrawPlane(cgm::kColorBlack);
+    cgm_drawer.DrawPolygon(border, cgm::kColorBlack);
+    cgm_drawer.DrawPolygons(free, cgm::kColorWhite);
+    cgm_drawer.DrawPoints(visibility, 0.2, cgm::kColorGreen);
+    cgm_drawer.DrawPolygon(visibility, cgm::kColorLightGreen, 0.5);
+    vertex = vertices[edge.parent];
+    vertex2 = vertices[edge.child];
+    cgm_drawer.DrawLine(vertex, vertex2, 0.2, cgm::kColorRed);
+    cgm_drawer.Close();
+    return;
+
+}
 
 int body(ProgramOptionVariables pov)
 {
@@ -123,18 +161,28 @@ int body(ProgramOptionVariables pov)
     edgevis::Mesh edgemesh;
     edgemesh.read(geomMeshPoly);
     edgemesh.calculate_edges();
-    int num = 0;
-    Edge spaceEdge;
+    std::vector<Point> r_v;
+    std::vector<Point> l_v;
+    std::vector<Point> v;
+    int c = 0;
+    int spaceEdge;
+    std::string name;
     for (Edge e : edgemesh.mesh_edges){
-        if(e.rightPoly >= 0) {
-            spaceEdge = e;
+        if(c % 1 == 0) {
+            name = "images/" + pov.input_map_name + "_" + std::to_string(c) + ".pdf";
+            std::cout << name << std::endl ;
+            spaceEdge = c;
+            r_v.clear(); l_v.clear(); v.clear();
+            r_v = edgevis::find_visibility(spaceEdge, edgemesh, true);
+            l_v = edgevis::find_visibility(spaceEdge, edgemesh, false);
+            v.reserve( r_v.size() + l_v.size() ); // preallocate memory
+            v.insert( v.end(), r_v.begin(), r_v.end() );
+            v.insert( v.end(), l_v.begin(), l_v.end() );
+            visualise(geomMeshPoly, edgemesh.mesh_edges[spaceEdge], v, name);
         }
+        c++;
 
     }
-    Point* right_side;
-    Point* left_side;
-    edgevis::find_visibility(spaceEdge, edgemesh, right_side, left_side);
-
     return 0;
 }
 

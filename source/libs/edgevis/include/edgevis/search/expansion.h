@@ -26,7 +26,7 @@ bool is_observable(Point left_parent,
 /*
  *
  */
-std::vector<int> normalise_ids(std::vector<int> elements, int new_start);
+std::vector<int> normalise_ids(std::vector<int> elements, int new_start, int& offset);
 
 /*
  *
