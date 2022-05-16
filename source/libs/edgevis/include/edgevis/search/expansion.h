@@ -7,6 +7,7 @@
 
 namespace edgevis
 {
+bool is_on_abscissa(Point A, Point B, Point C);
 
 /*
  * side means on which side of edge we want to look since we want to calculate visibility separately.

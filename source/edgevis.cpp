@@ -101,7 +101,7 @@ char ParseProgramOptions(
     return '0';
 }
 
-void visualise(parsers::GeomMesh &mesh, Edge& edge, std::vector<Point>& P, std::string name){
+void local_visualise(parsers::GeomMesh &mesh, Edge& edge, std::vector<Point>& P, std::string name){
     geom::Polygons<double> free;
     geom::Points<double> vertices;
     geom::Polygon<double> visibility;
@@ -130,6 +130,7 @@ void visualise(parsers::GeomMesh &mesh, Edge& edge, std::vector<Point>& P, std::
 
     /// Create and save to PDF file
     cgm_drawer.OpenPDF(name);
+    //cgm_drawer.OpenPDF("edgevis_testing.pdf");
     cgm_drawer.DrawPlane(cgm::kColorBlack);
     cgm_drawer.DrawPolygon(border, cgm::kColorBlack);
     cgm_drawer.DrawPolygons(free, cgm::kColorWhite);
@@ -137,10 +138,10 @@ void visualise(parsers::GeomMesh &mesh, Edge& edge, std::vector<Point>& P, std::
     cgm_drawer.DrawPolygon(visibility, cgm::kColorLightGreen, 0.5);
     vertex = vertices[edge.parent];
     vertex2 = vertices[edge.child];
-    cgm_drawer.DrawLine(vertex, vertex2, 0.2, cgm::kColorRed);
+    cgm_drawer.DrawLine(vertex, vertex2, 0.1, cgm::kColorRed, 0.5);
+    cgm_drawer.DrawPoint(vertex, 0.1, cgm::kColorBlue, 0.5);
     cgm_drawer.Close();
     return;
-
 }
 
 int body(ProgramOptionVariables pov)
@@ -173,12 +174,16 @@ int body(ProgramOptionVariables pov)
             std::cout << name << std::endl ;
             spaceEdge = c;
             r_v.clear(); l_v.clear(); v.clear();
-            r_v = edgevis::find_visibility(spaceEdge, edgemesh, true);
-            l_v = edgevis::find_visibility(spaceEdge, edgemesh, false);
+            std::cout << "calculating right \n";
+            r_v = edgevis::find_visibility(spaceEdge, edgemesh, true, geomMeshPoly);
+            std::cout << "calculating left \n";
+            l_v = edgevis::find_visibility(spaceEdge, edgemesh, false, geomMeshPoly);
             v.reserve( r_v.size() + l_v.size() ); // preallocate memory
             v.insert( v.end(), r_v.begin(), r_v.end() );
             v.insert( v.end(), l_v.begin(), l_v.end() );
-            visualise(geomMeshPoly, edgemesh.mesh_edges[spaceEdge], v, name);
+            std::cout << "visualizing\n";
+            local_visualise(geomMeshPoly, edgemesh.mesh_edges[spaceEdge], v, name);
+            //getchar();
         }
         c++;
 

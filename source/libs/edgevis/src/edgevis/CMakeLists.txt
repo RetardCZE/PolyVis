@@ -12,6 +12,6 @@ add_library(EdgeVis
         ${POLYANYA_SOURCE_FILES}
         )
 
-target_link_libraries(EdgeVis ${FADE2D_LIBRARY})
+target_link_libraries(EdgeVis ${FADE2D_LIBRARY} PolyAnya)
 
 target_compile_options(EdgeVis PUBLIC -std=c++17)
