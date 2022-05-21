@@ -11,6 +11,7 @@ struct SearchNode
 {
 
     Point parent, child;  // root
+    SearchNode* predecessor;
     Point left, right; // left right based on parent child orientation
 
     // The left vertex of the edge the interval is lying on.

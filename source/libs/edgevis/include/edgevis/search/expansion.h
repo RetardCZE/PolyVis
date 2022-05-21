@@ -7,7 +7,7 @@
 
 namespace edgevis
 {
-bool is_on_abscissa(Point A, Point B, Point C);
+bool is_on_segment(Point A, Point B, Point C);
 
 /*
  * side means on which side of edge we want to look since we want to calculate visibility separately.
@@ -32,11 +32,11 @@ std::vector<int> normalise_ids(std::vector<int> elements, int new_start, int& of
 /*
  *
  */
-void recompute_roots(SearchNode* nodes, SearchNode parent, int num);
+void recompute_roots(SearchNode &node, int num);
 
 /*
  *
  */
-int expand_searchnode(SearchNode node, const Mesh& mesh, SearchNode* newNodes);
+int expand_searchnode(SearchNode& node, const Mesh& mesh, SearchNode* newNodes);
 
 }

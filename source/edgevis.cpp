@@ -174,11 +174,19 @@ int body(ProgramOptionVariables pov)
             std::cout << name << std::endl ;
             spaceEdge = c;
             r_v.clear(); l_v.clear(); v.clear();
-            std::cout << "calculating right \n";
-            r_v = edgevis::find_visibility(spaceEdge, edgemesh, true, geomMeshPoly);
-            std::cout << "calculating left \n";
-            l_v = edgevis::find_visibility(spaceEdge, edgemesh, false, geomMeshPoly);
-            v.reserve( r_v.size() + l_v.size() ); // preallocate memory
+            if(c==27){
+                std::cout << "calculating right \n";
+                r_v = edgevis::find_visibility(spaceEdge, edgemesh, true, geomMeshPoly, true);
+                std::cout << "calculating left \n";
+                l_v = edgevis::find_visibility(spaceEdge, edgemesh, false, geomMeshPoly, true);
+                v.reserve( r_v.size() + l_v.size() ); // preallocate memory
+            }else{
+                std::cout << "calculating right \n";
+                r_v = edgevis::find_visibility(spaceEdge, edgemesh, true, geomMeshPoly, false);
+                std::cout << "calculating left \n";
+                l_v = edgevis::find_visibility(spaceEdge, edgemesh, false, geomMeshPoly, false);
+                v.reserve( r_v.size() + l_v.size() ); // preallocate memory
+            }
             v.insert( v.end(), r_v.begin(), r_v.end() );
             v.insert( v.end(), l_v.begin(), l_v.end() );
             std::cout << "visualizing\n";

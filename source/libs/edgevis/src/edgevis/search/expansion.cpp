@@ -41,6 +41,7 @@ namespace edgevis
         // side - true = right, false = left
         Polygon expander;
         SearchNode temp;
+        temp.predecessor = NULL;
         Point A, B;
         int count = 0;
         int offset;
@@ -86,7 +87,7 @@ namespace edgevis
     }
 
     bool
-    is_on_abscissa(Point A, Point B, Point C){
+    is_on_segment(Point A, Point B, Point C){
         Point V = B-A;
         Point T = C-A;
         double dx, dy;
@@ -98,37 +99,44 @@ namespace edgevis
     }
 
     void
-    recompute_roots(SearchNode* nodes, SearchNode parent, int num){
+    recompute_roots(SearchNode &node, int num){
         Point parent_intersection, child_intersection;
+        SearchNode* parent;
         bool P, C;
-        for(int i = 0; i < num; i++){
+        parent = node.predecessor;
+        while(parent){
+            parent_intersection = line_intersect(node.left,
+                                                 parent->right,
+                                                 node.child,
+                                                 node.parent);
 
-            parent_intersection = line_intersect(nodes[i].left,
-                                                 parent.right,
-                                                 nodes[i].child,
-                                                 nodes[i].parent);
+
+            child_intersection = line_intersect(node.right,
+                                                parent->left,
+                                                node.parent,
+                                                node.child);
+
+            if(is_on_segment(node.parent, node.child, parent_intersection) && node.child != node.left){
+                parent_intersection == parent_intersection ? node.parent = parent_intersection : node.parent;
+            }
+
+            if(is_on_segment(node.parent, node.child, child_intersection) && node.parent != node.right){
+                child_intersection == child_intersection ? node.child = child_intersection : node.child;
+            }
 
 
-            child_intersection = line_intersect(nodes[i].right,
-                                                parent.left,
-                                                nodes[i].parent,
-                                                nodes[i].child);
-
-            if(is_on_abscissa(nodes[i].parent, nodes[i].child, parent_intersection))
-                parent_intersection == parent_intersection ? nodes[i].parent = parent_intersection : nodes[i].parent;
-
-            if(is_on_abscissa(nodes[i].parent, nodes[i].child, child_intersection))
-                child_intersection == child_intersection ? nodes[i].child = child_intersection : nodes[i].parent;
+            parent = parent->predecessor;
         }
     }
 
     int
-    expand_searchnode(SearchNode node, const Mesh& mesh, SearchNode* newNodes){
+    expand_searchnode(SearchNode& node, const Mesh& mesh, SearchNode* newNodes){
         SearchNode temp;
         //std::cout << node.coming_from << " --> " <<node.next_polygon <<std::endl;
         temp.coming_from = node.next_polygon;
         temp.parent = node.parent;
         temp.child = node.child;
+        temp.predecessor = &node;
         // TODO: prove it can be just assigned like this
         // right line
         Point right_child = node.right;
@@ -170,7 +178,7 @@ namespace edgevis
         int count = 0;
 
         int visible = left_visible - right_visible;
-        //std::cout << left_visible << " | " << right_visible << " | " << visible << std::endl;
+        std::cout << left_visible << " | " << right_visible << " | " << visible << std::endl;
 
         right_intersection = line_intersect(mesh.mesh_vertices[sortedV[right_visible - 1]].p,
                                             mesh.mesh_vertices[sortedV[right_visible]].p,
@@ -236,7 +244,6 @@ namespace edgevis
             temp.right_vertex = sortedV[left_visible];
             newNodes[count++] = temp;
         }
-        recompute_roots(newNodes, node, count);
         return count;
 
     }
