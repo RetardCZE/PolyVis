@@ -178,16 +178,24 @@ namespace edgevis
         int count = 0;
 
         int visible = left_visible - right_visible;
-        std::cout << left_visible << " | " << right_visible << " | " << visible << std::endl;
+        //std::cout << left_visible << " | " << right_visible << " | " << visible << std::endl;
 
-        right_intersection = line_intersect(mesh.mesh_vertices[sortedV[right_visible - 1]].p,
-                                            mesh.mesh_vertices[sortedV[right_visible]].p,
-                                            right_parent, right_child);
+        if(get_orientation(right_child, right_parent, mesh.mesh_vertices[sortedV[right_visible]].p) == Orientation::COLLINEAR) {
+            right_intersection = mesh.mesh_vertices[sortedV[right_visible]].p;
+        }else{
+            right_intersection = line_intersect(mesh.mesh_vertices[sortedV[right_visible - 1]].p,
+                                                mesh.mesh_vertices[sortedV[right_visible]].p,
+                                                right_parent, right_child);
+        }
 
-
-        left_intersection = line_intersect(mesh.mesh_vertices[sortedV[left_visible]].p,
-                                           mesh.mesh_vertices[sortedV[left_visible + 1]].p,
-                                           left_parent, left_child);
+        if(get_orientation(left_parent, left_child, mesh.mesh_vertices[sortedV[left_visible]].p) == Orientation::COLLINEAR) {
+            left_intersection = mesh.mesh_vertices[sortedV[left_visible]].p;
+        }else {
+            left_intersection = line_intersect(mesh.mesh_vertices[sortedV[left_visible]].p,
+                                               mesh.mesh_vertices[sortedV[left_visible + 1]].p,
+                                               left_parent, left_child);
+        }
+        //std::cout << left_intersection << " | " << right_intersection << std::endl;
         /*
         if(!(right_intersection==right_intersection)){
             std::cout << right_intersection << " | " << mesh.mesh_vertices[sortedV[right_visible - 1]].p << " | " <<
@@ -221,12 +229,14 @@ namespace edgevis
             temp.right_vertex = sortedV[left_visible];
             newNodes[count++] = temp;
         }else{
-            temp.right = right_intersection;
-            temp.left = mesh.mesh_vertices[sortedV[right_visible]].p;
-            temp.next_polygon = sortedP[right_visible];
-            temp.left_vertex = sortedV[right_visible];
-            temp.right_vertex = sortedV[right_visible-1];
-            newNodes[count++] = temp;
+            if(right_intersection != mesh.mesh_vertices[sortedV[right_visible]].p) {
+                temp.right = right_intersection;
+                temp.left = mesh.mesh_vertices[sortedV[right_visible]].p;
+                temp.next_polygon = sortedP[right_visible];
+                temp.left_vertex = sortedV[right_visible];
+                temp.right_vertex = sortedV[right_visible - 1];
+                newNodes[count++] = temp;
+            }
 
             for( i=0; i < visible; i++){
                 temp.right = mesh.mesh_vertices[sortedV[right_visible+i]].p;
@@ -236,13 +246,14 @@ namespace edgevis
                 temp.right_vertex = sortedV[right_visible+i];
                 newNodes[count++] = temp;
             }
-
-            temp.right = mesh.mesh_vertices[sortedV[left_visible]].p;
-            temp.left = left_intersection;
-            temp.next_polygon = sortedP[left_visible+1];
-            temp.left_vertex = sortedV[left_visible+1];
-            temp.right_vertex = sortedV[left_visible];
-            newNodes[count++] = temp;
+            if(left_intersection != mesh.mesh_vertices[sortedV[left_visible]].p) {
+                temp.right = mesh.mesh_vertices[sortedV[left_visible]].p;
+                temp.left = left_intersection;
+                temp.next_polygon = sortedP[left_visible + 1];
+                temp.left_vertex = sortedV[left_visible + 1];
+                temp.right_vertex = sortedV[left_visible];
+                newNodes[count++] = temp;
+            }
         }
         return count;
 

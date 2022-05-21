@@ -169,12 +169,12 @@ int body(ProgramOptionVariables pov)
     int spaceEdge;
     std::string name;
     for (Edge e : edgemesh.mesh_edges){
-        if(c % 1 == 0) {
+        if(c % 28 == 0) {
             name = "images/" + pov.input_map_name + "_" + std::to_string(c) + ".pdf";
             std::cout << name << std::endl ;
             spaceEdge = c;
             r_v.clear(); l_v.clear(); v.clear();
-            if(c==27){
+            if(c==-1){
                 std::cout << "calculating right \n";
                 r_v = edgevis::find_visibility(spaceEdge, edgemesh, true, geomMeshPoly, true);
                 std::cout << "calculating left \n";
