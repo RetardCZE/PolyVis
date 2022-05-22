@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+ - Added Edgevis for computing visibility from mesh edges.
  - Added measurement of TriVis and PolyVis on triangles and polygons in one run.
  - Changed whole structure to integrate TriVis library.
  - Added MapVisualizer class for drawing maps based on meshes from polyanya.

@@ -10,8 +10,22 @@
 #include "geom/cairo_geom_drawer.h"
 
 namespace edgevis{
-    std::vector<Point> find_visibility(int edge_id, const Mesh &mesh, bool side, parsers::GeomMesh &gmesh, bool debig);
-    void expand(SearchNode &node, const Mesh &mesh, std::vector<Point> &visibility, int level, parsers::GeomMesh &gmesh,
-                bool debug);
-    void visualise(parsers::GeomMesh &mesh, SearchNode start, SearchNode expanded);
+    class EdgeVisibility{
+    public:
+        EdgeVisibility(const Mesh& mesh);
+        ~EdgeVisibility();
+
+
+        std::vector<Point> find_visibility(int edge_id, bool side);
+        void set_visual_mesh(const parsers::GeomMesh &gmesh);
+        bool switch_debug(bool on);
+    private:
+        void expand(SearchNode &node, std::vector<Point> &visibility, int level);
+        void visualise(parsers::GeomMesh &mesh, SearchNode start, SearchNode expanded);
+
+        Mesh mesh;
+        parsers::GeomMesh gmesh;
+        bool debug;
+    };
+
 };

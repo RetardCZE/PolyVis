@@ -10,15 +10,16 @@ namespace edgevis
 struct SearchNode
 {
 
-    Point parent, child;  // root
+    Point root_R, root_L;  // root
     SearchNode* predecessor;
-    Point left, right; // left right based on parent child orientation
+    Point child_L, child_R; // child_L child_R based on root_R root_L orientation
+    // child becomes transition when expanding searchnode
 
-    // The left vertex of the edge the interval is lying on.
+    // The child_L vertex of the edge the interval is lying on.
     // When generating the successors of this node, end there.
     int left_vertex;
 
-    // The right vertex of the edge the interval is lying on.
+    // The child_R vertex of the edge the interval is lying on.
     // When generating the successors of this node, start there.
     int right_vertex;
 
@@ -30,9 +31,9 @@ struct SearchNode
 
     friend std::ostream& operator<<(std::ostream& stream, const SearchNode& sn)
     {
-        return stream << "SearchNode - root: " << sn.parent << " | " << sn.child << "\n"
-                                     <<"edge: " << sn.left << " | " << sn.right << "\n"
-                                     <<"next: " << sn.next_polygon << "\n";
+        return stream << "SearchNode - root: " << sn.root_R << " | " << sn.root_L << "\n"
+                      << "edge: " << sn.child_L << " | " << sn.child_R << "\n"
+                      << "next: " << sn.next_polygon << "\n";
     }
 };
 
