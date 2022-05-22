@@ -8,7 +8,7 @@
 #include "geom/geom.h"
 #include "geom/utils.h"
 #include "geom/cairo_geom_drawer.h"
-
+namespace cgm = cairo_geom_drawer;
 namespace edgevis{
     class EdgeVisibility{
     public:
@@ -21,11 +21,18 @@ namespace edgevis{
         bool switch_debug(bool on);
         void precompute_edges();
         const Mesh& mesh_reference();
+        std::vector<Point> find_point_visibility(Point p);
     private:
         void expand(SearchNode &node, std::vector<Point> &visibility, int level);
-        void visualise(parsers::GeomMesh &mesh, SearchNode start, SearchNode expanded);
+        void visualise_segment(Point A, Point B, int color);
+        void visualise_point(Point A, int color);
+        void visualise_polygon(std::vector<Point>& p, int color);
+        void reset_visu();
+        std::vector<Edge*> get_init_edges(Point p);
+
 
         Mesh mesh;
+        cgm::CairoGeomDrawer cgm_drawer = cgm::CairoGeomDrawer(this->mesh.max_x, this->mesh.max_y, 100);
         parsers::GeomMesh gmesh;
         bool debug;
     };

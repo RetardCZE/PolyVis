@@ -184,11 +184,11 @@ namespace edgevis {
     class Mesh {
     private:
         std::map<double, std::vector<int>> slabs;
-        double min_x, max_x, min_y, max_y;
+        //double min_x, max_x, min_y, max_y;
 
     public:
         Mesh() = default;
-
+        double min_x, max_x, min_y, max_y;
         explicit Mesh(std::istream &infile);
 
         std::vector<Vertex> mesh_vertices;

@@ -14,6 +14,7 @@ namespace edgevis {
         *max_x = this->max_x;
         *min_y = this->min_y;
         *max_y = this->max_y;
+        std::cout << this->min_x << ", " << this->max_x << ", "<< this->min_y << ", " << this->max_y<< "\n";
     }
 
     Mesh::Mesh(std::istream &infile) {
@@ -38,6 +39,18 @@ namespace edgevis {
 
             v.p.x = vertex.point.x;
             v.p.y = vertex.point.y;
+            // mesh min/max
+            if (i == 0) {
+                min_x = v.p.x;
+                min_y = v.p.y;
+                max_x = v.p.x;
+                max_y = v.p.y;
+            } else {
+                min_x = std::min(min_x, v.p.x);
+                min_y = std::min(min_y, v.p.y);
+                max_x = std::max(max_x, v.p.x);
+                max_y = std::max(max_y, v.p.y);
+            }
 
             int neighbours = vertex.idxNeighPolygons.size();
             v.polygons.resize(neighbours);
@@ -93,18 +106,6 @@ namespace edgevis {
                     p.max_x = std::max(p.max_x, mesh_vertices[vertex_index].p.x);
                     p.max_y = std::max(p.max_y, mesh_vertices[vertex_index].p.y);
                 }
-            }
-            // mesh min/max
-            if (i == 0) {
-                min_x = p.min_x;
-                min_y = p.min_y;
-                max_x = p.max_x;
-                max_y = p.max_y;
-            } else {
-                min_x = std::min(min_x, p.min_x);
-                min_y = std::min(min_y, p.min_y);
-                max_x = std::max(max_x, p.max_x);
-                max_y = std::max(max_y, p.max_y);
             }
 
             bool found_trav = false;

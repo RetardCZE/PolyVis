@@ -7,12 +7,7 @@ namespace edgevis{
     }
 
     EdgeVisibility::~EdgeVisibility(){
-
-    }
-
-    void
-    EdgeVisibility::set_visual_mesh(const parsers::GeomMesh &gmesh) {
-        this->gmesh = gmesh;
+        cgm_drawer.Close();
     }
 
     bool
@@ -23,6 +18,7 @@ namespace edgevis{
 
     const Mesh& EdgeVisibility::mesh_reference() {
         return mesh;
+
     }
 
     void EdgeVisibility::precompute_edges() {
@@ -41,16 +37,66 @@ namespace edgevis{
         }
     }
 
+    std::vector<Point>
+    EdgeVisibility::find_point_visibility(Point p) {
+        std::vector<Point> v;
+        Point left, right, vector;
+        std::vector<Edge*> edges = this->get_init_edges(p);
+        if(edges.size() == 0)
+            return v;
+        for (Edge* e :edges){
+            this->reset_visu();
+            vector = mesh.mesh_vertices[e->child].p - p;
+            left = p + vector;
+            while(mesh.min_x < left.x && left.x < mesh.max_x && mesh.min_y < left.y && left.y < mesh.max_y){
+                left = left + vector;
+            }
+            this->visualise_segment(p, left, 2);
+            vector = (mesh.mesh_vertices[e->parent].p - p);
+            right = p + vector;
+            while(mesh.min_x < right.x && right.x < mesh.max_x && mesh.min_y < right.y & right.y < mesh.max_y){
+                right = right + vector;
+            }
+            this->visualise_segment(p, right, 2);
+            this->visualise_point(p, 0);
+            this->visualise_segment(mesh.mesh_vertices[e->parent].p, mesh.mesh_vertices[e->child].p, 1);
+            this->visualise_polygon(e->right_visibility, 2);
+            getchar();
+        }
+        return v;
+    }
+
+    std::vector<Edge*> EdgeVisibility::get_init_edges(Point p) {
+        std::vector<Edge*> edges;
+        PointLocation pl = mesh.get_point_location(p);
+        std::cout << p << " | " << pl << std::endl;
+        switch(pl.type){
+            case PointLocation::NOT_ON_MESH:
+                edges.clear();
+                return edges;
+            case PointLocation::IN_POLYGON:
+                for( auto e : mesh.mesh_polygons[pl.poly1].edges ){
+                    edges.push_back(&mesh.mesh_edges[e]);
+                }
+                break;
+            case PointLocation::ON_MESH_BORDER:
+            case PointLocation::ON_EDGE:
+                break;
+            case PointLocation::ON_CORNER_VERTEX_AMBIG:
+            case PointLocation::ON_CORNER_VERTEX_UNAMBIG:
+            case PointLocation::ON_NON_CORNER_VERTEX:
+
+                break;
+        }
+        return edges;
+    }
+
+
     void
     EdgeVisibility::expand(SearchNode &node, std::vector<Point> &visibility, int level) {
-        if(debug)
-        std::cout << node  << "\n";
-
         if(node.next_polygon == -1){
             visibility.push_back(node.child_R);
             visibility.push_back(node.child_L);
-            if(debug)
-            std::cout << node.child_L << " | " << node.child_R << std::endl;
             return;
         }
         int num;
@@ -58,15 +104,7 @@ namespace edgevis{
         num = edgevis::expand_searchnode(node, mesh, nodes);
 
         for(int i = 0; i < num; i++){
-            if(debug) {std::cout << nodes[i] << " -- " <<std::endl;
-                visualise(gmesh, node, nodes[i]);
-                getchar();
-            }
             recompute_roots(nodes[i]);
-            if(debug) {std::cout << nodes[i] << " -- " <<std::endl;
-                visualise(gmesh, node, nodes[i]);
-                getchar();
-            }
             expand(nodes[i], visibility, level + 1);
         }
         delete [] nodes;
@@ -79,13 +117,6 @@ namespace edgevis{
         Point tmp;
         SearchNode* nodes = new edgevis::SearchNode[mesh.max_poly_sides + 2];
         num = edgevis::get_edge_init_nodes(mesh.mesh_edges[edge], side, mesh, nodes);
-        if(debug){
-            for(int i = 0; i < num; i++){
-                visualise(gmesh, nodes[i], nodes[i]);std::cout << nodes[i];
-                getchar();
-
-            }
-        }
         for(int i = 0; i < num; i++){
             if(!side){
                 tmp = nodes[i].root_R;
@@ -97,19 +128,16 @@ namespace edgevis{
         delete [] nodes;
         return r_vis;
     }
-    namespace cgm = cairo_geom_drawer;
-
     void
-    EdgeVisibility::visualise(parsers::GeomMesh &mesh, SearchNode start, SearchNode expanded){
+    EdgeVisibility::set_visual_mesh(const parsers::GeomMesh &gmesh) {
+        this->gmesh = gmesh;
         geom::Polygons<double> free;
         geom::Points<double> vertices;
-        geom::Point<double> vertex, vertex2;
-        geom::Point<double> rootP, rootC, edgeR, edgeL, childR, childL;
 
-        for(auto v : mesh.vertices){
+        for(auto v : this->gmesh.vertices){
             vertices.push_back(v.point);
         }
-        for(auto p : mesh.polygons){
+        for(auto p : this->gmesh.polygons){
             free.push_back(p.polygon);
         }
         double x_min, x_max, y_min, y_max;
@@ -120,48 +148,85 @@ namespace edgevis{
                 {x_max, y_max},
                 {x_max, y_min},
         };
-        cgm::CairoGeomDrawer cgm_drawer(x_max, y_max, 1.0);
 
-        cgm_drawer.OpenPDF("debuging.pdf");
+        cgm_drawer.OpenImage();
         cgm_drawer.DrawPlane(cgm::kColorBlack);
         cgm_drawer.DrawPolygon(border, cgm::kColorBlack);
         cgm_drawer.DrawPolygons(free, cgm::kColorWhite);
 
-        vertex.x = expanded.root_R.x;
-        vertex.y = expanded.root_R.y;
-        vertex2.x = expanded.root_L.x;
-        vertex2.y = expanded.root_L.y;
-        cgm_drawer.DrawLine(vertex, vertex2, 0.1, cgm::kColorRed, 0.5);
-        cgm_drawer.DrawPoint(vertex, 0.1, cgm::kColorRed);
+    }
 
-        vertex.x = start.child_R.x;
-        vertex.y = start.child_R.y;
-        vertex2.x = start.child_L.x;
-        vertex2.y = start.child_L.y;
-        cgm_drawer.DrawLine(vertex, vertex2, 0.1, cgm::kColorGreen, 0.5);
-        cgm_drawer.DrawPoint(vertex, 0.1, cgm::kColorGreen);
-
-        vertex.x = expanded.child_R.x;
-        vertex.y = expanded.child_R.y;
-        vertex2.x = expanded.child_L.x;
-        vertex2.y = expanded.child_L.y;
-        cgm_drawer.DrawLine(vertex, vertex2, 0.1, cgm::kColorBlue, 0.5);
-        cgm_drawer.DrawPoint(vertex, 0.1, cgm::kColorBlue);
-
-        vertex.x = expanded.root_R.x;
-        vertex.y = expanded.root_R.y;
-        vertex2.x = start.child_L.x;
-        vertex2.y = start.child_L.y;
-        vertex2 = vertex + (vertex2 - vertex) + (vertex2 - vertex) + (vertex2 - vertex) + (vertex2 - vertex) + (vertex2 - vertex);
-        cgm_drawer.DrawLine(vertex, vertex2, 0.1, cgm::kColorYellow, 0.5);
-
-        vertex2.x = start.child_R.x;
-        vertex2.y = start.child_R.y;
-        vertex.x = expanded.root_L.x;
-        vertex.y = expanded.root_L.y;
-        vertex2 = vertex + (vertex2 - vertex) + (vertex2 - vertex) + (vertex2 - vertex) + (vertex2 - vertex) + (vertex2 - vertex);
-        cgm_drawer.DrawLine(vertex, vertex2, 0.1, cgm::kColorYellow, 0.5);
+    void EdgeVisibility::reset_visu(){
+        this->gmesh = gmesh;
+        geom::Polygons<double> free;
+        geom::Points<double> vertices;
         cgm_drawer.Close();
+        cgm_drawer = cgm::CairoGeomDrawer(this->mesh.max_x, this->mesh.max_y, 100);
+        for(auto v : this->gmesh.vertices){
+            vertices.push_back(v.point);
+        }
+        for(auto p : this->gmesh.polygons){
+            free.push_back(p.polygon);
+        }
+        double x_min, x_max, y_min, y_max;
+        geom::ComputeLimits(free, x_min, x_max, y_min, y_max);
+        geom::Polygon<double> border = {
+                {x_min, y_min},
+                {x_min, y_max},
+                {x_max, y_max},
+                {x_max, y_min},
+        };
+        cgm_drawer.OpenImage();
+        cgm_drawer.DrawPlane(cgm::kColorBlack);
+        cgm_drawer.DrawPolygon(border, cgm::kColorBlack);
+        cgm_drawer.DrawPolygons(free, cgm::kColorWhite);
+    }
+
+    void
+    EdgeVisibility::visualise_segment(Point A, Point B, int color){
+        cgm::RGB colors[3] = {cgm::kColorRed, cgm::kColorGreen, cgm::kColorBlue};
+        geom::Point<double> vertex, vertex2;
+
+        vertex.x = A.x;
+        vertex.y = A.y;
+        vertex2.x = B.x;
+        vertex2.y = B.y;
+        cgm_drawer.DrawLine(vertex, vertex2, 0.1, colors[color], 0.5);
+        cgm_drawer.DrawPoint(vertex, 0.1, colors[color]);
+        cgm_drawer.SaveToPng("debug_visu.png");
+        return;
+
+    }
+
+    void
+    EdgeVisibility::visualise_point(Point A, int color){
+        cgm::RGB colors[3] = {cgm::kColorRed, cgm::kColorGreen, cgm::kColorBlue};
+        geom::Point<double> vertex, vertex2;
+
+        vertex.x = A.x;
+        vertex.y = A.y;
+        cgm_drawer.DrawPoint(vertex, 0.1, colors[color]);
+        cgm_drawer.SaveToPng("debug_visu.png");
+        return;
+
+    }
+
+    void
+    EdgeVisibility::visualise_polygon(std::vector<Point>& p, int color) {
+        cgm::RGB colors[3] = {cgm::kColorRed, cgm::kColorGreen, cgm::kColorBlue};
+        cgm::RGB light_colors[3] = {cgm::kColorLightPink, cgm::kColorLightGreen, cgm::kColorLightBlue};
+        geom::Polygon<double> polygon;
+        geom::Point<double> vertex;
+
+        for(auto v : p){
+            vertex.x = v.x;
+            vertex.y = v.y;
+            polygon.push_back(vertex);
+        }
+
+        cgm_drawer.DrawPolygon(polygon, light_colors[color], 0.5);
+        cgm_drawer.DrawPoints(polygon, 0.2, colors[color]);
+        cgm_drawer.SaveToPng("debug_visu.png");
         return;
 
     }

@@ -67,6 +67,8 @@ target_link_libraries(PolyVis
 
 add_executable(EdgeVis_example
         edgevis.cpp
+        ${SOURCES}
+        ${${PROJECT_NAME}_SRC}
         )
 
 target_compile_definitions(EdgeVis_example PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
