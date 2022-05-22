@@ -170,31 +170,21 @@ int body(ProgramOptionVariables pov)
     std::string name;
     edgevis::EdgeVisibility Evis(edgemesh);
     Evis.set_visual_mesh(geomMeshPoly);
+    std::cout << "Precomputing visibility of edges.\n";
+    Evis.switch_debug(false);
+    Evis.precompute_edges();
 
-    for (Edge e : edgemesh.mesh_edges){
-        if(c % 1 == 0) {
-            name = "images/" + pov.input_map_name + "_" + std::to_string(c) + ".pdf";
-            std::cout << name << std::endl ;
-            spaceEdge = c;
-            r_v.clear(); l_v.clear(); v.clear();
-            if(c==-1)
-                Evis.switch_debug(true);
-            else
-                Evis.switch_debug(false);
-            std::cout << "calculating right \n";
-            r_v = Evis.find_visibility(spaceEdge, true);
-            std::cout << "calculating left \n";
-            l_v = Evis.find_visibility(spaceEdge, false);
-            v.reserve( r_v.size() + l_v.size() ); // preallocate memory
-
-            v.insert( v.end(), r_v.begin(), r_v.end() );
-            v.insert( v.end(), l_v.begin(), l_v.end() );
-            std::cout << "visualizing\n";
-            local_visualise(geomMeshPoly, edgemesh.mesh_edges[spaceEdge], v, name);
-            //getchar();
-        }
-        c++;
-
+    std::cout << "Showing visibility of edges.\n";
+    for (const Edge& e : Evis.mesh_reference().mesh_edges){
+        r_v.clear(); l_v.clear(); v.clear();
+        name = "images/show.pdf";
+        r_v = e.right_visibility;
+        l_v = e.left_visibility;
+        v.reserve( r_v.size() + l_v.size() ); // preallocate memory
+        v.insert( v.end(), r_v.begin(), r_v.end() );
+        v.insert( v.end(), l_v.begin(), l_v.end() );
+        local_visualise(geomMeshPoly, edgemesh.mesh_edges[spaceEdge], v, name);
+        getchar();
     }
     return 0;
 }

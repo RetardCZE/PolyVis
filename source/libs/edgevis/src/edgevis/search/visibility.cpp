@@ -2,7 +2,7 @@
 
 namespace edgevis{
 
-    EdgeVisibility::EdgeVisibility(const Mesh& mesh) {
+    EdgeVisibility::EdgeVisibility(Mesh& mesh) {
         this->mesh = mesh;
     }
 
@@ -19,6 +19,26 @@ namespace edgevis{
     EdgeVisibility::switch_debug(bool on) {
         this->debug = on;
         return on;
+    }
+
+    const Mesh& EdgeVisibility::mesh_reference() {
+        return mesh;
+    }
+
+    void EdgeVisibility::precompute_edges() {
+        std::vector<Point> r_v;
+        std::vector<Point> l_v;
+        int edge = 0;
+        for (Edge& e : mesh.mesh_edges){
+            r_v.clear(); l_v.clear();
+            r_v = this->find_visibility(edge, true);
+            l_v = this->find_visibility(edge, false);
+            e.right_visibility.reserve(r_v.size());
+            e.left_visibility.reserve(l_v.size());
+            e.right_visibility.insert(e.right_visibility.end(), r_v.begin(), r_v.end());
+            e.left_visibility.insert(e.left_visibility.end(), l_v.begin(), l_v.end());
+            edge++;
+        }
     }
 
     void
