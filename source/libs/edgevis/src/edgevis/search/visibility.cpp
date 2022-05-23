@@ -38,12 +38,16 @@ namespace edgevis{
     }
 
     std::vector<Point>
-    EdgeVisibility::find_point_visibility(Point p) {
+    EdgeVisibility::find_point_visibility(Point p, std::vector<Point> visu) {
         std::vector<Point> v;
         Point left, right, vector;
+        PointLocation pl = mesh.get_point_location(p);
         std::vector<Edge*> edges = this->get_init_edges(p);
+        std::string saving;
+        char c = 'a';
         if(edges.size() == 0)
             return v;
+
         for (Edge* e :edges){
             this->reset_visu();
             vector = mesh.mesh_vertices[e->child].p - p;
@@ -51,17 +55,30 @@ namespace edgevis{
             while(mesh.min_x < left.x && left.x < mesh.max_x && mesh.min_y < left.y && left.y < mesh.max_y){
                 left = left + vector;
             }
-            this->visualise_segment(p, left, 2);
+
             vector = (mesh.mesh_vertices[e->parent].p - p);
             right = p + vector;
             while(mesh.min_x < right.x && right.x < mesh.max_x && mesh.min_y < right.y & right.y < mesh.max_y){
                 right = right + vector;
             }
-            this->visualise_segment(p, right, 2);
-            this->visualise_point(p, 0);
-            this->visualise_segment(mesh.mesh_vertices[e->parent].p, mesh.mesh_vertices[e->child].p, 1);
-            this->visualise_polygon(e->right_visibility, 2);
-            getchar();
+
+
+            this->visualise_segment(mesh.mesh_vertices[e->parent].p, mesh.mesh_vertices[e->child].p, 1, 0.3);
+            if(pl.poly1 == e->rightPoly && e->left_visibility.size()>0)
+                this->visualise_polygon(e->left_visibility, 2);
+            if(pl.poly1 == e->leftPoly && e->right_visibility.size()>0)
+                this->visualise_polygon(e->right_visibility, 2);
+            this->visualise_polygon(visu, 0);
+            this->visualise_point(p, 1);
+            this->visualise_segment(p, left, 1, 0);
+            this->visualise_segment(p, right, 1, 0);
+            c = getchar();
+            if(c=='s' || c=='S'){
+                saving = "saves/edge_look_" + std::to_string(save_cntr) + ".png";
+                std::cout << "Saving to " << saving << std::endl;
+                cgm_drawer.SaveToPng(saving);
+                save_cntr++;
+            }
         }
         return v;
     }
@@ -161,7 +178,7 @@ namespace edgevis{
         geom::Polygons<double> free;
         geom::Points<double> vertices;
         cgm_drawer.Close();
-        cgm_drawer = cgm::CairoGeomDrawer(this->mesh.max_x, this->mesh.max_y, 100);
+        cgm_drawer = cgm::CairoGeomDrawer(this->mesh.max_x, this->mesh.max_y, 20);
         for(auto v : this->gmesh.vertices){
             vertices.push_back(v.point);
         }
@@ -183,7 +200,7 @@ namespace edgevis{
     }
 
     void
-    EdgeVisibility::visualise_segment(Point A, Point B, int color){
+    EdgeVisibility::visualise_segment(Point A, Point B, int color, float opacity) {
         cgm::RGB colors[3] = {cgm::kColorRed, cgm::kColorGreen, cgm::kColorBlue};
         geom::Point<double> vertex, vertex2;
 
@@ -205,7 +222,7 @@ namespace edgevis{
 
         vertex.x = A.x;
         vertex.y = A.y;
-        cgm_drawer.DrawPoint(vertex, 0.1, colors[color]);
+        cgm_drawer.DrawPoint(vertex, 0.15, colors[color]);
         cgm_drawer.SaveToPng("debug_visu.png");
         return;
 
@@ -213,8 +230,8 @@ namespace edgevis{
 
     void
     EdgeVisibility::visualise_polygon(std::vector<Point>& p, int color) {
-        cgm::RGB colors[3] = {cgm::kColorRed, cgm::kColorGreen, cgm::kColorBlue};
-        cgm::RGB light_colors[3] = {cgm::kColorLightPink, cgm::kColorLightGreen, cgm::kColorLightBlue};
+        cgm::RGB colors[4] = {cgm::kColorRed, cgm::kColorGreen, cgm::kColorBlue, cgm::kColorYellow};
+        cgm::RGB light_colors[4] = {cgm::kColorLightPink, cgm::kColorLightGreen, cgm::kColorLightBlue, cgm::kColorLightYellow};
         geom::Polygon<double> polygon;
         geom::Point<double> vertex;
 
@@ -226,6 +243,9 @@ namespace edgevis{
 
         cgm_drawer.DrawPolygon(polygon, light_colors[color], 0.5);
         cgm_drawer.DrawPoints(polygon, 0.2, colors[color]);
+        for( int i = 0; i < polygon.size() - 1; i++){
+            cgm_drawer.DrawLine(polygon[i], polygon[i+1], 0.1, colors[color], 0.3);
+        }
         cgm_drawer.SaveToPng("debug_visu.png");
         return;
 

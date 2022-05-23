@@ -30,6 +30,9 @@
 
 #include "polyanya/parsers/map_parser.h"
 
+#include "polyviz.h"
+#include "polyanya/parsers/map_parser.h"
+
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
@@ -233,6 +236,9 @@ int body(ProgramOptionVariables pov)
     std::vector<Point> v;
 
     std::string name;
+    polyanya::Point anyaP;
+    std::vector<polyanya::Point> verticesPolyAnya;
+    PolyVis solverPoly(geomMeshPoly);
     edgevis::EdgeVisibility Evis(edgemesh);
     Evis.set_visual_mesh(geomMeshPoly);
     std::cout << "Precomputing visibility of edges.\n";
@@ -253,9 +259,17 @@ int body(ProgramOptionVariables pov)
         getchar();
     }
      */
+
     for (auto pos : r_points){
-        verticesPoly = Evis.find_point_visibility(pos);
-        getchar();
+        anyaP.x = pos.x;
+        anyaP.y = pos.y;
+        verticesPolyAnya = solverPoly.get_visibility_polygon(anyaP);
+        verticesPoly.resize(verticesPolyAnya.size());
+        for(int i = 0; i < verticesPoly.size(); i++){
+            verticesPoly[i].x = verticesPolyAnya[i].x;
+            verticesPoly[i].y = verticesPolyAnya[i].y;
+        }
+        verticesPoly = Evis.find_point_visibility(pos, verticesPoly);
     }
     return 0;
 }
