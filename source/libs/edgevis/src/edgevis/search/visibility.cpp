@@ -39,54 +39,39 @@ namespace edgevis{
 
     std::vector<Point>
     EdgeVisibility::find_point_visibility(Point p, std::vector<Point> visu) {
-        std::vector<Point> v;
+        std::vector<Point> out;
         Point left, right, vector;
         PointLocation pl = mesh.get_point_location(p);
-        std::vector<Edge*> edges = this->get_init_edges(p);
+        std::vector<Edge*> edges = this->get_init_edges(pl);
         std::string saving;
-        char c = 'a';
-        if(edges.size() == 0)
-            return v;
-
-        for (Edge* e :edges){
-            this->reset_visu();
-            vector = mesh.mesh_vertices[e->child].p - p;
-            left = p + vector;
-            while(mesh.min_x < left.x && left.x < mesh.max_x && mesh.min_y < left.y && left.y < mesh.max_y){
-                left = left + vector;
+        if(edges.size() == 0) {
+            out.clear();
+            return out;
+        }
+        for (Edge* e :edges) {
+            if (pl.poly1 == e->rightPoly && e->left_visibility.size() > 0) {
+                left = mesh.mesh_vertices[e->parent].p;
+                right = mesh.mesh_vertices[e->child].p;
+                for(auto v: e->left_visibility){
+                    if(is_observable(p, left, p, right, v))
+                        out.push_back(v);
+                }
             }
 
-            vector = (mesh.mesh_vertices[e->parent].p - p);
-            right = p + vector;
-            while(mesh.min_x < right.x && right.x < mesh.max_x && mesh.min_y < right.y & right.y < mesh.max_y){
-                right = right + vector;
-            }
-
-
-            this->visualise_segment(mesh.mesh_vertices[e->parent].p, mesh.mesh_vertices[e->child].p, 1, 0.3);
-            if(pl.poly1 == e->rightPoly && e->left_visibility.size()>0)
-                this->visualise_polygon(e->left_visibility, 2);
-            if(pl.poly1 == e->leftPoly && e->right_visibility.size()>0)
-                this->visualise_polygon(e->right_visibility, 2);
-            this->visualise_polygon(visu, 0);
-            this->visualise_point(p, 1);
-            this->visualise_segment(p, left, 1, 0);
-            this->visualise_segment(p, right, 1, 0);
-            c = getchar();
-            if(c=='s' || c=='S'){
-                saving = "saves/edge_look_" + std::to_string(save_cntr) + ".png";
-                std::cout << "Saving to " << saving << std::endl;
-                cgm_drawer.SaveToPng(saving);
-                save_cntr++;
+            if(pl.poly1 == e->leftPoly && e->right_visibility.size()>0){
+                left = mesh.mesh_vertices[e->child].p;
+                right = mesh.mesh_vertices[e->parent].p;
+                for(auto v: e->right_visibility){
+                    if(is_observable(p, left, p, right, v))
+                        out.push_back(v);
+                }
             }
         }
-        return v;
+        return out;
     }
 
-    std::vector<Edge*> EdgeVisibility::get_init_edges(Point p) {
+    std::vector<Edge*> EdgeVisibility::get_init_edges(PointLocation pl) {
         std::vector<Edge*> edges;
-        PointLocation pl = mesh.get_point_location(p);
-        std::cout << p << " | " << pl << std::endl;
         switch(pl.type){
             case PointLocation::NOT_ON_MESH:
                 edges.clear();
@@ -114,6 +99,7 @@ namespace edgevis{
         if(node.next_polygon == -1){
             visibility.push_back(node.child_R);
             visibility.push_back(node.child_L);
+
             return;
         }
         int num;

@@ -59,6 +59,7 @@ struct ProgramOptionVariables {
     std::string input_map_extension = ".txt";
     std::string input_map_dir = INPUT_MAPS_DIR;
     std::string input_map_full_path;
+    std::string mesh_type = "polygonal";
     double map_scale = -1.0;
     double vis_radius = -1.0;
     int n_random_samples = 1;
@@ -86,6 +87,9 @@ void AddProgramOptions(
             ("map-scale,s",
              po::value(&pov.map_scale),
              "Map scale (optional).")
+            ("mesh-type,t",
+             po::value(&pov.mesh_type)->default_value(pov.mesh_type),
+             "Type of used mesh - (triangular, polygonal) - default: polygonal.")
             ("vis-radius,r",
              po::value(&pov.vis_radius)->default_value(pov.vis_radius),
              "Visibility radius (-1 ~ infinite).")
@@ -189,10 +193,7 @@ int body(ProgramOptionVariables pov)
     mapParser.convertMapToMergedMesh(mapName, mergedMesh);
     mapParser.convertMergedMeshToGeomMesh(mergedMesh, geomMeshPoly);
     mapParser.convertFade2DMeshToGeomMesh(fade2DMesh, geomMeshTri);
-    edgevis::Mesh edgemesh;
-    edgemesh.read(geomMeshPoly);
-    edgemesh.precalc_point_location();
-    edgemesh.calculate_edges();
+
 
     // Create and initialize TriVis object.
     tvc::TriVis vis;
@@ -220,15 +221,19 @@ int body(ProgramOptionVariables pov)
     std::vector<edgevis::Point> verticesTri;
     std::vector<edgevis::Point> verticesPoly;
     std::vector<edgevis::Point> r_points;
+    std::vector<polyanya::Point> p_points;
     edgevis::Point p;
-
+    polyanya::Point anyaP;
     std::optional<double> vis_radius = pov.vis_radius > 0.0 ? std::make_optional(pov.vis_radius) : std::nullopt;
     std::cout << "Generating points. (TriVis feature, points are converted for polyanya)\n";
     for (auto &rp: random_points) {
         rp = tv::map_coverage::UniformRandomPointInRandomTriangle(vis.triangles(), triangle_accum_areas, rng);
         p.x = rp.x;
         p.y = rp.y;
+        anyaP.x = rp.x;
+        anyaP.y = rp.y;
         r_points.push_back(p);
+        p_points.push_back(anyaP);
     }
 
     std::vector<Point> r_v;
@@ -236,41 +241,78 @@ int body(ProgramOptionVariables pov)
     std::vector<Point> v;
 
     std::string name;
-    polyanya::Point anyaP;
-    std::vector<polyanya::Point> verticesPolyAnya;
-    PolyVis solverPoly(geomMeshPoly);
+
+    parsers::GeomMesh geomMesh;
+    std::cout << pov.mesh_type << std::endl;
+    if(pov.mesh_type == "polygonal"){
+        geomMesh = geomMeshPoly;
+    }else if(pov.mesh_type == "triangular"){
+        geomMesh = geomMeshTri;
+    }else{
+        std::cout << "Unknown mesh type.\n";
+        return -1;
+    }
+
+    edgevis::Mesh edgemesh;
+    edgemesh.read(geomMesh);
+    edgemesh.precalc_point_location();
+    edgemesh.calculate_edges();
+
+    PolyVis solverPoly(geomMesh);
     edgevis::EdgeVisibility Evis(edgemesh);
-    Evis.set_visual_mesh(geomMeshPoly);
+    Evis.set_visual_mesh(geomMesh);
+
+    std::vector<polyanya::Point> verticesPolyAnya;
+
     std::cout << "Precomputing visibility of edges.\n";
     Evis.switch_debug(false);
+    double time;
+    tvc::utils::SimpleClock clock;
+
+    clock.Restart();
     Evis.precompute_edges();
+    time = clock.TimeInSeconds();
+    std::cout << "\nEdgevis\n";
+    std::cout << "Preprocessing time for EdgeVis was " <<
+              time << " seconds.\n";
 
-    std::cout << "Showing visibility of edges.\n";
-    /*
-    for (const Edge& e : Evis.mesh_reference().mesh_edges){
-        r_v.clear(); l_v.clear(); v.clear();
-        name = "images/show.pdf";
-        r_v = e.right_visibility;
-        l_v = e.left_visibility;
-        v.reserve( r_v.size() + l_v.size() ); // preallocate memory
-        v.insert( v.end(), r_v.begin(), r_v.end() );
-        v.insert( v.end(), l_v.begin(), l_v.end() );
-        local_visualise(geomMeshPoly, edgemesh.mesh_edges[spaceEdge], v, name);
-        getchar();
-    }
-     */
-
+    clock.Restart();
     for (auto pos : r_points){
+        verticesPoly = Evis.find_point_visibility(pos, verticesPoly);
+        /*
         anyaP.x = pos.x;
         anyaP.y = pos.y;
         verticesPolyAnya = solverPoly.get_visibility_polygon(anyaP);
+        Evis.reset_visu();
+        Evis.visualise_point(pos, 0);
+        Evis.visualise_polygon(verticesPoly, 2);
         verticesPoly.resize(verticesPolyAnya.size());
-        for(int i = 0; i < verticesPoly.size(); i++){
+        for(int i = 0; i < verticesPolyAnya.size(); i++){
             verticesPoly[i].x = verticesPolyAnya[i].x;
             verticesPoly[i].y = verticesPolyAnya[i].y;
         }
-        verticesPoly = Evis.find_point_visibility(pos, verticesPoly);
+        Evis.visualise_polygon(verticesPoly, 1);
+        getchar();*/
     }
+    time = clock.TimeInSeconds();
+    std::cout << "\nEdgevis\n";
+    std::cout << "Total computation time of "<< pov.n_random_samples << " random points was " <<
+              time << " seconds.\n";
+    std::cout << "Mean computation time of "<< pov.n_random_samples << " random points was " <<
+              time/pov.n_random_samples << " seconds/point.\n";
+
+
+    clock.Restart();
+    for (auto pos : p_points){
+        verticesPolyAnya = solverPoly.get_visibility_polygon(pos);
+    }
+    time = clock.TimeInSeconds();
+    std::cout << "\nPolyVis\n";
+    std::cout << "Total computation time of "<< pov.n_random_samples << " random points was " <<
+              time << " seconds.\n";
+    std::cout << "Mean computation time of "<< pov.n_random_samples << " random points was " <<
+              time/pov.n_random_samples << " seconds/point.\n";
+
     return 0;
 }
 
