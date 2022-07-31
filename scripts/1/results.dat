@@ -1,0 +1,10 @@
+EdgeVis:potholes
+Number of iterations: 10
+Total computation time:0.00686203
+Average computation time per point:0.000686203
+
+===============================================================
+PolyVis:potholes
+Number of iterations: 10
+Total computation time:0.00106017
+Average computation time per point:0.000106017
