@@ -291,6 +291,8 @@ int body(ProgramOptionVariables pov)
 
     std::ofstream outfile;
     std::ofstream outfile_polyvis;
+    std::ofstream results;
+    results.open("results.dat", std::ios::out | std::ios::trunc );
     if(save){
         outfile.open("logger_edgevis.dat", std::ios::out | std::ios::trunc );
         outfile_polyvis.open("logger_polyvis.dat", std::ios::out | std::ios::trunc );
@@ -333,7 +335,11 @@ int body(ProgramOptionVariables pov)
               time << " seconds.\n";
     std::cout << "Mean computation time of "<< pov.n_random_samples << " random points was " <<
               time/pov.n_random_samples << " seconds/point.\n";
-
+    results << "EdgeVis:";
+    results << pov.input_map_name <<
+              "\nNumber of iterations: " <<  pov.n_random_samples <<
+              "\nTotal computation time:" << time <<
+              "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
 
     clock.Restart();
     for (auto pos : p_points){
@@ -355,6 +361,13 @@ int body(ProgramOptionVariables pov)
               time << " seconds.\n";
     std::cout << "Mean computation time of "<< pov.n_random_samples << " random points was " <<
               time/pov.n_random_samples << " seconds/point.\n";
+
+    results << "\n===============================================================\n";
+    results << "PolyVis:";
+    results << pov.input_map_name <<
+            "\nNumber of iterations: " <<  pov.n_random_samples <<
+            "\nTotal computation time:" << time <<
+            "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
 
     return 0;
 }
