@@ -22,25 +22,24 @@ namespace edgevis{
     }
 
     void EdgeVisibility::precompute_edges() {
-        std::vector<Point> r_v;
-        std::vector<Point> l_v;
+        std::vector<OptimNode> r_v;
+        std::vector<OptimNode> l_v;
         int edge = 0;
         for (Edge& e : mesh.mesh_edges){
             r_v.clear(); l_v.clear();
             r_v = this->find_visibility(edge, true);
             l_v = this->find_visibility(edge, false);
-            e.right_visibility.reserve(r_v.size());
-            e.left_visibility.reserve(l_v.size());
-            e.right_visibility.insert(e.right_visibility.end(), r_v.begin(), r_v.end());
-            e.left_visibility.insert(e.left_visibility.end(), l_v.begin(), l_v.end());
+            e.right_nodes.reserve(r_v.size());
+            e.left_nodes.reserve(l_v.size());
+            e.right_nodes.insert(e.right_nodes.end(), r_v.begin(), r_v.end());
+            e.left_nodes.insert(e.left_nodes.end(), l_v.begin(), l_v.end());
             edge++;
         }
     }
 
     std::vector<Point>
-    EdgeVisibility::find_point_visibility(Point p, std::vector<Point> visu) {
+    EdgeVisibility::find_point_visibility(Point p, std::vector<Point> visu, bool debug) {
         std::vector<Point> out;
-        Point left, right, vector;
         PointLocation pl = mesh.get_point_location(p);
         std::vector<Edge*> edges = this->get_init_edges(pl);
         std::string saving;
@@ -48,22 +47,106 @@ namespace edgevis{
             out.clear();
             return out;
         }
+        STATE last_state = STATE::VISIBLE;
+        STATE current_state;
+        Point last_visible;
+        Point last_point;
+        Point segment_holder[2];
         for (Edge* e :edges) {
-            if (pl.poly1 == e->rightPoly && e->left_visibility.size() > 0) {
-                left = mesh.mesh_vertices[e->parent].p;
-                right = mesh.mesh_vertices[e->child].p;
-                for(auto v: e->left_visibility){
-                    if(is_observable(p, left, p, right, v))
-                        out.push_back(v);
+            if (pl.poly1 == e->rightPoly && e->left_nodes.size() > 0) {
+                for(int i = 0; i < e->left_nodes.size(); i++){
+                    Orientation RP = get_orientation(e->left_nodes[i].P, e->left_nodes[i].root_R, p);
+                    Orientation LP = get_orientation(e->left_nodes[i].P, e->left_nodes[i].root_L, p);
+                    if(RP != Orientation::CCW && LP != Orientation::CW){
+                        if(debug)
+                            this->visualise_point(e->left_nodes[i].P, 0);
+                        current_state = STATE::VISIBLE;
+                    }else{
+                        if(debug)
+                            this->visualise_point(e->left_nodes[i].P, 2);
+                        if(RP == Orientation::CCW) {
+                            current_state = STATE::RIGHT;
+                        }else{
+                            current_state = STATE::LEFT;
+                        }
+                    }
+                    if(current_state != last_state){
+                        if(last_state == STATE::RIGHT){
+                            // leaving RIGHT causes triggering of intersection
+                            Point I = line_intersect(p, last_visible, last_point, e->left_nodes[i].P);
+                            if(debug)
+                                this->visualise_point(I, 1);
+                            out.push_back(I);
+                        }
+                        if(current_state == STATE::LEFT){
+                            // entering left causes hanging intersection
+                            segment_holder[0] = last_point;
+                            segment_holder[1] = e->left_nodes[i].P;
+                        }
+                        if(last_state == STATE::LEFT && current_state == STATE::VISIBLE){
+                            // leaving LEFT will trigger intersection with segment in memory
+                            Point I = line_intersect(p, e->left_nodes[i].P, segment_holder[0], segment_holder[1]);
+                            if(debug)
+                                this->visualise_point(I, 1);
+                            out.push_back(I);
+                        }
+                    }
+
+                    if(current_state == STATE::VISIBLE){
+                        last_visible = e->left_nodes[i].P;
+                        out.push_back(e->left_nodes[i].P);
+                    }
+                    last_point = e->left_nodes[i].P;
+                    last_state = current_state;
                 }
             }
 
-            if(pl.poly1 == e->leftPoly && e->right_visibility.size()>0){
-                left = mesh.mesh_vertices[e->child].p;
-                right = mesh.mesh_vertices[e->parent].p;
-                for(auto v: e->right_visibility){
-                    if(is_observable(p, left, p, right, v))
-                        out.push_back(v);
+            if(pl.poly1 == e->leftPoly && e->right_nodes.size()>0){
+                for(int i = 0; i < e->right_nodes.size(); i++) {
+                    Orientation RP = get_orientation(e->right_nodes[i].P, e->right_nodes[i].root_R, p);
+                    Orientation LP = get_orientation(e->right_nodes[i].P, e->right_nodes[i].root_L, p);
+
+                    if(RP != Orientation::CCW && LP != Orientation::CW){
+                        if(debug)
+                            this->visualise_point(e->right_nodes[i].P, 0);
+                        current_state = STATE::VISIBLE;
+                    }else{
+                        if(debug)
+                            this->visualise_point(e->right_nodes[i].P, 2);
+                        if(RP == Orientation::CCW) {
+                            current_state = STATE::RIGHT;
+                        }else{
+                            current_state = STATE::LEFT;
+                        }
+                    }
+                    if(current_state != last_state){
+                        if(last_state == STATE::RIGHT){
+                            // leaving RIGHT causes triggering of intersection
+                            Point I = line_intersect(p, last_visible, last_point, e->right_nodes[i].P);
+                            if(debug)
+                                this->visualise_point(I, 1);
+                            out.push_back(I);
+                        }
+                        if(current_state == STATE::LEFT){
+                            // entering left causes hanging intersection
+                            segment_holder[0] = last_point;
+                            segment_holder[1] = e->right_nodes[i].P;
+                        }
+                        if(last_state == STATE::LEFT && current_state == STATE::VISIBLE){
+                            // leaving LEFT will trigger intersection with segment in memory
+                            Point I = line_intersect(p, e->right_nodes[i].P, segment_holder[0], segment_holder[1]);
+                            if(debug)
+                                this->visualise_point(I, 1);
+                            out.push_back(I);
+                        }
+                    }
+
+                    if(current_state == STATE::VISIBLE){
+                        last_visible = e->right_nodes[i].P;
+                        out.push_back(e->right_nodes[i].P);
+                    }
+                    last_point = e->right_nodes[i].P;
+                    last_state = current_state;
                 }
             }
         }
@@ -95,10 +178,34 @@ namespace edgevis{
 
 
     void
-    EdgeVisibility::expand(SearchNode &node, std::vector<Point> &visibility, int level) {
+    EdgeVisibility::expand(SearchNode &node, std::vector<OptimNode> &visibility, int level, bool side) {
+        OptimNode o;
+        Point true_root_R;
+        Point true_root_L;
+        if(side){
+            true_root_R = mesh.mesh_vertices[current_edge.parent].p;
+            true_root_L = mesh.mesh_vertices[current_edge.child].p;
+        }else{
+            true_root_L = mesh.mesh_vertices[current_edge.parent].p;
+            true_root_R = mesh.mesh_vertices[current_edge.child].p;
+        }
         if(node.next_polygon == -1){
-            visibility.push_back(node.child_R);
-            visibility.push_back(node.child_L);
+            o.P = node.child_R;
+            o.pivot_R = true_root_R;
+            o.pivot_L = true_root_L;
+            o.root_R = true_root_R;
+            o.root_L =  true_root_L;
+            recompute_end_roots(node, o);
+            visibility.push_back(o);
+
+
+            o.P = node.child_L;
+            o.pivot_R = true_root_R;
+            o.pivot_L = true_root_L;
+            o.root_R = true_root_R;
+            o.root_L =  true_root_L;
+            recompute_end_roots(node, o);
+            visibility.push_back(o);
 
             return;
         }
@@ -108,28 +215,63 @@ namespace edgevis{
 
         for(int i = 0; i < num; i++){
             recompute_roots(nodes[i]);
-            expand(nodes[i], visibility, level + 1);
+            expand(nodes[i], visibility, level + 1, side);
         }
         delete [] nodes;
     }
 
-    std::vector<Point>
+    std::vector<OptimNode>
     EdgeVisibility::find_visibility(int edge, bool side) {
+        current_edge = mesh.mesh_edges[edge];
         int num;
-        std::vector<Point> r_vis;
+        std::vector<OptimNode> vis;
+
         Point tmp;
         SearchNode* nodes = new edgevis::SearchNode[mesh.max_poly_sides + 2];
         num = edgevis::get_edge_init_nodes(mesh.mesh_edges[edge], side, mesh, nodes);
+        OptimNode o;
+        if(side){
+            o.P = mesh.mesh_vertices[current_edge.parent].p;
+            o.pivot_R = mesh.mesh_vertices[current_edge.parent].p;
+            o.pivot_L = mesh.mesh_vertices[current_edge.child].p;
+            o.root_R = mesh.mesh_vertices[current_edge.parent].p;
+            o.root_L =  mesh.mesh_vertices[current_edge.child].p;
+        }else{
+            o.P = mesh.mesh_vertices[current_edge.child].p;
+            o.pivot_R = mesh.mesh_vertices[current_edge.child].p;
+            o.pivot_L = mesh.mesh_vertices[current_edge.parent].p;
+            o.root_R = mesh.mesh_vertices[current_edge.child].p;
+            o.root_L =  mesh.mesh_vertices[current_edge.parent].p;
+        }
+        vis.push_back(o);
+
         for(int i = 0; i < num; i++){
             if(!side){
                 tmp = nodes[i].root_R;
                 nodes[i].root_R = nodes[i].root_L;
                 nodes[i].root_L = tmp;
             }
-            expand(nodes[i], r_vis, 0);
+            expand(nodes[i], vis, 0, side);
         }
+
+        if(side){
+            o.P = mesh.mesh_vertices[current_edge.child].p;
+            o.pivot_R = mesh.mesh_vertices[current_edge.parent].p;
+            o.pivot_L = mesh.mesh_vertices[current_edge.child].p;
+            o.root_R = mesh.mesh_vertices[current_edge.parent].p;
+            o.root_L =  mesh.mesh_vertices[current_edge.child].p;
+        }else{
+            o.P = mesh.mesh_vertices[current_edge.parent].p;
+            o.pivot_R = mesh.mesh_vertices[current_edge.child].p;
+            o.pivot_L = mesh.mesh_vertices[current_edge.parent].p;
+            o.root_R = mesh.mesh_vertices[current_edge.child].p;
+            o.root_L =  mesh.mesh_vertices[current_edge.parent].p;
+        }
+        vis.push_back(o);
+
+
         delete [] nodes;
-        return r_vis;
+        return vis;
     }
     void
     EdgeVisibility::set_visual_mesh(const parsers::GeomMesh &gmesh) {
@@ -208,7 +350,7 @@ namespace edgevis{
 
         vertex.x = A.x;
         vertex.y = A.y;
-        cgm_drawer.DrawPoint(vertex, 0.15, colors[color]);
+        cgm_drawer.DrawPoint(vertex, 0.2, colors[color]);
         cgm_drawer.SaveToPng("debug_visu.png");
         return;
 
@@ -228,7 +370,8 @@ namespace edgevis{
         }
 
         cgm_drawer.DrawPolygon(polygon, light_colors[color], 0.5);
-        cgm_drawer.DrawPoints(polygon, 0.2, colors[color]);
+        //cgm_drawer.DrawPoints(polygon, 0.15, colors[color], 0.5);
+
         for( int i = 0; i < polygon.size() - 1; i++){
             cgm_drawer.DrawLine(polygon[i], polygon[i+1], 0.1, colors[color], 0.3);
         }

@@ -35,6 +35,7 @@ int find_visible(const Mesh& mesh, SearchNode& node, std::vector<int>& sorted_ve
  *
  */
 void recompute_roots(SearchNode &node);
+void recompute_end_roots(SearchNode &node, OptimNode &o);
 
 
 SearchNode init_temp_node(SearchNode& node);

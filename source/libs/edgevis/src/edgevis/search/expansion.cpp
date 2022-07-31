@@ -87,7 +87,7 @@ namespace edgevis
             dx = dy;
         if(V.y == 0)
             dy = dx;
-        if (EPSILON > std::abs(dy - dx) && dx <= 1 && dx >= 0 && dy <= 1 && dy >= 0)
+        if (EPSILON > std::abs(dy - dx) && dx <= 1+ EPSILON && dx >= 0 - EPSILON && dy <= 1 + EPSILON && dy >= 0 - EPSILON)
             return true;
         return false;
     }
@@ -117,9 +117,48 @@ namespace edgevis
                 child_intersection == child_intersection ? node.root_L = child_intersection : node.root_L;
             }
 
-
             parent = parent->predecessor;
         }
+    }
+
+    void
+    recompute_end_roots(SearchNode &node, OptimNode &o) {
+        SearchNode* parent;
+        Point pivot_L, pivot_R;
+        Point parent_intersection, child_intersection;
+        parent = node.predecessor;
+        if(parent) {
+            while (parent) {
+                parent_intersection = line_intersect(o.P,
+                                                     parent->child_R,
+                                                     o.root_L,
+                                                     o.root_R);
+
+
+                child_intersection = line_intersect(o.P,
+                                                    parent->child_L,
+                                                    o.root_R,
+                                                    o.root_L);
+
+                if (is_on_segment(o.root_R, o.root_L, parent_intersection) && node.root_L != node.child_L) {
+                    parent_intersection == parent_intersection ? o.root_R = parent_intersection : o.root_R;
+                    o.pivot_R = parent->child_R;
+                }
+
+                if (is_on_segment(o.root_R, o.root_L, child_intersection) && node.root_R != node.child_R) {
+                    child_intersection == child_intersection ? o.root_L = child_intersection : o.root_L;
+                    o.pivot_L = parent->child_L;
+                }
+
+                parent = parent->predecessor;
+            }
+        }else{
+            o.pivot_R = node.root_R;
+            o.pivot_L = node.root_L;
+            o.root_R = node.root_R;
+            o.root_L = node.root_L;
+        }
+
     }
 
     SearchNode
