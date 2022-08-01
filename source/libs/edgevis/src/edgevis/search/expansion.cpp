@@ -199,7 +199,7 @@ namespace edgevis
     }
 
     int
-    expand_searchnode(SearchNode& node, const Mesh& mesh, SearchNode* newNodes){
+    expand_searchnode(SearchNode& node, const Mesh& mesh, SearchNode* newNodes) {
         // Temporary searchnode object for creating new nodes
         SearchNode temp = init_temp_node(node);
 
@@ -211,7 +211,7 @@ namespace edgevis
         Point left_child = node.child_L;
         Point left_parent = node.root_R;
 
-        const Polygon& expander = mesh.mesh_polygons[node.next_polygon];
+        const Polygon &expander = mesh.mesh_polygons[node.next_polygon];
         std::vector<int> sortedV, sortedP;
 
         int offset;
@@ -225,25 +225,41 @@ namespace edgevis
         Point right_intersection, left_intersection;
         int count = 0;
 
-        if(get_orientation(right_child, right_parent, mesh.mesh_vertices[sortedV[right_visible]].p) == Orientation::COLLINEAR ||
-           right_visible == 0) {
+        if (get_orientation(right_child, right_parent, mesh.mesh_vertices[sortedV[right_visible]].p) ==
+            Orientation::COLLINEAR ||
+            right_visible == 0) {
             right_intersection = mesh.mesh_vertices[sortedV[right_visible]].p;
-        }else{
+        } else {
             right_intersection = line_intersect(mesh.mesh_vertices[sortedV[right_visible - 1]].p,
                                                 mesh.mesh_vertices[sortedV[right_visible]].p,
                                                 right_parent, right_child);
         }
 
-        if(get_orientation(left_parent, left_child, mesh.mesh_vertices[sortedV[left_visible]].p) == Orientation::COLLINEAR ||
-           left_visible == S-1) {
+        if (get_orientation(left_parent, left_child, mesh.mesh_vertices[sortedV[left_visible]].p) ==
+            Orientation::COLLINEAR ||
+            left_visible == S - 1) {
             left_intersection = mesh.mesh_vertices[sortedV[left_visible]].p;
-        }else {
+        } else {
             left_intersection = line_intersect(mesh.mesh_vertices[sortedV[left_visible]].p,
                                                mesh.mesh_vertices[sortedV[left_visible + 1]].p,
                                                left_parent, left_child);
         }
+        if (!(left_intersection == left_intersection && right_intersection == right_intersection)) {
+            /*
+            std::cout << left_intersection << " | " << right_intersection << std::endl;
+             */
+            Point a = mesh.mesh_vertices[sortedV[left_visible]].p;
+            Point b = mesh.mesh_vertices[sortedV[left_visible + 1]].p;
+            Point c = left_parent;
+            Point d = left_child;
+            const Point ab = b - a;
+            /*
+            std::cout << a << " | "<< ab << " | "  <<(c - a) << " | "  <<(d - a)<< " | " << (d - c) <<std::endl;
 
-
+            std::cout << ( a + ab * ((c - a) * (d - a))) << " | " << (ab * (d - c)) << std::endl;
+             */
+            left_intersection = ( a + ab * ((c - a) * (d - a)));
+        }
         i = right_visible;
         if(right_intersection != mesh.mesh_vertices[sortedV[right_visible]].p) {
             i--;

@@ -42,6 +42,7 @@ def run_single(map, number, save, folder):
 def analyze(edgevis, polyvis):
     ePath = Path(edgevis)
     pPath = Path(polyvis)
+    res = [0,0,0]
     with ePath.open('r') as e:
         with pPath.open('r') as p:
             el = 1
@@ -66,14 +67,17 @@ def analyze(edgevis, polyvis):
                     pVerts = np.array([eval(v) for v in pVerts])
                     ePoly = geometry.Polygon([[p[0], p[1]] for p in eVerts])
                     pPoly = geometry.Polygon([[p[0], p[1]] for p in pVerts])
+                    print(ePoly.area - pPoly.area)
+                    if abs(ePoly.area - pPoly.area) < 1e-8:
+                        res[0] += 1
+                    else:
+                        res[1] += 1
 
-                    plt.figure()
-                    plt.plot(eVerts[:, 0], eVerts[:, 1], linewidth=2, label=f'EdgeVis {ePoly.area}')
-                    plt.plot(pVerts[:, 0], pVerts[:, 1], '--', label=f'PolyVis {pPoly.area}')
-                    plt.legend()
-                    plt.show()
                 except NameError:
+                    print("nan")
+                    res[2] += 1
                     pass
+        print(res)
 
 
 if __name__ == "__main__":
