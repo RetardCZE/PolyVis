@@ -4,6 +4,7 @@
 #include "edgevis/structs/polygon.h"
 #include "edgevis/structs/edge.h"
 #include "edgevis/helpers/geometry.h"
+#include "edgevis/search/intersections.h"
 #include <vector>
 
 namespace edgevis
@@ -248,6 +249,7 @@ namespace edgevis
             /*
             std::cout << left_intersection << " | " << right_intersection << std::endl;
              */
+
             Point a = mesh.mesh_vertices[sortedV[left_visible]].p;
             Point b = mesh.mesh_vertices[sortedV[left_visible + 1]].p;
             Point c = left_parent;
