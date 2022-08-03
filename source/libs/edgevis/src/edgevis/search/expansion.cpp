@@ -5,6 +5,7 @@
 #include "edgevis/structs/edge.h"
 #include "edgevis/helpers/geometry.h"
 #include "edgevis/search/intersections.h"
+#include "edgevis/search/robust_geometry.h"
 #include <vector>
 
 namespace edgevis
@@ -246,21 +247,25 @@ namespace edgevis
                                                left_parent, left_child);
         }
         if (!(left_intersection == left_intersection && right_intersection == right_intersection)) {
-            /*
+
             std::cout << left_intersection << " | " << right_intersection << std::endl;
-             */
+
 
             Point a = mesh.mesh_vertices[sortedV[left_visible]].p;
             Point b = mesh.mesh_vertices[sortedV[left_visible + 1]].p;
             Point c = left_parent;
             Point d = left_child;
             const Point ab = b - a;
-            /*
+            Point p;
+            std::cout << a << " | "<< b << " | "  <<c << " | "  <<d<< std::endl;
             std::cout << a << " | "<< ab << " | "  <<(c - a) << " | "  <<(d - a)<< " | " << (d - c) <<std::endl;
 
             std::cout << ( a + ab * ((c - a) * (d - a))) << " | " << (ab * (d - c)) << std::endl;
-             */
+
             left_intersection = ( a + ab * ((c - a) * (d - a)));
+            std::cout << robust_geom::LineLineIntersectionNotCollinear(a,b,c,d,p) << std::endl;
+            std::cout << p << std::endl;
+            getchar();
         }
         i = right_visible;
         if(right_intersection != mesh.mesh_vertices[sortedV[right_visible]].p) {

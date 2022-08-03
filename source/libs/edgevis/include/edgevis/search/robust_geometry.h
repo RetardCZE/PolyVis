@@ -7,12 +7,11 @@
  *
  */
 
-#ifndef TRIVIS_CORE_GEOM_ROBUST_GEOMETRY_H_
-#define TRIVIS_CORE_GEOM_ROBUST_GEOMETRY_H_
+#include "edgevis/structs/point.h"
+#include "edgevis/structs/polygon.h"
 
-#include "edgevis/search/geom_types.h"
-
-namespace edgevis {
+using namespace edgevis;
+namespace robust_geom {
 
 enum class Orientation : int {
     kRightTurn = -1,
@@ -20,21 +19,21 @@ enum class Orientation : int {
     kLeftTurn = 1
 };
 
-Orientation Orient(const FPoint &a, const FPoint &b, const FPoint &c);
+Orientation Orient(const Point &a, const Point &b, const Point &c);
 
-Orientation OrientWithEps(const FPoint &a, const FPoint &b, const FPoint &c, double eps);
+Orientation OrientWithEps(const Point &a, const Point &b, const Point &c, double eps);
 
-bool TurnsLeft(const FPoint &a, const FPoint &b, const FPoint &c);
+bool TurnsLeft(const Point &a, const Point &b, const Point &c);
 
-bool TurnsRight(const FPoint &a, const FPoint &b, const FPoint &c);
+bool TurnsRight(const Point &a, const Point &b, const Point &c);
 
-bool Collinear(const FPoint &a, const FPoint &b, const FPoint &c);
+bool Collinear(const Point &a, const Point &b, const Point &c);
 
-bool TurnsLeftWithEps(const FPoint &a, const FPoint &b, const FPoint &c, double eps);
+bool TurnsLeftWithEps(const Point &a, const Point &b, const Point &c, double eps);
 
-bool TurnsRightWithEps(const FPoint &a, const FPoint &b, const FPoint &c, double eps);
+bool TurnsRightWithEps(const Point &a, const Point &b, const Point &c, double eps);
 
-bool CollinearWithEps(const FPoint &a, const FPoint &b, const FPoint &c, double eps);
+bool CollinearWithEps(const Point &a, const Point &b, const Point &c, double eps);
 
 /**
  *
@@ -43,7 +42,7 @@ bool CollinearWithEps(const FPoint &a, const FPoint &b, const FPoint &c, double 
  *      FALSE | FALSE | TRUE
  * Exact implementation, works only if a, b, c are EXACTLY collinear.
  */
-inline bool Extends(const FPoint &a, const FPoint &b, const FPoint &c) {
+inline bool Extends(const Point &a, const Point &b, const Point &c) {
     return (a.x == b.x) ? ((a.y <= b.y) ? (b.y <= c.y) : (b.y >= c.y)) : ((a.x <= b.x) ? (b.x <= c.x) : (b.x >= c.x));
 }
 
@@ -53,7 +52,7 @@ inline bool Extends(const FPoint &a, const FPoint &b, const FPoint &c) {
  *
  * Exact implementation, works only if a, b, c are EXACTLY collinear.
  */
-inline bool IsBetween(const FPoint &a, const FPoint &b, const FPoint &c) {
+inline bool IsBetween(const Point &a, const Point &b, const Point &c) {
     return !Extends(a, b, c) && !Extends(b, a, c);
 }
 
@@ -76,18 +75,10 @@ inline bool IsBetween(const FPoint &a, const FPoint &b, const FPoint &c) {
  *  Point q lies on the border of a-b-c: 'a', 'b', 'c', 'A', 'B', 'C'.
  *  Point q is equal to one of the triangle vertices:  'A', 'B', 'C'.
  */
-char PointTriangleRelation(const FPoint &q, const FPoint &a, const FPoint &b, const FPoint &c);
+char PointTriangleRelation(const Point &q, const Point &a, const Point &b, const Point &c);
 
-char PointTriangleRelationWithEps(const FPoint &q, const FPoint &a, const FPoint &b, const FPoint &c, double eps);
+char PointTriangleRelationWithEps(const Point &q, const Point &a, const Point &b, const Point &c, double eps);
 
-bool IsPointInCone(const FPoint &q, const FPoint &a, const FPoint &b, const FPoint &c);
-
-FPolygon RemoveDuplicatePoints(const FPolygon &polygon);
-
-FPolygon RemoveCollinearPoints(const FPolygon &polygon);
-
-FPoint FindAnyPointInNonConvexPolygon(const FPolygon &polygon, bool clockwise);
+bool IsPointInCone(const Point &q, const Point &a, const Point &b, const Point &c);
 
 }
-
-#endif //TRIVIS_CORE_GEOM_ROBUST_GEOMETRY_H_

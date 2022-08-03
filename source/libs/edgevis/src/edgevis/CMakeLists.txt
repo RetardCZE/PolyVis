@@ -3,7 +3,7 @@
 
 FILE(GLOB SRCFILES_HELPERS helpers/*.cpp)
 FILE(GLOB SRCFILES_STRUCTS structs/*.cpp)
-FILE(GLOB SRCFILES_SEARCH search/*.cpp)
+FILE(GLOB SRCFILES_SEARCH search/*.cpp search/*.cc)
 FILE(GLOB SRCFILES_UTILS_FADEUTILS fadeutils/*.cpp)
 FILE(GLOB SRCFILES_PARSERS parsers/*.cpp)
 
