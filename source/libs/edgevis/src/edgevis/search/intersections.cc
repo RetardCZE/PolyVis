@@ -9,8 +9,6 @@
 
 #include "edgevis/search/intersections.h"
 
-#include "edgevis/search/robust_geometry.h"
-
 using namespace edgevis;
 
 /**
@@ -28,5 +26,45 @@ bool  robust_geom::LineLineIntersectionNotCollinear(const Point &a, const Point 
     p.x = a.x + split * (b.x - a.x);
     p.y = a.y + split * (b.y - a.y);
     return true;
+}
+
+uint8_t robust_geom::LineSegmentIntersectionGeneral(const Point &a, const Point &b, const Point &c, const Point &d, Point &p){
+    robust_geom::Orientation cOri = robust_geom::Orient(a, b , c);
+    robust_geom::Orientation dOri = robust_geom::Orient(a, b, d);
+    if(cOri == dOri){
+        /* specific cases
+         * */
+        if(cOri == robust_geom::Orientation::kCollinear){
+            /*
+             * Segment is part of a->b line. This should not occur.
+             */
+            return 3;
+        }
+        if(cOri == robust_geom::Orientation::kLeftTurn){
+            return 1;
+        }
+        if(cOri == robust_geom::Orientation::kRightTurn){
+            return 2;
+        }
+    }
+    if(cOri == robust_geom::Orientation::kCollinear){
+        p = c;
+        return 0;
+    }
+    if(dOri == robust_geom::Orientation::kCollinear){
+        p = d;
+        return 0;
+    }
+    /*
+     * only if all special cases are checked we move to common intersection calculation. That can be done with line line.
+     */
+    bool check = robust_geom::LineLineIntersectionNotCollinear(a, b, c, d, p);
+    if(check){
+        return 0;
+    }else{
+        return 4;
+    }
+
+
 }
 

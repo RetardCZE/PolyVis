@@ -55,6 +55,7 @@ namespace edgevis{
         for (Edge* e :edges) {
             if (pl.poly1 == e->rightPoly && e->left_nodes.size() > 0) {
                 for(int i = 0; i < e->left_nodes.size(); i++){
+                    std::cout << e->left_nodes[i] << std::endl;
                     Orientation RP = get_orientation(e->left_nodes[i].P, e->left_nodes[i].root_R, p);
                     Orientation LP = get_orientation(e->left_nodes[i].P, e->left_nodes[i].root_L, p);
                     if(RP != Orientation::CCW && LP != Orientation::CW){
@@ -103,6 +104,7 @@ namespace edgevis{
 
             if(pl.poly1 == e->leftPoly && e->right_nodes.size()>0){
                 for(int i = 0; i < e->right_nodes.size(); i++) {
+                    std::cout << e->right_nodes[i] << std::endl;
                     Orientation RP = get_orientation(e->right_nodes[i].P, e->right_nodes[i].root_R, p);
                     Orientation LP = get_orientation(e->right_nodes[i].P, e->right_nodes[i].root_L, p);
 
@@ -149,6 +151,7 @@ namespace edgevis{
                     last_state = current_state;
                 }
             }
+            if(debug)getchar();
         }
         return out;
     }
@@ -196,6 +199,11 @@ namespace edgevis{
             o.root_R = true_root_R;
             o.root_L =  true_root_L;
             recompute_end_roots(node, o);
+            if(!(o.P == o.P)){
+                std::cout << o << node << *node.predecessor;
+                std::cout << "Encountered nan as optim node point." << std::endl;
+                getchar();
+            }
             visibility.push_back(o);
 
 
@@ -205,16 +213,42 @@ namespace edgevis{
             o.root_R = true_root_R;
             o.root_L =  true_root_L;
             recompute_end_roots(node, o);
-            visibility.push_back(o);
+            if(!(o.P == o.P)){
+                this->reset_visu();
 
+                this->visualise_segment(node.predecessor->root_R, node.predecessor->root_L, 0, 0.5);
+                this->visualise_segment(node.predecessor->child_R, node.predecessor->child_L, 1, 0.5);
+                this->visualise_segment(node.predecessor->predecessor->root_R, node.predecessor->predecessor->root_L, 1, 0.5);
+                this->visualise_segment(node.predecessor->predecessor->child_R, node.predecessor->predecessor->child_L, 2, 0.5);
+
+                std::cout << o << node << *node.predecessor;
+                std::cout << "Encountered nan as optim node point." << std::endl;
+                getchar();
+            }
+            visibility.push_back(o);
             return;
         }
         int num;
         SearchNode* nodes = new edgevis::SearchNode[mesh.max_poly_sides + 2];
-        num = edgevis::expand_searchnode(node, mesh, nodes);
+        bool hasNan;
+        num = edgevis::expand_searchnode(node, mesh, nodes, hasNan);
+        /*
+        if (hasNan) {
+            std::cout << num << std::endl;
+            this->reset_visu();
 
+            for(int n = 0; n < num; n++){
+                this->visualise_segment(nodes[n].root_L, nodes->root_R, 0, 0.5);
+                this->visualise_segment(nodes[n].child_L, nodes->child_R, 1, 0.5);
+
+                std::cout << nodes[n] <<std::endl;
+            }
+            getchar();
+        }*/
         for(int i = 0; i < num; i++){
+            std::cout << nodes[i];
             recompute_roots(nodes[i]);
+            std::cout << nodes[i];
             expand(nodes[i], visibility, level + 1, side);
         }
         delete [] nodes;

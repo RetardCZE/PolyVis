@@ -1,6 +1,11 @@
 # Sprint august 2022
 Logger for daily progress on sprint during august 2022.
 
+### 4.8.2022
+- Implementing robust Line-Segment intersection. Seems that previous approach might have
+ been logicaly correct, but all cases of intersecting lines/segments werent taken into
+account. Once more robust handling of these intersections is done, results should stabilise.
+
 ### 3.8.2022
 - Compiled succesfully robust geometry from trivis. Hopefully with all parts needed. 
 Problem seems to be in line parallelism. Have to find why that occurs, and find general solution.

@@ -8,6 +8,7 @@
  */
 
 #include "edgevis/structs/point.h"
+#include "edgevis/search/robust_geometry.h"
 using namespace edgevis;
 namespace robust_geom {
 bool LineLineIntersectionNotCollinear(const Point &a, const Point &b, const Point &c, const Point &d, Point &p);
@@ -36,5 +37,14 @@ bool LineLineIntersectionNotCollinear(const Point &a, const Point &b, const Poin
  *  Intersection NOT found: 'c', '0', 'e'.
  */
 
-}
+uint8_t LineSegmentIntersectionGeneral(const Point &a, const Point &b, const Point &c, const Point &d, Point &p);
+/**
+ * Find intersection between line and segment.
+ * Return 0 if successful,
+ * 1 if segment was left and
+ * 2 if segment was right.
+ * 3 is returned when cd is part of ab. (very rare case) -> intersection is whole segment.
+ * 4 on unknown error.
+ */
 
+}

@@ -5,7 +5,6 @@
 #include "edgevis/structs/edge.h"
 #include "edgevis/helpers/geometry.h"
 #include "edgevis/search/intersections.h"
-#include "edgevis/search/robust_geometry.h"
 #include <vector>
 
 namespace edgevis
@@ -100,23 +99,52 @@ namespace edgevis
         SearchNode* parent;
         parent = node.predecessor;
         while(parent){
-            parent_intersection = line_intersect(node.child_L,
-                                                 parent->child_R,
-                                                 node.root_L,
-                                                 node.root_R);
 
+            uint8_t parentIntersectionCheck = robust_geom::LineSegmentIntersectionGeneral(node.child_L,
+                                                                                          parent->child_R,
+                                                                                          node.root_L,
+                                                                                          node.root_R,
+                                                                                          parent_intersection);
 
-            child_intersection = line_intersect(node.child_R,
-                                                parent->child_L,
-                                                node.root_R,
-                                                node.root_L);
+            uint8_t childIntersectionCheck = robust_geom::LineSegmentIntersectionGeneral(node.child_R,
+                                                                                         parent->child_L,
+                                                                                         node.root_L,
+                                                                                         node.root_R,
+                                                                                         child_intersection);
 
-            if(is_on_segment(node.root_R, node.root_L, parent_intersection) && node.root_L != node.child_L){
-                parent_intersection == parent_intersection ? node.root_R = parent_intersection : node.root_R;
+            switch(parentIntersectionCheck){
+                case 0:
+                    node.root_R = parent_intersection;
+                    break;
+                case 2:
+                    node.root_R = node.root_R;
+                    break;
+                case 1:
+                    std::cerr << "Case 1\n";
+                case 3:
+                    std::cerr << "Case 3\n";
+                case 4:
+                    std::cerr << "Case 4\n";
+                default:
+                    std::cerr << "Root recomputation crashed." << std::endl;
+                    assert(false);
             }
-
-            if(is_on_segment(node.root_R, node.root_L, child_intersection) && node.root_R != node.child_R){
-                child_intersection == child_intersection ? node.root_L = child_intersection : node.root_L;
+            switch(childIntersectionCheck){
+                case 0:
+                    node.root_L = child_intersection;
+                    break;
+                case 1:
+                    node.root_L = node.root_L;
+                    break;
+                case 2:
+                    std::cerr << "Case 2\n";
+                case 3:
+                    std::cerr << "Case 3\n";
+                case 4:
+                    std::cerr << "Case 4\n";
+                default:
+                    std::cerr << "Root recomputation crashed." << std::endl;
+                    assert(false);
             }
 
             parent = parent->predecessor;
@@ -201,7 +229,7 @@ namespace edgevis
     }
 
     int
-    expand_searchnode(SearchNode& node, const Mesh& mesh, SearchNode* newNodes) {
+    expand_searchnode(SearchNode &node, const Mesh &mesh, SearchNode *newNodes, bool &hasNan) {
         // Temporary searchnode object for creating new nodes
         SearchNode temp = init_temp_node(node);
 
@@ -246,6 +274,7 @@ namespace edgevis
                                                mesh.mesh_vertices[sortedV[left_visible + 1]].p,
                                                left_parent, left_child);
         }
+        /*
         if (!(left_intersection == left_intersection && right_intersection == right_intersection)) {
 
             std::cout << left_intersection << " | " << right_intersection << std::endl;
@@ -261,12 +290,11 @@ namespace edgevis
             std::cout << a << " | "<< ab << " | "  <<(c - a) << " | "  <<(d - a)<< " | " << (d - c) <<std::endl;
 
             std::cout << ( a + ab * ((c - a) * (d - a))) << " | " << (ab * (d - c)) << std::endl;
-
-            left_intersection = ( a + ab * ((c - a) * (d - a)));
             std::cout << robust_geom::LineLineIntersectionNotCollinear(a,b,c,d,p) << std::endl;
             std::cout << p << std::endl;
             getchar();
-        }
+            hasNan = true;
+        }*/
         i = right_visible;
         if(right_intersection != mesh.mesh_vertices[sortedV[right_visible]].p) {
             i--;

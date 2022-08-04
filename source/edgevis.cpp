@@ -326,6 +326,7 @@ int body(ProgramOptionVariables pov)
             }
             Evis.visualise_polygon(verticesPoly, 1);
             getchar();
+            system("clear");
         }
 
     }

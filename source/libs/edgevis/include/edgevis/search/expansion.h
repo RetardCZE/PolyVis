@@ -42,6 +42,6 @@ SearchNode init_temp_node(SearchNode& node);
 /*
  *
  */
-int expand_searchnode(SearchNode& node, const Mesh& mesh, SearchNode* newNodes);
+    int expand_searchnode(SearchNode &node, const Mesh &mesh, SearchNode *newNodes, bool &hasNan);
 
 }
