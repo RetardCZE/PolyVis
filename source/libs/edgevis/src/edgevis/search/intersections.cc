@@ -49,11 +49,19 @@ uint8_t robust_geom::LineSegmentIntersectionGeneral(const Point &a, const Point 
     }
     if(cOri == robust_geom::Orientation::kCollinear){
         p = c;
-        return 0;
+        if (dOri == robust_geom::Orientation::kLeftTurn) {
+            return 5;
+        }else{
+            return 6;
+        }
     }
     if(dOri == robust_geom::Orientation::kCollinear){
         p = d;
-        return 0;
+        if (cOri == robust_geom::Orientation::kLeftTurn) {
+            return 5;
+        }else{
+            return 6;
+        }
     }
     /*
      * only if all special cases are checked we move to common intersection calculation. That can be done with line line.

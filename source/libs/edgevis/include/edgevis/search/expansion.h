@@ -18,15 +18,6 @@ int get_edge_init_nodes(Edge edge, bool side, const Mesh& mesh, SearchNode* init
 /*
  *
  */
-bool is_observable(Point left_parent,
-                       Point left_child,
-                       Point right_parent,
-                       Point right_child,
-                       Point p);
-
-/*
- *
- */
 int normalise(const Polygon& P, int transition_R, std::vector<int>* sorted_vertices, std::vector<int>* sorted_polygons);
 
 int find_visible(const Mesh& mesh, SearchNode& node, std::vector<int>& sorted_vertices, int* right_visible, int* left_visible);
@@ -34,7 +25,7 @@ int find_visible(const Mesh& mesh, SearchNode& node, std::vector<int>& sorted_ve
 /*
  *
  */
-void recompute_roots(SearchNode &node);
+
 void recompute_end_roots(SearchNode &node, OptimNode &o);
 
 
@@ -42,6 +33,6 @@ SearchNode init_temp_node(SearchNode& node);
 /*
  *
  */
-    int expand_searchnode(SearchNode &node, const Mesh &mesh, SearchNode *newNodes, bool &hasNan);
+
 
 }

@@ -10,6 +10,7 @@
 #include "geom/geom.h"
 #include "geom/utils.h"
 #include "geom/cairo_geom_drawer.h"
+
 namespace cgm = cairo_geom_drawer;
 namespace edgevis{
     class EdgeVisibility{
@@ -49,5 +50,6 @@ namespace edgevis{
         parsers::GeomMesh gmesh;
         bool debug;
     };
-
+    void recompute_roots(SearchNode &node, EdgeVisibility *eObject);
+    int expand_searchnode(SearchNode &node, const Mesh &mesh, SearchNode *newNodes, edgevis::EdgeVisibility *eObject);
 };

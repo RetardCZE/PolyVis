@@ -31,7 +31,7 @@ struct SearchNode
 
     friend std::ostream& operator<<(std::ostream& stream, const SearchNode& sn)
     {
-        return stream << "SearchNode - root: " << sn.root_R << " | " << sn.root_L << "\n"
+        return stream << "SearchNode - root: " << sn.root_L << " | " << sn.root_R << "\n"
                       << "edge: " << sn.child_L << " | " << sn.child_R << "\n"
                       << "next: " << sn.next_polygon << "\n";
     }

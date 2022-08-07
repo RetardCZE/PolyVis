@@ -5,19 +5,11 @@
 #include "edgevis/structs/edge.h"
 #include "edgevis/helpers/geometry.h"
 #include "edgevis/search/intersections.h"
+#include "edgevis/search/visibility.h"
 #include <vector>
 
 namespace edgevis
 {
-    bool
-    is_observable(Point left_parent, Point left_child, Point right_parent, Point right_child, Point p){
-        Orientation L = get_orientation(left_parent, left_child, p);
-        Orientation R = get_orientation(right_parent, right_child, p);
-        bool a = (L == Orientation::CW || L == Orientation::COLLINEAR);
-        bool b = (R == Orientation::CCW || R == Orientation::COLLINEAR);
-        return a && b;
-    }
-
     int
     normalise(const Polygon& P, int transition_R, std::vector<int>* sorted_vertices, std::vector<int>* sorted_polygons){
         sorted_vertices->clear();
@@ -94,59 +86,90 @@ namespace edgevis
     }
 
     void
-    recompute_roots(SearchNode &node){
-        Point parent_intersection, child_intersection;
+    recompute_roots(SearchNode &node, edgevis::EdgeVisibility *eObject) {
+        Point parent_intersection, child_intersection, temp;
+        float ratioPx, ratioPy, ratioCx, ratioCy;
         SearchNode* parent;
         parent = node.predecessor;
         while(parent){
 
             uint8_t parentIntersectionCheck = robust_geom::LineSegmentIntersectionGeneral(node.child_L,
                                                                                           parent->child_R,
-                                                                                          node.root_L,
                                                                                           node.root_R,
+                                                                                          node.root_L,
                                                                                           parent_intersection);
 
             uint8_t childIntersectionCheck = robust_geom::LineSegmentIntersectionGeneral(node.child_R,
                                                                                          parent->child_L,
-                                                                                         node.root_L,
                                                                                          node.root_R,
+                                                                                         node.root_L,
                                                                                          child_intersection);
 
             switch(parentIntersectionCheck){
-                case 0:
-                    node.root_R = parent_intersection;
-                    break;
                 case 2:
-                    node.root_R = node.root_R;
+                case 3:
+                case 6:
+                    break;
+                case 0:
+                case 5:
+                    temp = parent->child_R - node.child_L;
+                    ratioPx = temp.x / ((parent_intersection - node.child_L).x + 1e-12);
+                    ratioPy = temp.y / ((parent_intersection - node.child_L).y + 1e-12);
+                    if (ratioPx > 0 || ratioPy > 0)
+                        node.root_R = parent_intersection;
                     break;
                 case 1:
                     std::cerr << "Case 1\n";
-                case 3:
-                    std::cerr << "Case 3\n";
                 case 4:
                     std::cerr << "Case 4\n";
                 default:
-                    std::cerr << "Root recomputation crashed." << std::endl;
-                    assert(false);
+                    std::cout << node;
+                    eObject->reset_visu();
+                    eObject->visualise_segment(node.child_R, node.child_L, 0, 0.5);
+                    eObject->visualise_segment(node.root_R, node.root_L, 1, 0.5);
+                    eObject->visualise_segment(parent->child_R, parent->child_L, 2, 0.5);
+                    std::cout << parent_intersection << " | " << static_cast<int>(parentIntersectionCheck) << std::endl;
+                    std::cout << child_intersection << " | " << static_cast<int>(childIntersectionCheck) << std::endl;
+                    eObject->visualise_point(parent_intersection, 0);
+                    eObject->visualise_point(child_intersection, 2);
+                    std::cerr << "Root R recomputation crashed." <<  std::endl;
+                    eObject->visualise_point(node.root_L, 3);
+                    eObject->visualise_point(node.root_R, 1);
+                    getchar();break;
             }
-            switch(childIntersectionCheck){
-                case 0:
-                    node.root_L = child_intersection;
-                    break;
+            switch(childIntersectionCheck) {
                 case 1:
-                    node.root_L = node.root_L;
+                case 3:
+                case 5:
+                    break;
+                case 0:
+                case 6:
+                    temp = parent->child_L - node.child_R;
+                    ratioCx = temp.x / ((child_intersection - node.child_R).x + 1e-12);
+                    ratioCy = temp.y / ((child_intersection - node.child_R).y + 1e-12);
+                    if (ratioCy > 0 || ratioCx > 0)
+                        node.root_L = child_intersection;
                     break;
                 case 2:
                     std::cerr << "Case 2\n";
-                case 3:
-                    std::cerr << "Case 3\n";
                 case 4:
                     std::cerr << "Case 4\n";
                 default:
-                    std::cerr << "Root recomputation crashed." << std::endl;
-                    assert(false);
-            }
+                    std::cout << node;
+                    eObject->reset_visu();
+                    eObject->visualise_segment(node.child_R, node.child_L, 0, 0.5);
+                    eObject->visualise_segment(node.root_R, node.root_L, 1, 0.5);
+                    eObject->visualise_segment(parent->child_R, parent->child_L, 2, 0.5);
+                    std::cout << parent_intersection << " | " << static_cast<int>(parentIntersectionCheck) << std::endl;
+                    std::cout << child_intersection << " | " << static_cast<int>(childIntersectionCheck) << std::endl;
+                    eObject->visualise_point(parent_intersection, 0);
+                    eObject->visualise_point(child_intersection, 2);
 
+                    eObject->visualise_point(node.root_L, 3);
+                    eObject->visualise_point(node.root_R, 1);
+                    getchar();
+                    break;
+            }
             parent = parent->predecessor;
         }
     }
@@ -214,14 +237,16 @@ namespace edgevis
         *right_visible = S-1;
         *left_visible = 0;
         for(i = 0; i<S; i++){
-            if (!is_observable(right_child, left_child, right_parent, right_child, mesh.mesh_vertices[sorted_vertices[S-1-i]].p)){
-                break;
+            if (robust_geom::Orient(right_parent, right_child, mesh.mesh_vertices[sorted_vertices[S-1-i]].p) == robust_geom::Orientation::kRightTurn){
+                if( i > 0)
+                    break;
             }
             *right_visible = S-1-i;
         }
         for(i = 0; i<S; i++){
-            if (!is_observable(left_parent, left_child, left_child, right_child, mesh.mesh_vertices[sorted_vertices[i]].p)){
-                break;
+            if (robust_geom::Orient(left_parent, left_child, mesh.mesh_vertices[sorted_vertices[i]].p) == robust_geom::Orientation::kLeftTurn){
+                if( i > 0)
+                    break;
             }
             *left_visible = i;
         }
@@ -229,7 +254,7 @@ namespace edgevis
     }
 
     int
-    expand_searchnode(SearchNode &node, const Mesh &mesh, SearchNode *newNodes, bool &hasNan) {
+    expand_searchnode(SearchNode &node, const Mesh &mesh, SearchNode *newNodes, EdgeVisibility *eObject) {
         // Temporary searchnode object for creating new nodes
         SearchNode temp = init_temp_node(node);
 
@@ -241,6 +266,7 @@ namespace edgevis
         Point left_child = node.child_L;
         Point left_parent = node.root_R;
 
+
         const Polygon &expander = mesh.mesh_polygons[node.next_polygon];
         std::vector<int> sortedV, sortedP;
 
@@ -249,52 +275,67 @@ namespace edgevis
         const int S = sortedV.size();
 
         int i;
+        uint8_t rCheck = 0;
+        uint8_t lCheck = 0;
         int right_visible, left_visible;
         int visible = find_visible(mesh, node, sortedV, &right_visible, &left_visible);
 
         Point right_intersection, left_intersection;
         int count = 0;
 
-        if (get_orientation(right_child, right_parent, mesh.mesh_vertices[sortedV[right_visible]].p) ==
-            Orientation::COLLINEAR ||
+        if (robust_geom::Orient(right_child, right_parent, mesh.mesh_vertices[sortedV[right_visible]].p) ==
+            robust_geom::Orientation::kCollinear ||
             right_visible == 0) {
             right_intersection = mesh.mesh_vertices[sortedV[right_visible]].p;
         } else {
-            right_intersection = line_intersect(mesh.mesh_vertices[sortedV[right_visible - 1]].p,
-                                                mesh.mesh_vertices[sortedV[right_visible]].p,
-                                                right_parent, right_child);
+            rCheck = robust_geom::LineSegmentIntersectionGeneral(
+                    right_parent, right_child, mesh.mesh_vertices[sortedV[right_visible - 1]].p,
+                    mesh.mesh_vertices[sortedV[right_visible]].p, right_intersection);
+
+            switch (rCheck) {
+                case 0:
+                    break;
+                case 1:
+                    right_intersection = mesh.mesh_vertices[sortedV[right_visible]].p;
+                    break;
+                default:
+                    break;
+            }
         }
 
-        if (get_orientation(left_parent, left_child, mesh.mesh_vertices[sortedV[left_visible]].p) ==
-            Orientation::COLLINEAR ||
+        if (robust_geom::Orient(left_parent, left_child, mesh.mesh_vertices[sortedV[left_visible]].p) ==
+            robust_geom::Orientation::kCollinear ||
             left_visible == S - 1) {
             left_intersection = mesh.mesh_vertices[sortedV[left_visible]].p;
         } else {
-            left_intersection = line_intersect(mesh.mesh_vertices[sortedV[left_visible]].p,
-                                               mesh.mesh_vertices[sortedV[left_visible + 1]].p,
-                                               left_parent, left_child);
+            lCheck = robust_geom::LineSegmentIntersectionGeneral(
+                    left_parent, left_child, mesh.mesh_vertices[sortedV[left_visible]].p,
+                    mesh.mesh_vertices[sortedV[left_visible + 1]].p, left_intersection);
+            switch (lCheck) {
+                case 0:
+                    break;
+                case 2:
+                    left_intersection = mesh.mesh_vertices[sortedV[left_visible]].p;
+                    break;
+                default:
+                    break;
+            }
         }
-        /*
-        if (!(left_intersection == left_intersection && right_intersection == right_intersection)) {
+        switch (lCheck) {
+            default:
+                std::cout << node;
+                eObject->visualise_segment(right_parent, right_child, 0, 0.5);
+                eObject->visualise_segment(left_parent, left_child, 1, 0.5);
+                eObject->visualise_segment(node.child_R, node.child_L, 2, 0.5);
+                std::cout << left_intersection << " | " << right_intersection << std::endl;
+                std::cout << static_cast<int>(lCheck) << " | " << static_cast<int>(rCheck) << std::endl;
+                std::cout << visible << " | " << S << " | " << left_visible << " | " << right_visible << std::endl;
 
-            std::cout << left_intersection << " | " << right_intersection << std::endl;
+                getchar();
+                break;
+        }
 
 
-            Point a = mesh.mesh_vertices[sortedV[left_visible]].p;
-            Point b = mesh.mesh_vertices[sortedV[left_visible + 1]].p;
-            Point c = left_parent;
-            Point d = left_child;
-            const Point ab = b - a;
-            Point p;
-            std::cout << a << " | "<< b << " | "  <<c << " | "  <<d<< std::endl;
-            std::cout << a << " | "<< ab << " | "  <<(c - a) << " | "  <<(d - a)<< " | " << (d - c) <<std::endl;
-
-            std::cout << ( a + ab * ((c - a) * (d - a))) << " | " << (ab * (d - c)) << std::endl;
-            std::cout << robust_geom::LineLineIntersectionNotCollinear(a,b,c,d,p) << std::endl;
-            std::cout << p << std::endl;
-            getchar();
-            hasNan = true;
-        }*/
         i = right_visible;
         if(right_intersection != mesh.mesh_vertices[sortedV[right_visible]].p) {
             i--;
@@ -319,6 +360,8 @@ namespace edgevis
             temp.right_vertex = sortedV[i];
             newNodes[count++] = temp;
         }
+
+
         return count;
 
     }
