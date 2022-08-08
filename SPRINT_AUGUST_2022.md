@@ -1,6 +1,11 @@
 # Sprint august 2022
 Logger for daily progress on sprint during august 2022.
 
+### 8.8.2022
+- Realized that last error was not some general problem, but its numeric. More precisely it
+seems, that polygons on polygonal potholes are not convex. Needs further research/discussion.
+Will do testing on triangles too.
+
 ### 6.8.2022 + 7.8.2022
 - Implemented robust geometry. And started debugging edgevis.
 - Got lost in debugging and best solution will probably be fast reimplementation with
