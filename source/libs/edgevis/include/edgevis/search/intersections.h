@@ -6,7 +6,7 @@
  * E-mail: jan.mikula@cvut.cz
  *
  */
-
+#pragma once
 #include "edgevis/structs/point.h"
 #include "edgevis/search/robust_geometry.h"
 using namespace edgevis;

@@ -6,9 +6,10 @@
  * E-mail: jan.mikula@cvut.cz
  *
  */
-
+#pragma once
 #include "edgevis/structs/point.h"
 #include "edgevis/structs/polygon.h"
+#include "edgevis/libs/predicates/predicates.h"
 
 using namespace edgevis;
 namespace robust_geom {

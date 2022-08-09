@@ -269,7 +269,9 @@ int body(ProgramOptionVariables pov)
     PolyVis solverPoly(geomMesh);
     edgevis::EdgeVisibility Evis(edgemesh);
     Evis.set_visual_mesh(geomMesh);
+    std::cout << edgemesh.is_convex();
 
+    return 1;
     std::vector<polyanya::Point> verticesPolyAnya;
 
     std::cout << "Precomputing visibility of edges.\n";

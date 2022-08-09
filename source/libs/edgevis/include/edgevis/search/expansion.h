@@ -1,3 +1,8 @@
+#pragma once
+
+#include "edgevis/structs/polygon.h"
+#include "edgevis/search/intersections.h"
+#include "edgevis/search/visibility.h"
 #include "edgevis/structs/searchnode.h"
 #include "edgevis/structs/mesh.h"
 #include "edgevis/structs/point.h"

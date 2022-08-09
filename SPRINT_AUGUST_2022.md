@@ -1,6 +1,13 @@
 # Sprint august 2022
 Logger for daily progress on sprint during august 2022.
 
+### 9.8 2022
+- Has to reimplement intersections to abstarct structure. Final computation of points has to be done 
+at the end. -> Change whole structure.
+- Found out that Fade2D polygonal mesh does not fulfill convex rule. On potholes was found 1 polygon 
+that did was not convex. Few other maps seemed fine, so currently only check is implemented, and potholes
+won't be used for measurement.
+
 ### 8.8.2022
 - Realized that last error was not some general problem, but its numeric. More precisely it
 seems, that polygons on polygonal potholes are not convex. Needs further research/discussion.

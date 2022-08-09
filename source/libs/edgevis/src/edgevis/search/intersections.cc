@@ -6,7 +6,6 @@
  * E-mail: jan.mikula@cvut.cz
  *
  */
-
 #include "edgevis/search/intersections.h"
 
 using namespace edgevis;
@@ -31,6 +30,7 @@ bool  robust_geom::LineLineIntersectionNotCollinear(const Point &a, const Point 
 uint8_t robust_geom::LineSegmentIntersectionGeneral(const Point &a, const Point &b, const Point &c, const Point &d, Point &p){
     robust_geom::Orientation cOri = robust_geom::Orient(a, b , c);
     robust_geom::Orientation dOri = robust_geom::Orient(a, b, d);
+    //std::cout << static_cast<int>(cOri) << " | " << static_cast<int>(dOri) << std::endl;
     if(cOri == dOri){
         /* specific cases
          * */

@@ -9,8 +9,6 @@
 
 #include "edgevis/search/robust_geometry.h"
 
-#include "edgevis/libs/predicates/predicates.h"
-
 #include <cassert>
 
 using namespace edgevis;

@@ -4,6 +4,7 @@
 #include "edgevis/structs/vertex.h"
 #include "edgevis/structs/edge.h"
 #include "edgevis/parsers/utils.h"
+#include "edgevis/search/robust_geometry.h"
 
 #include <vector>
 #include <iostream>
@@ -203,6 +204,8 @@ namespace edgevis {
         void read(std::istream &infile);
 
         void read(const parsers::GeomMesh &geomMesh);
+
+        bool is_convex();
 
         void precalc_point_location();
 

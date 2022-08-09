@@ -1,11 +1,4 @@
-#include "edgevis/structs/searchnode.h"
-#include "edgevis/structs/mesh.h"
-#include "edgevis/structs/point.h"
-#include "edgevis/structs/polygon.h"
-#include "edgevis/structs/edge.h"
-#include "edgevis/helpers/geometry.h"
-#include "edgevis/search/intersections.h"
-#include "edgevis/search/visibility.h"
+#include "edgevis/search/expansion.h"
 #include <vector>
 
 namespace edgevis
@@ -283,7 +276,7 @@ namespace edgevis
         Point right_intersection, left_intersection;
         int count = 0;
 
-        if (robust_geom::Orient(right_child, right_parent, mesh.mesh_vertices[sortedV[right_visible]].p) ==
+        if (robust_geom::Orient(right_parent, right_child, mesh.mesh_vertices[sortedV[right_visible]].p) ==
             robust_geom::Orientation::kCollinear ||
             right_visible == 0) {
             right_intersection = mesh.mesh_vertices[sortedV[right_visible]].p;
@@ -298,6 +291,12 @@ namespace edgevis
                 case 1:
                     right_intersection = mesh.mesh_vertices[sortedV[right_visible]].p;
                     break;
+                case 2:
+                    if(visible == 0){
+
+                    }else{
+                        std::cerr << " Possibly wrong operation on right visibility edge on expansion." << std::endl;
+                    }
                 default:
                     break;
             }
@@ -317,16 +316,27 @@ namespace edgevis
                 case 2:
                     left_intersection = mesh.mesh_vertices[sortedV[left_visible]].p;
                     break;
+                case 1:
+                    if(visible == 0){
+
+                    }else{
+                        std::cerr << " Possibly wrong operation on left visibility edge on expansion." << std::endl;
+                    }
                 default:
                     break;
             }
         }
         switch (lCheck) {
             default:
+                std::cout << right_parent << " | " << right_child << " | " << mesh.mesh_vertices[sortedV[right_visible - 1]].p
+                         << " | " <<mesh.mesh_vertices[sortedV[right_visible]].p<< " | " << mesh.mesh_vertices[sortedV[left_visible]].p << " | " << std::endl;
                 std::cout << node;
+
                 eObject->visualise_segment(right_parent, right_child, 0, 0.5);
-                eObject->visualise_segment(left_parent, left_child, 1, 0.5);
-                eObject->visualise_segment(node.child_R, node.child_L, 2, 0.5);
+                eObject->visualise_segment(mesh.mesh_vertices[sortedV[right_visible - 1]].p,
+                                           mesh.mesh_vertices[sortedV[right_visible]].p, 1, 0.5);
+                /*eObject->visualise_segment(left_parent, left_child, 1, 0.5);
+                eObject->visualise_segment(node.child_R, node.child_L, 2, 0.5);*/
                 std::cout << left_intersection << " | " << right_intersection << std::endl;
                 std::cout << static_cast<int>(lCheck) << " | " << static_cast<int>(rCheck) << std::endl;
                 std::cout << visible << " | " << S << " | " << left_visible << " | " << right_visible << std::endl;

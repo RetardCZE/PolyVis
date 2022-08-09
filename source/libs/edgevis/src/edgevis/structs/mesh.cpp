@@ -292,6 +292,33 @@ namespace edgevis {
 #undef fail
     }
 
+    bool Mesh::is_convex(){
+        int i;
+        for(auto P : this->mesh_polygons){
+            int S = P.vertices.size();
+            for(i = 0; i < S; i++){
+                if(robust_geom::Orient(this->mesh_vertices[P.vertices[i]].p,
+                                       this->mesh_vertices[P.vertices[(i+1) % S]].p,
+                                       this->mesh_vertices[P.vertices[(i+2) % S]].p) == robust_geom::Orientation::kRightTurn){
+                    std::cout << "Mesh is not valid on polygon defined by: "<< std::endl;
+                    int j = 0;
+                    for(auto v : P.vertices){
+                        if(j == i || j == (i+1)%S || j == (i+2)%S){
+                            std::cout << "  X  ";
+                        }else {
+                            std::cout << "     ";
+                        }
+                        std::cout << this->mesh_vertices[v].p << std::endl;
+                        j++;
+                    }
+                    return false;
+                }
+
+            }
+        }
+        return true;
+    }
+
     void Mesh::calculate_edges(){
         int edges, i, Aidx, Bidx;
         Edge temp;

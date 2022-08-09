@@ -1,3 +1,4 @@
+#pragma once
 #include "edgevis/search/expansion.h"
 #include "edgevis/structs/edge.h"
 #include "edgevis/structs/mesh.h"
