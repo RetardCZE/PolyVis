@@ -1,6 +1,11 @@
 # Sprint august 2022
 Logger for daily progress on sprint during august 2022.
 
+### 10.8.2022 + 11.8.2022
+- Most drawing on paper how intersection works and how new pivot points are passed.
+- Implemented struct for holding intersections given by combination of mesh vertices.
+- Implementation will change most of the code -> I will start with paper before code works.
+
 ### 9.8 2022
 - Has to reimplement intersections to abstarct structure. Final computation of points has to be done 
 at the end. -> Change whole structure.

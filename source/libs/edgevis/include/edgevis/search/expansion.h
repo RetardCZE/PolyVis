@@ -8,6 +8,7 @@
 #include "edgevis/structs/point.h"
 #include "edgevis/structs/edge.h"
 #include "edgevis/helpers/geometry.h"
+#include "edgevis/structs/intersection.h"
 #include <vector>
 
 namespace edgevis
