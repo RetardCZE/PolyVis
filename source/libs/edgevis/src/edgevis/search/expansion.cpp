@@ -35,21 +35,21 @@ namespace edgevis
             if(edge.rightPoly == -1) return 0;
             expander = mesh.mesh_polygons[edge.rightPoly];
             normalise(expander, edge.parent, &sortedV, &sortedP);
-            temp.root_R = mesh.mesh_vertices[edge.parent].p;
-            temp.root_L = mesh.mesh_vertices[edge.child].p;
+            temp.root_R.p = edge.parent;
+            temp.root_L.p = edge.child;
             temp.coming_from = edge.rightPoly;
         }else{
             if(edge.leftPoly == -1) return 0;
             expander = mesh.mesh_polygons[edge.leftPoly];
             normalise(expander, edge.child, &sortedV, &sortedP);
-            temp.root_R = mesh.mesh_vertices[edge.parent].p;
-            temp.root_L = mesh.mesh_vertices[edge.child].p;
+            temp.root_R.p = edge.parent;
+            temp.root_L.p = edge.child;
             temp.coming_from = edge.leftPoly;
         }
 
         for(int i = 0; i < sortedV.size()-1; i++){
-            temp.child_R = mesh.mesh_vertices[sortedV[i]].p;
-            temp.child_L = mesh.mesh_vertices[sortedV[i+1]].p;
+            temp.child_R.p = sortedV[i];
+            temp.child_L.p = sortedV[i+1];
             temp.right_vertex = sortedV[i];
             temp.left_vertex = sortedV[i+1];
             temp.next_polygon = sortedP[i+1];
@@ -222,11 +222,11 @@ namespace edgevis
         const int S = sorted_vertices.size();
         int i;
         // right line
-        Point right_child = node.child_R;
-        Point right_parent = node.root_L;
+        SearchPoint right_child = node.child_R;
+        SearchPoint right_parent = node.root_L;
         // left line
-        Point left_child = node.child_L;
-        Point left_parent = node.root_R;
+        SearchPoint left_child = node.child_L;
+        SearchPoint left_parent = node.root_R;
         *right_visible = S-1;
         *left_visible = 0;
         for(i = 0; i<S; i++){
@@ -252,12 +252,12 @@ namespace edgevis
         SearchNode temp = init_temp_node(node);
 
         // right line
-        Point right_child = node.child_R;
-        Point right_parent = node.root_L;
+        SearchPoint right_child = node.child_R;
+        SearchPoint right_parent = node.root_L;
 
         // left line
-        Point left_child = node.child_L;
-        Point left_parent = node.root_R;
+        SearchPoint left_child = node.child_L;
+        SearchPoint left_parent = node.root_R;
 
 
         const Polygon &expander = mesh.mesh_polygons[node.next_polygon];

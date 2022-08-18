@@ -185,54 +185,36 @@ namespace edgevis{
     void
     EdgeVisibility::expand(SearchNode &node, std::vector<OptimNode> &visibility, int level, bool side) {
         OptimNode o;
-        Point true_root_R;
-        Point true_root_L;
+        int true_root_R;
+        int true_root_L;
         if(side){
-            true_root_R = mesh.mesh_vertices[current_edge.parent].p;
-            true_root_L = mesh.mesh_vertices[current_edge.child].p;
+            true_root_R = current_edge.parent;
+            true_root_L = current_edge.child;
         }else{
-            true_root_L = mesh.mesh_vertices[current_edge.parent].p;
-            true_root_R = mesh.mesh_vertices[current_edge.child].p;
+            true_root_L = current_edge.parent;
+            true_root_R =current_edge.child;
         }
         if(node.next_polygon == -1){
             o.P = node.child_R;
-            o.pivot_R = true_root_R;
-            o.pivot_L = true_root_L;
-            o.root_R = true_root_R;
-            o.root_L =  true_root_L;
+            o.pivot_R.p = true_root_R;
+            o.pivot_L.p = true_root_L;
+            o.root_R.p = true_root_R;
+            o.root_L.p =  true_root_L;
             recompute_end_roots(node, o);
-            if(!(o.P == o.P)){
-                std::cout << o << node << *node.predecessor;
-                std::cout << "Encountered nan as optim node point." << std::endl;
-                getchar();
-            }
             visibility.push_back(o);
 
 
             o.P = node.child_L;
-            o.pivot_R = true_root_R;
-            o.pivot_L = true_root_L;
-            o.root_R = true_root_R;
-            o.root_L =  true_root_L;
+            o.pivot_R.p = true_root_R;
+            o.pivot_L.p = true_root_L;
+            o.root_R.p = true_root_R;
+            o.root_L.p =  true_root_L;
             recompute_end_roots(node, o);
-            if(!(o.P == o.P)){
-                this->reset_visu();
-
-                this->visualise_segment(node.predecessor->root_R, node.predecessor->root_L, 0, 0.5);
-                this->visualise_segment(node.predecessor->child_R, node.predecessor->child_L, 1, 0.5);
-                //this->visualise_segment(node.predecessor->predecessor->root_R, node.predecessor->predecessor->root_L, 1, 0.5);
-                this->visualise_segment(node.predecessor->predecessor->child_R, node.predecessor->predecessor->child_L, 2, 0.5);
-
-                std::cout << o << node << *node.predecessor;
-                std::cout << "Encountered nan as optim node point." << std::endl;
-                getchar();
-            }
             visibility.push_back(o);
             return;
         }
         int num;
         SearchNode* nodes = new edgevis::SearchNode[mesh.max_poly_sides + 2];
-        bool hasNan;
         this->reset_visu();
         num = edgevis::expand_searchnode(node, mesh, nodes, this);
 
@@ -249,22 +231,22 @@ namespace edgevis{
         int num;
         std::vector<OptimNode> vis;
 
-        Point tmp;
+        SearchPoint tmp;
         SearchNode* nodes = new edgevis::SearchNode[mesh.max_poly_sides + 2];
         num = edgevis::get_edge_init_nodes(mesh.mesh_edges[edge], side, mesh, nodes);
         OptimNode o;
         if(side){
-            o.P = mesh.mesh_vertices[current_edge.parent].p;
-            o.pivot_R = mesh.mesh_vertices[current_edge.parent].p;
-            o.pivot_L = mesh.mesh_vertices[current_edge.child].p;
-            o.root_R = mesh.mesh_vertices[current_edge.parent].p;
-            o.root_L =  mesh.mesh_vertices[current_edge.child].p;
+            o.P.p = current_edge.parent;
+            o.pivot_R.p = current_edge.parent;
+            o.pivot_L.p = current_edge.child;
+            o.root_R.p = current_edge.parent;
+            o.root_L.p =  current_edge.child;
         }else{
-            o.P = mesh.mesh_vertices[current_edge.child].p;
-            o.pivot_R = mesh.mesh_vertices[current_edge.child].p;
-            o.pivot_L = mesh.mesh_vertices[current_edge.parent].p;
-            o.root_R = mesh.mesh_vertices[current_edge.child].p;
-            o.root_L =  mesh.mesh_vertices[current_edge.parent].p;
+            o.P.p = current_edge.child;
+            o.pivot_R.p = current_edge.child;
+            o.pivot_L.p = current_edge.parent;
+            o.root_R.p = current_edge.child;
+            o.root_L.p =  current_edge.parent;
         }
         vis.push_back(o);
 
@@ -278,17 +260,17 @@ namespace edgevis{
         }
 
         if(side){
-            o.P = mesh.mesh_vertices[current_edge.child].p;
-            o.pivot_R = mesh.mesh_vertices[current_edge.parent].p;
-            o.pivot_L = mesh.mesh_vertices[current_edge.child].p;
-            o.root_R = mesh.mesh_vertices[current_edge.parent].p;
-            o.root_L =  mesh.mesh_vertices[current_edge.child].p;
+            o.P.p = current_edge.child;
+            o.pivot_R.p = current_edge.parent;
+            o.pivot_L.p = current_edge.child;
+            o.root_R.p = current_edge.parent;
+            o.root_L.p =  current_edge.child;
         }else{
-            o.P = mesh.mesh_vertices[current_edge.parent].p;
-            o.pivot_R = mesh.mesh_vertices[current_edge.child].p;
-            o.pivot_L = mesh.mesh_vertices[current_edge.parent].p;
-            o.root_R = mesh.mesh_vertices[current_edge.child].p;
-            o.root_L =  mesh.mesh_vertices[current_edge.parent].p;
+            o.P = current_edge.parent;
+            o.pivot_R.p = current_edge.child;
+            o.pivot_L.p = current_edge.parent;
+            o.root_R.p = current_edge.child;
+            o.root_L.p =  current_edge.parent;
         }
         vis.push_back(o);
 
@@ -296,6 +278,7 @@ namespace edgevis{
         delete [] nodes;
         return vis;
     }
+
     void
     EdgeVisibility::set_visual_mesh(const parsers::GeomMesh &gmesh) {
         this->gmesh = gmesh;

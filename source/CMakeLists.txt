@@ -61,22 +61,21 @@ target_link_libraries(PolyVis
         TriVis
         cairo
         PolyAnya
-        EdgeVis
         ${FADE2D_LIBRARY}
         ${Boost_LIBRARIES})
 
-add_executable(EdgeVis_example
-        edgevis.cpp
-        ${SOURCES}
-        ${${PROJECT_NAME}_SRC}
-        libs/edgevis/include/edgevis/structs/intersection.h)
-
-target_compile_definitions(EdgeVis_example PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
-
-target_link_libraries(EdgeVis_example
-        TriVis
-        cairo
-        PolyAnya
-        EdgeVis
-        ${FADE2D_LIBRARY}
-        ${Boost_LIBRARIES})
+# add_executable(EdgeVis_example
+#         edgevis.cpp
+#         ${SOURCES}
+#         ${${PROJECT_NAME}_SRC}
+#         libs/edgevis/include/edgevis/structs/intersection.h)
+#
+# target_compile_definitions(EdgeVis_example PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
+#
+# target_link_libraries(EdgeVis_example
+#         TriVis
+#         cairo
+#         PolyAnya
+#         EdgeVis
+#         ${FADE2D_LIBRARY}
+#         ${Boost_LIBRARIES})

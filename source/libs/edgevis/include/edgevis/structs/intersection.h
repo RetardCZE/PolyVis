@@ -12,12 +12,11 @@ namespace robust_geom{
          * We assume oriented line a -> b. In case of segment we assume parent -> child or right -> left orientation,
          * but it should not matter.
          */
-        public:
-            int a, b, c, d;
-            bool is_calculated = false;
+        int a, b, c, d;
+        bool is_calculated = false;
 
-            bool calculate(Mesh &mesh);
-            Point p;
+        bool calculate(Mesh &mesh);
+        Point p;
     };
 
 }

@@ -20,8 +20,6 @@
 #include "logging/logging.h"
 #include "visualization.h"
 #include "polyviz.h"
-#include "edgevis/structs/mesh.h"
-#include "edgevis//structs/edge.h"
 
 #include "polyanya/parsers/map_parser.h"
 
@@ -241,8 +239,8 @@ int body(ProgramOptionVariables pov)
 
     drawerTri.set_visible_polygon(p, verticesTri);
     drawerTri.redraw("triangles.pdf");
-    drawerPoly.set_visible_polygon(p, verticesPoly);
-    drawerPoly.redraw("polygons.pdf");
+    //drawerPoly.set_visible_polygon(p, verticesPoly);
+    drawerPoly.redraw(pov.input_map_name + ".pdf");
     return 0;
 }
 

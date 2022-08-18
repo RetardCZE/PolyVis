@@ -1,18 +1,22 @@
 #pragma once
 #include "edgevis/structs/point.h"
+#include "edgevis/structs/intersection.h"
 
 namespace edgevis
 {
 
-// A search node.
-// Only makes sense given a mesh and an endpoint, which the node does not store.
-// This means that the f value needs to be set manually.
+struct SearchPoint{
+    int p;
+    robust_geom::SegmentLineIntersection i;
+    bool is_intersection = false;
+};
+
 struct SearchNode
 {
 
-    Point root_R, root_L;  // root
+    SearchPoint root_R, root_L;  // root
     SearchNode* predecessor;
-    Point child_L, child_R; // child_L child_R based on root_R root_L orientation
+    SearchPoint child_L, child_R; // child_L child_R based on root_R root_L orientation
     // child becomes transition when expanding searchnode
 
     // The child_L vertex of the edge the interval is lying on.
@@ -28,13 +32,13 @@ struct SearchNode
     int next_polygon;
     int coming_from;
 
-
+    /*
     friend std::ostream& operator<<(std::ostream& stream, const SearchNode& sn)
     {
         return stream << "SearchNode - root: " << sn.root_L << " | " << sn.root_R << "\n"
                       << "edge: " << sn.child_L << " | " << sn.child_R << "\n"
                       << "next: " << sn.next_polygon << "\n";
-    }
+    }*/
 };
 
 typedef SearchNode* SearchNodePtr;
