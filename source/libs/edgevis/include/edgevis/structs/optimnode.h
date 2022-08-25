@@ -13,7 +13,7 @@ namespace edgevis
         friend std::ostream& operator<<(std::ostream& stream, const OptimNode& on)
         {
             return stream << "OptimNode - point: " << on.P << "\n"
-                          << "roots: " << on.root_L << " | " << on.root_R << "\n"
+                          << "roots: " << on.rootL << " | " << on.rootR << "\n"
                           << "pivot: " << on.pivot_L << " | " << on.pivot_R <<"\n";
         }
          */

@@ -355,10 +355,10 @@ std::vector<SearchNodePtr> SearchInstance::gen_initial_nodes2()
 
 void SearchInstance::gen_initial_nodes()
 {
-    // {parent, root, left, right, next_polygon, right_vertex, f, g}
+    // {parent, root, left, right, nextPolygon, rightVertex, f, g}
     // be VERY lazy and abuse how our function expands collinear search nodes
-    // if right_vertex is not valid, it will generate EVERYTHING
-    // and we can set right_vertex if we want to omit generating an interval.
+    // if rightVertex is not valid, it will generate EVERYTHING
+    // and we can set rightVertex if we want to omit generating an interval.
     const PointLocation pl = get_point_location(start);
     const double h = start.distance(goal);
     #define get_lazy(next, left, right) new (node_pool->allocate()) SearchNode \

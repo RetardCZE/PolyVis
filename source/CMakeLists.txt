@@ -39,43 +39,28 @@ set(${PROJECT_NAME}_COMPILE_DEFINITIONS
         -DINPUT_MAPS_DIR="${PROJECT_SOURCE_DIR}/data/maps"
         )
 
-add_executable(trivis_debug trivis_debug.cc ${${PROJECT_NAME}_SRC})
-target_compile_definitions(trivis_debug PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
-target_link_libraries(trivis_debug TriVis ${Boost_LIBRARIES} cairo)
-
-add_executable(trivis_examples trivis_examples.cc ${${PROJECT_NAME}_SRC})
-target_compile_definitions(trivis_examples PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
-target_link_libraries(trivis_examples TriVis ${Boost_LIBRARIES} cairo)
+# add_executable(trivis_debug trivis_debug.cc ${${PROJECT_NAME}_SRC})
+# target_compile_definitions(trivis_debug PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
+# target_link_libraries(trivis_debug TriVis ${Boost_LIBRARIES} cairo)
+#
+# add_executable(trivis_examples trivis_examples.cc ${${PROJECT_NAME}_SRC})
+# target_compile_definitions(trivis_examples PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
+# target_link_libraries(trivis_examples TriVis ${Boost_LIBRARIES} cairo)
 
 FILE(GLOB SRC src/*.cpp)
 set(SOURCES ${SRC})
-add_executable(PolyVis
-        main.cpp
+
+add_executable(EdgeVis_example
+        edgevis.cpp
         ${SOURCES}
-        ${${PROJECT_NAME}_SRC}
-        )
+        ${${PROJECT_NAME}_SRC})
 
-target_compile_definitions(PolyVis PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
+target_compile_definitions(EdgeVis_example PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
 
-target_link_libraries(PolyVis
+target_link_libraries(EdgeVis_example
         TriVis
         cairo
         PolyAnya
+        EdgeVis
         ${FADE2D_LIBRARY}
         ${Boost_LIBRARIES})
-
-# add_executable(EdgeVis_example
-#         edgevis.cpp
-#         ${SOURCES}
-#         ${${PROJECT_NAME}_SRC}
-#         libs/edgevis/include/edgevis/structs/intersection.h)
-#
-# target_compile_definitions(EdgeVis_example PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
-#
-# target_link_libraries(EdgeVis_example
-#         TriVis
-#         cairo
-#         PolyAnya
-#         EdgeVis
-#         ${FADE2D_LIBRARY}
-#         ${Boost_LIBRARIES})

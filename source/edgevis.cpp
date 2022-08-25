@@ -21,7 +21,7 @@
 #include "edgevis/structs/mesh.h"
 #include "edgevis/structs/edge.h"
 #include "edgevis/structs/searchnode.h"
-#include "edgevis/search/expansion.h"
+#include "edgevis/search/visibility_utils.h"
 #include "edgevis/search/visibility.h"
 
 #include "geom/geom.h"
@@ -189,6 +189,7 @@ void local_visualise(parsers::GeomMesh &mesh, Edge& edge, std::vector<Point>& P,
 int body(ProgramOptionVariables pov)
 {
     std::cout << "Preparing meshes, initializing TriVis and PolyVis solvers.\n";
+
     parsers::MapParser mapParser;
     parsers::Fade2DMesh fade2DMesh;
     parsers::MergedMesh mergedMesh;
@@ -271,17 +272,16 @@ int body(ProgramOptionVariables pov)
     Evis.set_visual_mesh(geomMesh);
     std::cout << edgemesh.is_convex();
 
-    return 1;
     std::vector<polyanya::Point> verticesPolyAnya;
-
     std::cout << "Precomputing visibility of edges.\n";
     Evis.switch_debug(false);
     double time;
     tvc::utils::SimpleClock clock;
 
     clock.Restart();
-    Evis.precompute_edges();
-
+    Evis.precompute_edges_searchnodes();
+    return 1;
+    /*
     time = clock.TimeInSeconds();
     std::cout << "\nEdgevis\n";
     std::cout << "Preprocessing time for EdgeVis was " <<
@@ -373,6 +373,7 @@ int body(ProgramOptionVariables pov)
             "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
 
     return 0;
+        */
 }
 
 int main(

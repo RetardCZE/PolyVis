@@ -11,30 +11,28 @@
 #include "edgevis/structs/polygon.h"
 #include "edgevis/libs/predicates/predicates.h"
 
-using namespace edgevis;
-namespace robust_geom {
+namespace edgevis{
+        enum class robustOrientation : int {
+            kRightTurn = -1,
+            kCollinear = 0,
+            kLeftTurn = 1
+        };
 
-enum class Orientation : int {
-    kRightTurn = -1,
-    kCollinear = 0,
-    kLeftTurn = 1
-};
+        robustOrientation Orient(const Point &a, const Point &b, const Point &c);
 
-Orientation Orient(const Point &a, const Point &b, const Point &c);
+        robustOrientation OrientWithEps(const Point &a, const Point &b, const Point &c, double eps);
 
-Orientation OrientWithEps(const Point &a, const Point &b, const Point &c, double eps);
+        bool TurnsLeft(const Point &a, const Point &b, const Point &c);
 
-bool TurnsLeft(const Point &a, const Point &b, const Point &c);
+        bool TurnsRight(const Point &a, const Point &b, const Point &c);
 
-bool TurnsRight(const Point &a, const Point &b, const Point &c);
+        bool Collinear(const Point &a, const Point &b, const Point &c);
 
-bool Collinear(const Point &a, const Point &b, const Point &c);
+        bool TurnsLeftWithEps(const Point &a, const Point &b, const Point &c, double eps);
 
-bool TurnsLeftWithEps(const Point &a, const Point &b, const Point &c, double eps);
+        bool TurnsRightWithEps(const Point &a, const Point &b, const Point &c, double eps);
 
-bool TurnsRightWithEps(const Point &a, const Point &b, const Point &c, double eps);
-
-bool CollinearWithEps(const Point &a, const Point &b, const Point &c, double eps);
+        bool CollinearWithEps(const Point &a, const Point &b, const Point &c, double eps);
 
 /**
  *
@@ -43,9 +41,10 @@ bool CollinearWithEps(const Point &a, const Point &b, const Point &c, double eps
  *      FALSE | FALSE | TRUE
  * Exact implementation, works only if a, b, c are EXACTLY collinear.
  */
-inline bool Extends(const Point &a, const Point &b, const Point &c) {
-    return (a.x == b.x) ? ((a.y <= b.y) ? (b.y <= c.y) : (b.y >= c.y)) : ((a.x <= b.x) ? (b.x <= c.x) : (b.x >= c.x));
-}
+        inline bool Extends(const Point &a, const Point &b, const Point &c) {
+            return (a.x == b.x) ? ((a.y <= b.y) ? (b.y <= c.y) : (b.y >= c.y)) : ((a.x <= b.x) ? (b.x <= c.x) : (b.x >=
+                                                                                                                 c.x));
+        }
 
 /**
  *  <---------a------b--------->
@@ -53,9 +52,9 @@ inline bool Extends(const Point &a, const Point &b, const Point &c) {
  *
  * Exact implementation, works only if a, b, c are EXACTLY collinear.
  */
-inline bool IsBetween(const Point &a, const Point &b, const Point &c) {
-    return !Extends(a, b, c) && !Extends(b, a, c);
-}
+        inline bool IsBetween(const Point &a, const Point &b, const Point &c) {
+            return !Extends(a, b, c) && !Extends(b, a, c);
+        }
 
 /**
  *
@@ -76,10 +75,11 @@ inline bool IsBetween(const Point &a, const Point &b, const Point &c) {
  *  Point q lies on the border of a-b-c: 'a', 'b', 'c', 'A', 'B', 'C'.
  *  Point q is equal to one of the triangle vertices:  'A', 'B', 'C'.
  */
-char PointTriangleRelation(const Point &q, const Point &a, const Point &b, const Point &c);
+        char PointTriangleRelation(const Point &q, const Point &a, const Point &b, const Point &c);
 
-char PointTriangleRelationWithEps(const Point &q, const Point &a, const Point &b, const Point &c, double eps);
+        char PointTriangleRelationWithEps(const Point &q, const Point &a, const Point &b, const Point &c, double eps);
 
-bool IsPointInCone(const Point &q, const Point &a, const Point &b, const Point &c);
+        bool IsPointInCone(const Point &q, const Point &a, const Point &b, const Point &c);
+
 
 }

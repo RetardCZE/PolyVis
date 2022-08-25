@@ -297,9 +297,9 @@ namespace edgevis {
         for(auto P : this->mesh_polygons){
             int S = P.vertices.size();
             for(i = 0; i < S; i++){
-                if(robust_geom::Orient(this->mesh_vertices[P.vertices[i]].p,
+                if(Orient(this->mesh_vertices[P.vertices[i]].p,
                                        this->mesh_vertices[P.vertices[(i+1) % S]].p,
-                                       this->mesh_vertices[P.vertices[(i+2) % S]].p) == robust_geom::Orientation::kRightTurn){
+                                       this->mesh_vertices[P.vertices[(i+2) % S]].p) == robustOrientation::kRightTurn){
                     std::cout << "Mesh is not valid on polygon defined by: "<< std::endl;
                     int j = 0;
                     for(auto v : P.vertices){

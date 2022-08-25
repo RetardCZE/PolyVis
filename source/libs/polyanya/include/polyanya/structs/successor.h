@@ -17,8 +17,8 @@ struct Successor
 
     Point left, right;
 
-    // Used to get next_polygon (Polygon.polygons[left_ind])
-    // as well as right_vertex (Polygon.vertices[left_ind - 1])
+    // Used to get nextPolygon (Polygon.polygons[left_ind])
+    // as well as rightVertex (Polygon.vertices[left_ind - 1])
     int poly_left_ind;
 
     friend std::ostream& operator<<(std::ostream& stream,

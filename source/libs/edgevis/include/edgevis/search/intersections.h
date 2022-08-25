@@ -9,8 +9,7 @@
 #pragma once
 #include "edgevis/structs/point.h"
 #include "edgevis/search/robust_geometry.h"
-using namespace edgevis;
-namespace robust_geom {
+namespace edgevis{
 bool LineLineIntersectionNotCollinear(const Point &a, const Point &b, const Point &c, const Point &d, Point &p);
 /**
  *

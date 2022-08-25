@@ -1,12 +1,18 @@
 #pragma once
-#include "edgevis/search/expansion.h"
+#include "edgevis/search/visibility_utils.h"
+#include "edgevis/search/intersections.h"
+
 #include "edgevis/structs/edge.h"
 #include "edgevis/structs/mesh.h"
 #include "edgevis/structs/searchnode.h"
 #include "edgevis/structs/optimnode.h"
+#include "edgevis/structs/polygon.h"
+#include "edgevis/structs/point.h"
+#include "edgevis/structs/intersection.h"
+
 #include "edgevis/helpers/geometry.h"
 
-#include "polyanya/parsers/map_parser.h"
+#include <vector>
 
 #include "geom/geom.h"
 #include "geom/utils.h"
@@ -26,19 +32,24 @@ namespace edgevis{
         ~EdgeVisibility();
 
 
-        std::vector<OptimNode> find_visibility(int edge_id, bool side);
+        std::vector<SearchNode> find_edge_visibility(int edge_id, bool side);
         void set_visual_mesh(const parsers::GeomMesh &gmesh);
         bool switch_debug(bool on);
-        void precompute_edges();
+        void precompute_edges_searchnodes();
         const Mesh& mesh_reference();
+        /*
         std::vector<Point> find_point_visibility(Point p, std::vector<Point> visu, bool debug);
-
+        */
         void visualise_segment(Point A, Point B, int color, float opacity);
         void visualise_point(Point A, int color);
         void visualise_polygon(std::vector<Point>& p, int color);
         void reset_visu();
     private:
-        void expand(SearchNode &node, std::vector<OptimNode> &visibility, int level, bool side);
+        void expand(SearchNode &node, std::vector<SearchNode> &visibility, bool side);
+        int get_edge_init_nodes(Edge edge, bool side, SearchNode *initNodes);
+        int find_visible(SearchNode &node, std::vector<int> &sorted_vertices, int *right_visible, int *left_visible);
+        int expand_forward(SearchNode &node, SearchNode *newNodes);
+        void back_propagation(SearchNode &node);
 
         std::vector<Edge*> get_init_edges(PointLocation pl);
         Edge current_edge;
@@ -51,6 +62,4 @@ namespace edgevis{
         parsers::GeomMesh gmesh;
         bool debug;
     };
-    void recompute_roots(SearchNode &node, EdgeVisibility *eObject);
-    int expand_searchnode(SearchNode &node, const Mesh &mesh, SearchNode *newNodes, edgevis::EdgeVisibility *eObject);
 };
