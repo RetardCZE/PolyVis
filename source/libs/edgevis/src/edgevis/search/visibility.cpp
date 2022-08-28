@@ -54,88 +54,17 @@ namespace edgevis{
         on1.root_R.isIntersection = false;
         on1.root_L.isIntersection = false;
         v.push_back(on1);
-        for(auto sn : edge.right_nodes){
-            this->reset_visu();
-            Point lr,rr, lp, rp;
-            lr = mesh.mesh_vertices[sn.rootL.p].p;
-            rr= mesh.mesh_vertices[sn.rootR.p].p;
-            if(sn.rootR.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[sn.rootR.i.a].p,
-                                                                         mesh.mesh_vertices[sn.rootR.i.b].p,
-                                                                         mesh.mesh_vertices[sn.rootR.i.c].p,
-                                                                         mesh.mesh_vertices[sn.rootR.i.d].p,
-                                                                         rr);
-            if(sn.rootL.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[sn.rootL.i.a].p,
-                                                                         mesh.mesh_vertices[sn.rootL.i.b].p,
-                                                                         mesh.mesh_vertices[sn.rootL.i.c].p,
-                                                                         mesh.mesh_vertices[sn.rootL.i.d].p,
-                                                                         lr);
-            lp = mesh.mesh_vertices[sn.transitionL.p].p;
-            rp= mesh.mesh_vertices[sn.transitionR.p].p;
-            if(sn.transitionR.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[sn.transitionR.i.a].p,
-                                                                               mesh.mesh_vertices[sn.transitionR.i.b].p,
-                                                                               mesh.mesh_vertices[sn.transitionR.i.c].p,
-                                                                               mesh.mesh_vertices[sn.transitionR.i.d].p,
-                                                                               rp);
-            if(sn.transitionL.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[sn.transitionL.i.a].p,
-                                                                               mesh.mesh_vertices[sn.transitionL.i.b].p,
-                                                                               mesh.mesh_vertices[sn.transitionL.i.c].p,
-                                                                               mesh.mesh_vertices[sn.transitionL.i.d].p,
-                                                                               lp);
+        std::vector<SearchNode>* vec = right ? &edge.right_nodes : &edge.left_nodes;
+        if(vec->size() > 0) {
+            for (auto sn: *vec) {
+                this->compute_optimnodesv1(sn, on1, on2);
 
-            this->visualise_segment(rp, lp, 1,0.5);
-            this->visualise_segment(rr, lr, 0,0.5);
-            this->compute_optimnodesv1(sn, on1, on2);
-            std::cout << "debug3  "  <<std::endl;
-            Point o, l, r;
-            o = mesh.mesh_vertices[on1.P.p].p;
-            if(on1.P.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[on1.P.i.a].p,
-                                                                      mesh.mesh_vertices[on1.P.i.b].p,
-                                                                      mesh.mesh_vertices[on1.P.i.c].p,
-                                                                      mesh.mesh_vertices[on1.P.i.d].p,
-                                                                      o);
-            l = mesh.mesh_vertices[on1.root_L.p].p;
-            if(on1.root_L.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[on1.root_L.i.a].p,
-                                                                           mesh.mesh_vertices[on1.root_L.i.b].p,
-                                                                           mesh.mesh_vertices[on1.root_L.i.c].p,
-                                                                           mesh.mesh_vertices[on1.root_L.i.d].p,
-                                                                           l);
-            r = mesh.mesh_vertices[on1.root_R.p].p;
-            if(on1.root_R.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[on1.root_R.i.a].p,
-                                                                           mesh.mesh_vertices[on1.root_R.i.b].p,
-                                                                           mesh.mesh_vertices[on1.root_R.i.c].p,
-                                                                           mesh.mesh_vertices[on1.root_R.i.d].p,
-                                                                           r);
-            this->visualise_segment(r,o,0,0.5);
-            this->visualise_segment(l,o,0,0.5);
-            o = mesh.mesh_vertices[on2.P.p].p;
-            if(on2.P.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[on2.P.i.a].p,
-                                                                      mesh.mesh_vertices[on2.P.i.b].p,
-                                                                      mesh.mesh_vertices[on2.P.i.c].p,
-                                                                      mesh.mesh_vertices[on2.P.i.d].p,
-                                                                      o);
-            l = mesh.mesh_vertices[on2.root_L.p].p;
-            if(on2.root_L.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[on2.root_L.i.a].p,
-                                                                           mesh.mesh_vertices[on2.root_L.i.b].p,
-                                                                           mesh.mesh_vertices[on2.root_L.i.c].p,
-                                                                           mesh.mesh_vertices[on2.root_L.i.d].p,
-                                                                           l);
-            r = mesh.mesh_vertices[on2.root_R.p].p;
-            if(on2.root_R.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[on2.root_R.i.a].p,
-                                                                           mesh.mesh_vertices[on2.root_R.i.b].p,
-                                                                           mesh.mesh_vertices[on2.root_R.i.c].p,
-                                                                           mesh.mesh_vertices[on2.root_R.i.d].p,
-                                                                           r);
-            this->visualise_segment(r,o,2,0.5);
-            this->visualise_segment(l,o,2,0.5);
-
-            getchar();
-
-
-            if(on1 != v.back()){
-                v.push_back(on1);
-            }
-            if(on2 != v.back()){
-                v.push_back(on2);
+                if (on1 != v.back()) {
+                    v.push_back(on1);
+                }
+                if (on2 != v.back()) {
+                    v.push_back(on2);
+                }
             }
         }
         on1.P.p = edge.child;
@@ -185,48 +114,41 @@ namespace edgevis{
         o2.root_R = node.rootR;
         o2.root_L.isIntersection = false;
         o2.root_L.p = node.leftRootVertex;
-        std::cout << "debug1" <<std::endl;
         parent = node.predecessor;
         while (parent) {
-            std::cout << "debug2  " << parent <<std::endl;
             if(o1.P.isIntersection) {
-                std::cout << "debug3  " << parent <<std::endl;
-                o1.root_R = node.rootR;
+                o1.root_R = node.rootL;
             }else if(!parent->transitionR.isIntersection) {
-                std::cout << "debug4  " << parent <<std::endl;
-                int root_dir = node.rootR.isIntersection ? node.rootR.i.a : node.rootR.p;
+                int root_dir = o1.root_R.isIntersection ? o1.root_R.i.a : o1.root_R.p;
                 if(Orient(mesh.mesh_vertices[o1.P.p].p,
                           mesh.mesh_vertices[root_dir].p,
                           mesh.mesh_vertices[parent->transitionR.p].p)
-                          ==
-                          robustOrientation::kRightTurn ){
-                    o1.root_R.isIntersection = true;
-                    o1.root_R.i.a = o1.P.p;
-                    o1.root_R.i.b = parent->transitionR.p;
-                    o1.root_R.i.c = node.rightRootVertex;
-                    o1.root_R.i.d = node.leftRootVertex;
+                    ==
+                    robustOrientation::kRightTurn){
+                     o1.root_R.isIntersection = true;
+                     o1.root_R.i.b = o1.P.p;
+                     o1.root_R.i.a = parent->transitionR.p;
+                     o1.root_R.i.c = node.rightRootVertex;
+                     o1.root_R.i.d = node.leftRootVertex;
                 }
             }
 
             if(o2.P.isIntersection) {
-                std::cout << "debug5  " << parent <<std::endl;
-                o2.root_L = node.rootL;
+                o2.root_L = node.rootR;
             }else if(!parent->transitionL.isIntersection){
-                std::cout << "debug6  " << parent <<std::endl;
-                int root_dir = node.rootL.isIntersection ? node.rootL.i.a : node.rootL.p;
+                int root_dir = o2.root_L.isIntersection ? o2.root_L.i.a : o2.root_L.p;
                 if(Orient(mesh.mesh_vertices[o2.P.p].p,
                           mesh.mesh_vertices[root_dir].p,
                           mesh.mesh_vertices[parent->transitionL.p].p)
                    ==
-                   robustOrientation::kLeftTurn ){
+                   robustOrientation::kLeftTurn){
                     o2.root_L.isIntersection = true;
-                    o2.root_L.i.a = o1.P.p;
-                    o2.root_L.i.b = parent->transitionL.p;
+                    o2.root_L.i.b = o2.P.p;
+                    o2.root_L.i.a = parent->transitionL.p;
                     o2.root_L.i.c = node.rightRootVertex;
                     o2.root_L.i.d = node.leftRootVertex;
                 }
             }
-            std::cout << "debugger  " << parent->predecessor <<std::endl;
             parent = parent->predecessor;
         }
         return;
@@ -389,64 +311,10 @@ namespace edgevis{
         num = this->expand_forward(node, nodes);
 
         for(int i = 0; i < num; i++){
-            /*
-            this->reset_visu();
-            Point lp,rp, lr, rr;
-            lp = mesh.mesh_vertices[nodes[i].transitionL.p].p;
-            rp= mesh.mesh_vertices[nodes[i].transitionR.p].p;
-            lr = mesh.mesh_vertices[nodes[i].rootL.p].p;
-            rr= mesh.mesh_vertices[nodes[i].rootR.p].p;
-            if(nodes[i].transitionR.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[nodes[i].transitionR.i.a].p,
-                                                                                     mesh.mesh_vertices[nodes[i].transitionR.i.b].p,
-                                                                                     mesh.mesh_vertices[nodes[i].transitionR.i.c].p,
-                                                                                     mesh.mesh_vertices[nodes[i].transitionR.i.d].p,
-                                                                                     rp);
-            if(nodes[i].transitionL.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[nodes[i].transitionL.i.a].p,
-                                                                                     mesh.mesh_vertices[nodes[i].transitionL.i.b].p,
-                                                                                     mesh.mesh_vertices[nodes[i].transitionL.i.c].p,
-                                                                                     mesh.mesh_vertices[nodes[i].transitionL.i.d].p,
-                                                                                     lp);
-            if(nodes[i].rootR.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[nodes[i].rootR.i.a].p,
-                                                                               mesh.mesh_vertices[nodes[i].rootR.i.b].p,
-                                                                               mesh.mesh_vertices[nodes[i].rootR.i.c].p,
-                                                                               mesh.mesh_vertices[nodes[i].rootR.i.d].p,
-                                                                               rr);
-            if(nodes[i].rootL.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[nodes[i].rootL.i.a].p,
-                                                                               mesh.mesh_vertices[nodes[i].rootL.i.b].p,
-                                                                               mesh.mesh_vertices[nodes[i].rootL.i.c].p,
-                                                                               mesh.mesh_vertices[nodes[i].rootL.i.d].p,
-                                                                               lr);
-
-            this->visualise_segment(rp, lp, 1,0.5);
-            this->visualise_segment(rr, lr, 0,0.5);
-            std::cout << "Pre backward" << std::endl;
-            getchar();*/
-
-
             this->back_propagation(nodes[i]);
-            /*
-            this->reset_visu();
-
-            lr = mesh.mesh_vertices[nodes[i].rootL.p].p;
-            rr= mesh.mesh_vertices[nodes[i].rootR.p].p;
-            if(nodes[i].rootR.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[nodes[i].rootR.i.a].p,
-                                                                               mesh.mesh_vertices[nodes[i].rootR.i.b].p,
-                                                                               mesh.mesh_vertices[nodes[i].rootR.i.c].p,
-                                                                               mesh.mesh_vertices[nodes[i].rootR.i.d].p,
-                                                                               rr);
-            if(nodes[i].rootL.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[nodes[i].rootL.i.a].p,
-                                                                               mesh.mesh_vertices[nodes[i].rootL.i.b].p,
-                                                                               mesh.mesh_vertices[nodes[i].rootL.i.c].p,
-                                                                               mesh.mesh_vertices[nodes[i].rootL.i.d].p,
-                                                                               lr);
-
-            this->visualise_segment(rp, lp, 1,0.5);
-            this->visualise_segment(rr, lr, 0,0.5);
-            getchar();*/
-
             expand(nodes[i], visibility, side);
         }
-        delete [] nodes;
+        return;
     }
 
     std::vector<SearchNode>
@@ -463,7 +331,7 @@ namespace edgevis{
             expand(nodes[i], vis, side);
         }
 
-        delete [] nodes;
+        //delete [] nodes;
         return vis;
     }
 
@@ -618,37 +486,18 @@ namespace edgevis{
         else{
             right_parent = node.transitionR.p;
             while(parent){
-                if(parent->transitionL.isIntersection) {
-                    parent = parent->predecessor;
-                    continue;
-                }
-                right_child = parent->transitionL.p;
-
-                if(node.rootL.isIntersection){
-                    if(Orient(mesh.mesh_vertices[right_parent].p,
-                                           mesh.mesh_vertices[node.rootL.i.a].p,
-                                           mesh.mesh_vertices[right_child].p)
-                       ==
-                       robustOrientation::kLeftTurn){
+                if(!parent->transitionL.isIntersection) {
+                    right_child = parent->transitionL.p;
+                    int root_dir = node.rootL.isIntersection ? node.rootL.i.a : node.rootL.p;
+                    robustOrientation ori = Orient(mesh.mesh_vertices[right_parent].p,
+                                                  mesh.mesh_vertices[root_dir].p,
+                                                  mesh.mesh_vertices[right_child].p);
+                    if (ori == robustOrientation::kLeftTurn or ori ==robustOrientation::kCollinear) {
                         node.rootL.isIntersection = true;
                         node.rootL.i.a = right_child;
                         node.rootL.i.b = right_parent;
                         node.rootL.i.c = current_edge.parent;
                         node.rootL.i.d = current_edge.child;
-                    }
-                }
-                else{
-                    if(Orient(mesh.mesh_vertices[right_parent].p,
-                                        mesh.mesh_vertices[right_child].p,
-                                        mesh.mesh_vertices[node.rootL.p].p)
-                       ==
-                       robustOrientation::kRightTurn){
-                        node.rootL.isIntersection = true;
-                        node.rootL.i.a = right_child;
-                        node.rootL.i.b = right_parent;
-                        node.rootL.i.c = current_edge.parent;
-                        node.rootL.i.d = current_edge.child;
-
                     }
                 }
                 parent = parent->predecessor;
@@ -663,37 +512,19 @@ namespace edgevis{
         }else{
             left_parent = node.transitionL.p;
             while(parent){
-                if(parent->transitionR.isIntersection) {
-                    parent = parent->predecessor;
-                    continue;
-                }
-                left_child = parent->transitionR.p;
+                if(!parent->transitionR.isIntersection) {
+                    left_child = parent->transitionR.p;
 
-                if(node.rootR.isIntersection){
-                    if(Orient(mesh.mesh_vertices[left_parent].p,
-                                           mesh.mesh_vertices[node.rootR.i.a].p,
-                                           mesh.mesh_vertices[left_child].p)
-                       ==
-                       robustOrientation::kRightTurn){
+                    int root_dir = node.rootR.isIntersection ? node.rootR.i.a : node.rootR.p;
+                    robustOrientation ori = Orient(mesh.mesh_vertices[left_parent].p,
+                                                   mesh.mesh_vertices[root_dir].p,
+                                                   mesh.mesh_vertices[left_child].p);
+                    if(ori == robustOrientation::kRightTurn or ori == robustOrientation::kCollinear){
                         node.rootR.isIntersection = true;
                         node.rootR.i.a = left_child;
                         node.rootR.i.b = left_parent;
                         node.rootR.i.c = current_edge.parent;
                         node.rootR.i.d = current_edge.child;
-                    }
-                }
-                else{
-                    if(Orient(mesh.mesh_vertices[left_parent].p,
-                                           mesh.mesh_vertices[left_child].p,
-                                           mesh.mesh_vertices[node.rootR.p].p)
-                       ==
-                       robustOrientation::kLeftTurn){
-                        node.rootR.isIntersection = true;
-                        node.rootR.i.a = left_child;
-                        node.rootR.i.b = left_parent;
-                        node.rootR.i.c = current_edge.parent;
-                        node.rootR.i.d = current_edge.child;
-
                     }
                 }
                 parent = parent->predecessor;
