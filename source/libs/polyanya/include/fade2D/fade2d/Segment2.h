@@ -43,8 +43,8 @@ public:
 * @param src First endpoint (source)
 * @param trg Second endpoint (target)
 */
-	CLASS_DECLSPEC
-	Segment2(Point2 src,Point2 trg);
+        CLASS_DECLSPEC
+        Segment2(const Point2& src_,const Point2& trg_);
 /** Create a Segment2
 * Default constructor
 */

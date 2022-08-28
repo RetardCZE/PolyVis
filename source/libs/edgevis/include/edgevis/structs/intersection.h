@@ -16,5 +16,14 @@ namespace edgevis{
         bool is_calculated = false;
 
         Point p;
+
+        bool operator==(SegmentLineIntersection& A) const {
+            if (a == A.a && b == A.b && c == A.c && d == A.d){
+                return true;
+            } else {
+                return false;
+            }
+        }
+
     };
 }

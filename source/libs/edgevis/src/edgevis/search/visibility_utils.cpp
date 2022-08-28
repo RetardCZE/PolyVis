@@ -88,6 +88,8 @@ namespace edgevis
         temp.comingFrom = node.nextPolygon;
         temp.rootR = node.rootR;
         temp.rootL = node.rootL;
+        temp.rightRootVertex = node.rightRootVertex;
+        temp.leftRootVertex = node.leftRootVertex;
         temp.predecessor = &node;
         return temp;
     }

@@ -15,13 +15,11 @@ namespace edgevis
         SearchPoint transitionL, transitionR; // transitionL transitionR based on rootR rootL orientation
         // child becomes transition when expanding searchnode
 
-        // The transitionL vertex of the edge the interval is lying on.
+        // The transitionL and transitionR vertex of the edge the interval is lying on.
         // When generating the successors of this node, end there.
-        int leftVertex;
+        int leftVertex ,rightVertex;
 
-        // The transitionR vertex of the edge the interval is lying on.
-        // When generating the successors of this node, start there.
-        int rightVertex;
+        int leftRootVertex, rightRootVertex;
 
         // Index of the polygon we're going to "push" into.
         // Every successor must lie within this polygon.

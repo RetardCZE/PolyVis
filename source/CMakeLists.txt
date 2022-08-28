@@ -5,7 +5,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-find_library(FADE2D_LIBRARY NAMES fade2d PATHS libs/polyanya/include/fade2D/lib/ubuntu16.10_x86_64/)
+find_library(FADE2D_LIBRARY NAMES fade2d PATHS /usr/local/lib/FADE2D/)
 # Check if fade2d library was found
 if (NOT FADE2D_LIBRARY)
     MESSAGE(STATUS "WARNING: Library FADE2D not found! Running script '${CMAKE_SOURCE_DIR}/pathfinding/polyanya/utils/scripts/install_fade2d.sh' solve the problem.")

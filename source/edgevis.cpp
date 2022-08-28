@@ -280,13 +280,19 @@ int body(ProgramOptionVariables pov)
 
     clock.Restart();
     Evis.precompute_edges_searchnodes();
+    time = clock.TimeInSeconds();
+    std::cout << "\nEdge Visibility\n";
+    std::cout << "Preprocessing time for Edge Visibility was " <<
+              time << " seconds.\n";
+    clock.Restart();
+    Evis.precompute_edges_optimnodesV1();
+
+    time = clock.TimeInSeconds();
+    std::cout << "\nOptimNodeV1\n";
+    std::cout << "Preprocessing time for OptimNodesV1 was " <<
+              time << " seconds.\n";
     return 1;
     /*
-    time = clock.TimeInSeconds();
-    std::cout << "\nEdgevis\n";
-    std::cout << "Preprocessing time for EdgeVis was " <<
-              time << " seconds.\n";
-
     clock.Restart();
     bool debug = pov.debug;
     bool save = pov.save;

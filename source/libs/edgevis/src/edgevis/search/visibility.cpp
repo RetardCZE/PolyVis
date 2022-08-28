@@ -29,44 +29,209 @@ namespace edgevis{
             r_v.clear(); l_v.clear();
             r_v = this->find_edge_visibility(edge, true);
             l_v = this->find_edge_visibility(edge, false);
-            std::cout << l_v.size() << " | " << r_v.size()<<std::endl;
-            this->reset_visu();
-            std::vector<Point> prop;
-            for(auto sn : l_v){
-
-                Point rp, lp;
-                if(sn.transitionR.isIntersection) {
-                    LineLineIntersectionNotCollinear(mesh.mesh_vertices[sn.transitionR.i.a].p,
-                                                     mesh.mesh_vertices[sn.transitionR.i.b].p,
-                                                     mesh.mesh_vertices[sn.transitionR.i.c].p,
-                                                     mesh.mesh_vertices[sn.transitionR.i.d].p,
-                                                     rp);
-                }else{
-                    rp = mesh.mesh_vertices[sn.transitionR.p].p;
-                }
-                if(sn.transitionL.isIntersection) {
-                    LineLineIntersectionNotCollinear(mesh.mesh_vertices[sn.transitionL.i.a].p,
-                                                     mesh.mesh_vertices[sn.transitionL.i.b].p,
-                                                     mesh.mesh_vertices[sn.transitionL.i.c].p,
-                                                     mesh.mesh_vertices[sn.transitionL.i.d].p,
-                                                     lp);
-                }else{
-                    lp = mesh.mesh_vertices[sn.transitionL.p].p;
-                }
-                prop.push_back(rp);
-                prop.push_back(lp);
-                this->visualise_segment(rp, lp, 1, 0.5);
-
-            }
-            visualise_polygon(prop,1);
-            getchar();
             e.right_nodes.reserve(r_v.size());
             e.left_nodes.reserve(l_v.size());
             e.right_nodes.insert(e.right_nodes.end(), r_v.begin(), r_v.end());
             e.left_nodes.insert(e.left_nodes.end(), l_v.begin(), l_v.end());
             edge++;
         }
+        searchnodes_precomputed = true;
     }
+
+    std::vector<OptimNodeV1>
+    EdgeVisibility::compute_side_optimnodesV1(Edge &edge, bool right){
+        std::vector<OptimNodeV1> v;
+        OptimNodeV1 on1, on2;
+        on1.P.p = edge.parent;
+        on1.P.isIntersection = false;
+        if(right) {
+            on1.root_R.p = edge.parent;
+            on1.root_L.p = edge.child;
+        }else{
+            on1.root_R.p = edge.child;
+            on1.root_L.p = edge.parent;
+        }
+        on1.root_R.isIntersection = false;
+        on1.root_L.isIntersection = false;
+        v.push_back(on1);
+        for(auto sn : edge.right_nodes){
+            this->reset_visu();
+            Point lr,rr, lp, rp;
+            lr = mesh.mesh_vertices[sn.rootL.p].p;
+            rr= mesh.mesh_vertices[sn.rootR.p].p;
+            if(sn.rootR.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[sn.rootR.i.a].p,
+                                                                         mesh.mesh_vertices[sn.rootR.i.b].p,
+                                                                         mesh.mesh_vertices[sn.rootR.i.c].p,
+                                                                         mesh.mesh_vertices[sn.rootR.i.d].p,
+                                                                         rr);
+            if(sn.rootL.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[sn.rootL.i.a].p,
+                                                                         mesh.mesh_vertices[sn.rootL.i.b].p,
+                                                                         mesh.mesh_vertices[sn.rootL.i.c].p,
+                                                                         mesh.mesh_vertices[sn.rootL.i.d].p,
+                                                                         lr);
+            lp = mesh.mesh_vertices[sn.transitionL.p].p;
+            rp= mesh.mesh_vertices[sn.transitionR.p].p;
+            if(sn.transitionR.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[sn.transitionR.i.a].p,
+                                                                               mesh.mesh_vertices[sn.transitionR.i.b].p,
+                                                                               mesh.mesh_vertices[sn.transitionR.i.c].p,
+                                                                               mesh.mesh_vertices[sn.transitionR.i.d].p,
+                                                                               rp);
+            if(sn.transitionL.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[sn.transitionL.i.a].p,
+                                                                               mesh.mesh_vertices[sn.transitionL.i.b].p,
+                                                                               mesh.mesh_vertices[sn.transitionL.i.c].p,
+                                                                               mesh.mesh_vertices[sn.transitionL.i.d].p,
+                                                                               lp);
+
+            this->visualise_segment(rp, lp, 1,0.5);
+            this->visualise_segment(rr, lr, 0,0.5);
+            this->compute_optimnodesv1(sn, on1, on2);
+            std::cout << "debug3  "  <<std::endl;
+            Point o, l, r;
+            o = mesh.mesh_vertices[on1.P.p].p;
+            if(on1.P.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[on1.P.i.a].p,
+                                                                      mesh.mesh_vertices[on1.P.i.b].p,
+                                                                      mesh.mesh_vertices[on1.P.i.c].p,
+                                                                      mesh.mesh_vertices[on1.P.i.d].p,
+                                                                      o);
+            l = mesh.mesh_vertices[on1.root_L.p].p;
+            if(on1.root_L.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[on1.root_L.i.a].p,
+                                                                           mesh.mesh_vertices[on1.root_L.i.b].p,
+                                                                           mesh.mesh_vertices[on1.root_L.i.c].p,
+                                                                           mesh.mesh_vertices[on1.root_L.i.d].p,
+                                                                           l);
+            r = mesh.mesh_vertices[on1.root_R.p].p;
+            if(on1.root_R.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[on1.root_R.i.a].p,
+                                                                           mesh.mesh_vertices[on1.root_R.i.b].p,
+                                                                           mesh.mesh_vertices[on1.root_R.i.c].p,
+                                                                           mesh.mesh_vertices[on1.root_R.i.d].p,
+                                                                           r);
+            this->visualise_segment(r,o,0,0.5);
+            this->visualise_segment(l,o,0,0.5);
+            o = mesh.mesh_vertices[on2.P.p].p;
+            if(on2.P.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[on2.P.i.a].p,
+                                                                      mesh.mesh_vertices[on2.P.i.b].p,
+                                                                      mesh.mesh_vertices[on2.P.i.c].p,
+                                                                      mesh.mesh_vertices[on2.P.i.d].p,
+                                                                      o);
+            l = mesh.mesh_vertices[on2.root_L.p].p;
+            if(on2.root_L.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[on2.root_L.i.a].p,
+                                                                           mesh.mesh_vertices[on2.root_L.i.b].p,
+                                                                           mesh.mesh_vertices[on2.root_L.i.c].p,
+                                                                           mesh.mesh_vertices[on2.root_L.i.d].p,
+                                                                           l);
+            r = mesh.mesh_vertices[on2.root_R.p].p;
+            if(on2.root_R.isIntersection) LineLineIntersectionNotCollinear(mesh.mesh_vertices[on2.root_R.i.a].p,
+                                                                           mesh.mesh_vertices[on2.root_R.i.b].p,
+                                                                           mesh.mesh_vertices[on2.root_R.i.c].p,
+                                                                           mesh.mesh_vertices[on2.root_R.i.d].p,
+                                                                           r);
+            this->visualise_segment(r,o,2,0.5);
+            this->visualise_segment(l,o,2,0.5);
+
+            getchar();
+
+
+            if(on1 != v.back()){
+                v.push_back(on1);
+            }
+            if(on2 != v.back()){
+                v.push_back(on2);
+            }
+        }
+        on1.P.p = edge.child;
+        on1.P.isIntersection = false;
+        if(right) {
+            on1.root_R.p = edge.parent;
+            on1.root_L.p = edge.child;
+        }else{
+            on1.root_R.p = edge.child;
+            on1.root_L.p = edge.parent;
+        }
+        on1.root_R.isIntersection = false;
+        on1.root_L.isIntersection = false;
+        v.push_back(on1);
+        return v;
+    }
+
+    void EdgeVisibility::precompute_edges_optimnodesV1() {
+        if(!searchnodes_precomputed){
+            this->precompute_edges_searchnodes();
+        }
+        std::vector<OptimNodeV1> r_v;
+        std::vector<OptimNodeV1> l_v;
+        OptimNodeV1 on1, on2;
+        SearchNode sn;
+        int edge = 0;
+        for (Edge& e : mesh.mesh_edges){
+            r_v = compute_side_optimnodesV1(e, true);
+            l_v = compute_side_optimnodesV1(e, false);
+            e.rightOptimNodesV1.reserve(r_v.size());
+            e.leftOptimNodesV1.reserve(l_v.size());
+            e.rightOptimNodesV1.insert(e.rightOptimNodesV1.end(), r_v.begin(), r_v.end());
+            e.leftOptimNodesV1.insert(e.leftOptimNodesV1.end(), l_v.begin(), l_v.end());
+            edge++;
+        }
+    }
+
+    void
+    EdgeVisibility::compute_optimnodesv1(SearchNode &node, OptimNodeV1 &o1, OptimNodeV1 &o2) {
+        SearchNode* parent;
+        o1.P = node.transitionR;
+        o1.root_R.isIntersection = false;
+        o1.root_R.p = node.rightRootVertex;
+        o1.root_L = node.rootL;
+
+        o2.P = node.transitionL;
+        o2.root_R = node.rootR;
+        o2.root_L.isIntersection = false;
+        o2.root_L.p = node.leftRootVertex;
+        std::cout << "debug1" <<std::endl;
+        parent = node.predecessor;
+        while (parent) {
+            std::cout << "debug2  " << parent <<std::endl;
+            if(o1.P.isIntersection) {
+                std::cout << "debug3  " << parent <<std::endl;
+                o1.root_R = node.rootR;
+            }else if(!parent->transitionR.isIntersection) {
+                std::cout << "debug4  " << parent <<std::endl;
+                int root_dir = node.rootR.isIntersection ? node.rootR.i.a : node.rootR.p;
+                if(Orient(mesh.mesh_vertices[o1.P.p].p,
+                          mesh.mesh_vertices[root_dir].p,
+                          mesh.mesh_vertices[parent->transitionR.p].p)
+                          ==
+                          robustOrientation::kRightTurn ){
+                    o1.root_R.isIntersection = true;
+                    o1.root_R.i.a = o1.P.p;
+                    o1.root_R.i.b = parent->transitionR.p;
+                    o1.root_R.i.c = node.rightRootVertex;
+                    o1.root_R.i.d = node.leftRootVertex;
+                }
+            }
+
+            if(o2.P.isIntersection) {
+                std::cout << "debug5  " << parent <<std::endl;
+                o2.root_L = node.rootL;
+            }else if(!parent->transitionL.isIntersection){
+                std::cout << "debug6  " << parent <<std::endl;
+                int root_dir = node.rootL.isIntersection ? node.rootL.i.a : node.rootL.p;
+                if(Orient(mesh.mesh_vertices[o2.P.p].p,
+                          mesh.mesh_vertices[root_dir].p,
+                          mesh.mesh_vertices[parent->transitionL.p].p)
+                   ==
+                   robustOrientation::kLeftTurn ){
+                    o2.root_L.isIntersection = true;
+                    o2.root_L.i.a = o1.P.p;
+                    o2.root_L.i.b = parent->transitionL.p;
+                    o2.root_L.i.c = node.rightRootVertex;
+                    o2.root_L.i.d = node.leftRootVertex;
+                }
+            }
+            std::cout << "debugger  " << parent->predecessor <<std::endl;
+            parent = parent->predecessor;
+        }
+        return;
+    }
+
     /*
     std::vector<Point>
     EdgeVisibility::find_point_visibility(Point p, std::vector<Point> visu, bool debug) {
@@ -557,6 +722,8 @@ namespace edgevis{
             normalise(expander, edge.parent, &sortedV, &sortedP);
             temp.rootR.p = edge.parent;
             temp.rootL.p = edge.child;
+            temp.rightRootVertex = edge.parent;
+            temp.leftRootVertex = edge.child;
             temp.comingFrom = edge.rightPoly;
         }else{
             if(edge.leftPoly == -1) return 0;
@@ -564,6 +731,8 @@ namespace edgevis{
             normalise(expander, edge.child, &sortedV, &sortedP);
             temp.rootR.p = edge.child;
             temp.rootL.p = edge.parent;
+            temp.rightRootVertex = edge.child;
+            temp.leftRootVertex = edge.parent;
             temp.comingFrom = edge.leftPoly;
         }
 

@@ -13,6 +13,8 @@ struct Edge
     int rightPoly, leftPoly;
     // std::vector<Point> right_visibility, left_visibility;
     std::vector<SearchNode> right_nodes, left_nodes;
+    std::vector<OptimNodeV1> rightOptimNodesV1, leftOptimNodesV1;
+    std::vector<OptimNodeV2> rightOptimNodesV2, leftOptimNodesV2;
     bool operator==(Edge& A) const {
         if (parent == A.parent && child == A.child) {
             return true;
