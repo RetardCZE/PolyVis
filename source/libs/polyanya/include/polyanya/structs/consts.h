@@ -1,2 +1,4 @@
 #pragma once
-const double EPSILON = 1e-8;
+namespace polyanya{
+    const double EPSILON = 1e-8;
+}
