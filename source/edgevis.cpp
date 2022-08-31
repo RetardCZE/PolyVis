@@ -291,8 +291,7 @@ int body(ProgramOptionVariables pov)
     std::cout << "\nOptimNodeV1\n";
     std::cout << "Preprocessing time for OptimNodesV1 was " <<
               time << " seconds.\n";
-    return 1;
-    /*
+
     clock.Restart();
     bool debug = pov.debug;
     bool save = pov.save;
@@ -309,7 +308,8 @@ int body(ProgramOptionVariables pov)
         if(debug)
             Evis.reset_visu();
 
-        verticesPoly = Evis.find_point_visibility(pos, verticesPoly, debug);
+        verticesPoly = Evis.find_point_visibility(pos, debug);
+        std::cout << "Calculated_points" << std::endl;
         if(save){
             outfile << "--\n";
             outfile << pos << std::endl;
@@ -332,7 +332,7 @@ int body(ProgramOptionVariables pov)
                 verticesPoly[i].x = verticesPolyAnya[i].x;
                 verticesPoly[i].y = verticesPolyAnya[i].y;
             }
-            Evis.visualise_polygon(verticesPoly, 1);
+            //Evis.visualise_polygon(verticesPoly, 1);
             getchar();
             system("clear");
         }
@@ -379,7 +379,6 @@ int body(ProgramOptionVariables pov)
             "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
 
     return 0;
-        */
 }
 
 int main(

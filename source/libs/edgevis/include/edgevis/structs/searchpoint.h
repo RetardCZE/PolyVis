@@ -8,6 +8,15 @@ namespace edgevis {
         SegmentLineIntersection i;
         bool isIntersection;
 
+        friend std::ostream& operator<<(std::ostream& stream, const SearchPoint& sp)
+        {
+            if(sp.isIntersection){
+                return stream << "SearchPoint - intersection: " << sp.i.a << ", " << sp.i.b << ", " << sp.i.c << ", " << sp.i.d <<"\n";
+            }else{
+                return stream << "SearchPoint - point: " << sp.p << "\n";
+            }
+        }
+
         bool operator==(SearchPoint& A) const {
             if (!isIntersection && !A.isIntersection && p == A.p) {
                 return true;

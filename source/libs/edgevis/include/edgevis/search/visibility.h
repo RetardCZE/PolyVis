@@ -38,14 +38,14 @@ namespace edgevis{
         void precompute_edges_searchnodes();
         const Mesh& mesh_reference();
         void precompute_edges_optimnodesV1();
-        /*
-        std::vector<Point> find_point_visibility(Point p, std::vector<Point> visu, bool debug);
-        */
+        std::vector<Point> find_point_visibility(Point p, bool debug);
+
         void visualise_segment(Point A, Point B, int color, float opacity);
         void visualise_point(Point A, int color);
         void visualise_polygon(std::vector<Point>& p, int color);
         void reset_visu();
     private:
+        Point evaluate_intersection(SearchPoint& sp);
         std::vector<OptimNodeV1> compute_side_optimnodesV1(Edge &edge, bool right=true);
         void expand(SearchNode &node, std::vector<SearchNode> &visibility, bool side);
         int get_edge_init_nodes(Edge edge, bool side, SearchNode *initNodes);

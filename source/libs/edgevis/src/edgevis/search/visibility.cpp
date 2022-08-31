@@ -154,9 +154,23 @@ namespace edgevis{
         return;
     }
 
-    /*
+    Point
+    EdgeVisibility::evaluate_intersection(SearchPoint& sp){
+        if(!sp.isIntersection){
+            return mesh.mesh_vertices[sp.p].p;
+        }else{
+            Point p;
+            LineLineIntersectionNotCollinear(mesh.mesh_vertices[sp.i.a].p,
+                                             mesh.mesh_vertices[sp.i.b].p,
+                                             mesh.mesh_vertices[sp.i.c].p,
+                                             mesh.mesh_vertices[sp.i.d].p,
+                                             p);
+            return p;
+        }
+    }
+
     std::vector<Point>
-    EdgeVisibility::find_point_visibility(Point p, std::vector<Point> visu, bool debug) {
+    EdgeVisibility::find_point_visibility(Point p, bool debug) {
         std::vector<Point> out;
         PointLocation pl = mesh.get_point_location(p);
         std::vector<Edge*> edges = this->get_init_edges(pl);
@@ -167,110 +181,83 @@ namespace edgevis{
         }
         STATE last_state = STATE::VISIBLE;
         STATE current_state;
+        int left_parent, left_child, right_parent, right_child;
         Point last_visible;
         Point last_point;
+        Point I;
         Point segment_holder[2];
+        std::vector<OptimNodeV1> *vec;
         for (Edge* e :edges) {
-            if (pl.poly1 == e->rightPoly && e->left_nodes.size() > 0) {
-                for(int i = 0; i < e->left_nodes.size(); i++){
-                    std::cout << e->left_nodes[i] << std::endl;
-                    robustOrientation RP = get_robustOrientation(e->left_nodes[i].P, e->left_nodes[i].root_R, p);
-                    robustOrientation LP = get_robustOrientation(e->left_nodes[i].P, e->left_nodes[i].root_L, p);
-                    if(RP != robustOrientation::CCW && LP != robustOrientation::CW){
-                        if(debug)
-                            this->visualise_point(e->left_nodes[i].P, 0);
-                        current_state = STATE::VISIBLE;
-                    }else{
-                        if(debug)
-                            this->visualise_point(e->left_nodes[i].P, 2);
-                        if(RP == robustOrientation::CCW) {
-                            current_state = STATE::RIGHT;
-                        }else{
-                            current_state = STATE::LEFT;
-                        }
-                    }
-                    if(current_state != last_state){
-                        if(last_state == STATE::RIGHT){
-                            // leaving RIGHT causes triggering of intersection
-                            Point I = line_intersect(p, last_visible, last_point, e->left_nodes[i].P);
-                            if(debug)
-                                this->visualise_point(I, 1);
-                            out.push_back(I);
-                        }
-                        if(current_state == STATE::LEFT){
-                            // entering left causes hanging intersection
-                            segment_holder[0] = last_point;
-                            segment_holder[1] = e->left_nodes[i].P;
-                        }
-                        if(last_state == STATE::LEFT && current_state == STATE::VISIBLE){
-                            // leaving LEFT will trigger intersection with segment in memory
-                            Point I = line_intersect(p, e->left_nodes[i].P, segment_holder[0], segment_holder[1]);
-                            if(debug)
-                                this->visualise_point(I, 1);
-                            out.push_back(I);
-                        }
-                    }
-
-                    if(current_state == STATE::VISIBLE){
-                        last_visible = e->left_nodes[i].P;
-                        out.push_back(e->left_nodes[i].P);
-                    }
-                    last_point = e->left_nodes[i].P;
-                    last_state = current_state;
-                }
+            if (pl.poly1 == e->rightPoly && e->leftOptimNodesV1.size() > 0) {
+                vec = &e->leftOptimNodesV1;
+            }else if((pl.poly1 == e->leftPoly && e->rightOptimNodesV1.size() > 0)) {
+                vec = &e->rightOptimNodesV1;
             }
-
-            if(pl.poly1 == e->leftPoly && e->right_nodes.size()>0){
-                for(int i = 0; i < e->right_nodes.size(); i++) {
-                    std::cout << e->right_nodes[i] << std::endl;
-                    robustOrientation RP = get_robustOrientation(e->right_nodes[i].P, e->right_nodes[i].root_R, p);
-                    robustOrientation LP = get_robustOrientation(e->right_nodes[i].P, e->right_nodes[i].root_L, p);
-
-                    if(RP != robustOrientation::CCW && LP != robustOrientation::CW){
-                        if(debug)
-                            this->visualise_point(e->right_nodes[i].P, 0);
-                        current_state = STATE::VISIBLE;
-                    }else{
-                        if(debug)
-                            this->visualise_point(e->right_nodes[i].P, 2);
-                        if(RP == robustOrientation::CCW) {
-                            current_state = STATE::RIGHT;
-                        }else{
-                            current_state = STATE::LEFT;
-                        }
-                    }
-                    if(current_state != last_state){
-                        if(last_state == STATE::RIGHT){
-                            // leaving RIGHT causes triggering of intersection
-                            Point I = line_intersect(p, last_visible, last_point, e->right_nodes[i].P);
-                            if(debug)
-                                this->visualise_point(I, 1);
-                            out.push_back(I);
-                        }
-                        if(current_state == STATE::LEFT){
-                            // entering left causes hanging intersection
-                            segment_holder[0] = last_point;
-                            segment_holder[1] = e->right_nodes[i].P;
-                        }
-                        if(last_state == STATE::LEFT && current_state == STATE::VISIBLE){
-                            // leaving LEFT will trigger intersection with segment in memory
-                            Point I = line_intersect(p, e->right_nodes[i].P, segment_holder[0], segment_holder[1]);
-                            if(debug)
-                                this->visualise_point(I, 1);
-                            out.push_back(I);
-                        }
-                    }
-
-                    if(current_state == STATE::VISIBLE){
-                        last_visible = e->right_nodes[i].P;
-                        out.push_back(e->right_nodes[i].P);
-                    }
-                    last_point = e->right_nodes[i].P;
-                    last_state = current_state;
+            std::cout << vec->size() << std::endl;
+            for(auto node : *vec){
+                std::cout << node.P << std::endl;
+                if(node.root_L.isIntersection){
+                    left_parent = node.root_L.i.a;
+                    left_child = node.P.isIntersection ? node.root_L.i.b : node.P.p;
+                }else{
+                    left_parent = node.root_L.p;
+                    left_child = node.P.isIntersection ? node.P.i.b : node.P.p;
                 }
+                if(node.root_R.isIntersection){
+                    right_parent = node.root_R.i.a;
+                    right_child = node.P.isIntersection ? node.root_R.i.b : node.P.p;
+                }else{
+                    right_parent = node.root_R.p;
+                    right_child = node.P.isIntersection ? node.P.i.b : node.P.p;
+                }
+                robustOrientation rightOri = Orient(mesh.mesh_vertices[right_child].p,
+                                                    mesh.mesh_vertices[right_parent].p,
+                                                    p);
+                robustOrientation leftOri = Orient(mesh.mesh_vertices[left_child].p,
+                                                   mesh.mesh_vertices[left_parent].p,
+                                                   p);
+                if(rightOri != robustOrientation::kLeftTurn && leftOri != robustOrientation::kRightTurn){
+                    current_state = STATE::VISIBLE;
+                }else{
+                    if(rightOri == robustOrientation::kLeftTurn) {
+                        current_state = STATE::RIGHT;
+                    }else{
+                        current_state = STATE::LEFT;
+                    }
+                }
+                std::cout << static_cast<int>(last_state) << " ,   " << static_cast<int>(current_state) << std::endl;
+                if(current_state != last_state){
+                    if(last_state == STATE::RIGHT){
+                        // leaving RIGHT causes triggering of intersection
+                        std::cout << "debug1" <<std::endl;
+                        LineLineIntersectionNotCollinear(p, last_visible, last_point, this->evaluate_intersection(node.P), I);
+                        out.push_back(I);
+                    }
+                    if(current_state == STATE::LEFT){
+                        std::cout << "debug2" <<std::endl;
+                        // entering left causes hanging intersection
+                        segment_holder[0] = last_point;
+                        segment_holder[1] = this->evaluate_intersection(node.P);
+                    }
+                    if(last_state == STATE::LEFT && current_state == STATE::VISIBLE){
+                        std::cout << "debug3" <<std::endl;
+                        // leaving LEFT will trigger intersection with segment in memory
+                        LineLineIntersectionNotCollinear(p, this->evaluate_intersection(node.P), segment_holder[0], segment_holder[1], I);
+                        out.push_back(I);
+                    }
+                }
+
+                if(current_state == STATE::VISIBLE){
+                    std::cout << "debug4" <<std::endl;
+                    last_visible = this->evaluate_intersection(node.P);
+                    out.push_back(last_visible);
+                }
+                std::cout << "end debug" <<std::endl;
+                last_point = this->evaluate_intersection(node.P);
+                last_state = current_state;
             }
-            if(debug)getchar();
         }
+
         return out;
     }
 
@@ -295,7 +282,7 @@ namespace edgevis{
                 break;
         }
         return edges;
-    }*/
+    }
 
 
     void
