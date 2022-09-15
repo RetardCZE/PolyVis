@@ -309,7 +309,6 @@ int body(ProgramOptionVariables pov)
             Evis.reset_visu();
 
         verticesPoly = Evis.find_point_visibility(pos, debug);
-        std::cout << "Calculated_points" << std::endl;
         if(save){
             outfile << "--\n";
             outfile << pos << std::endl;

@@ -42,12 +42,14 @@ namespace edgevis{
     EdgeVisibility::compute_side_optimnodesV1(Edge &edge, bool right){
         std::vector<OptimNodeV1> v;
         OptimNodeV1 on1, on2;
-        on1.P.p = edge.parent;
+
         on1.P.isIntersection = false;
         if(right) {
+            on1.P.p = edge.parent;
             on1.root_R.p = edge.parent;
             on1.root_L.p = edge.child;
         }else{
+            on1.P.p = edge.child;
             on1.root_R.p = edge.child;
             on1.root_L.p = edge.parent;
         }
@@ -67,12 +69,14 @@ namespace edgevis{
                 }
             }
         }
-        on1.P.p = edge.child;
+
         on1.P.isIntersection = false;
         if(right) {
+            on1.P.p = edge.child;
             on1.root_R.p = edge.parent;
             on1.root_L.p = edge.child;
         }else{
+            on1.P.p = edge.parent;
             on1.root_R.p = edge.child;
             on1.root_L.p = edge.parent;
         }
@@ -193,9 +197,7 @@ namespace edgevis{
             }else if((pl.poly1 == e->leftPoly && e->rightOptimNodesV1.size() > 0)) {
                 vec = &e->rightOptimNodesV1;
             }
-            std::cout << vec->size() << std::endl;
             for(auto node : *vec){
-                std::cout << node.P << std::endl;
                 if(node.root_L.isIntersection){
                     left_parent = node.root_L.i.a;
                     left_child = node.P.isIntersection ? node.root_L.i.b : node.P.p;
@@ -225,22 +227,18 @@ namespace edgevis{
                         current_state = STATE::LEFT;
                     }
                 }
-                std::cout << static_cast<int>(last_state) << " ,   " << static_cast<int>(current_state) << std::endl;
                 if(current_state != last_state){
                     if(last_state == STATE::RIGHT){
                         // leaving RIGHT causes triggering of intersection
-                        std::cout << "debug1" <<std::endl;
                         LineLineIntersectionNotCollinear(p, last_visible, last_point, this->evaluate_intersection(node.P), I);
                         out.push_back(I);
                     }
                     if(current_state == STATE::LEFT){
-                        std::cout << "debug2" <<std::endl;
                         // entering left causes hanging intersection
                         segment_holder[0] = last_point;
                         segment_holder[1] = this->evaluate_intersection(node.P);
                     }
                     if(last_state == STATE::LEFT && current_state == STATE::VISIBLE){
-                        std::cout << "debug3" <<std::endl;
                         // leaving LEFT will trigger intersection with segment in memory
                         LineLineIntersectionNotCollinear(p, this->evaluate_intersection(node.P), segment_holder[0], segment_holder[1], I);
                         out.push_back(I);
@@ -248,11 +246,9 @@ namespace edgevis{
                 }
 
                 if(current_state == STATE::VISIBLE){
-                    std::cout << "debug4" <<std::endl;
                     last_visible = this->evaluate_intersection(node.P);
                     out.push_back(last_visible);
                 }
-                std::cout << "end debug" <<std::endl;
                 last_point = this->evaluate_intersection(node.P);
                 last_state = current_state;
             }
@@ -313,7 +309,6 @@ namespace edgevis{
         SearchPoint tmp;
         SearchNode* nodes = new edgevis::SearchNode[mesh.max_poly_sides + 2];
         num = this->get_edge_init_nodes(mesh.mesh_edges[edge], side, nodes);
-
         for(int i = 0; i < num; i++){
             expand(nodes[i], vis, side);
         }

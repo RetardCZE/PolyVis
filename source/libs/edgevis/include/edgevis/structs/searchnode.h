@@ -26,13 +26,13 @@ namespace edgevis
         int nextPolygon;
         int comingFrom;
 
-        /*
+
         friend std::ostream& operator<<(std::ostream& stream, const SearchNode& sn)
         {
             return stream << "SearchNode - root: " << sn.rootL << " | " << sn.rootR << "\n"
                           << "edge: " << sn.transitionL << " | " << sn.transitionR << "\n"
                           << "next: " << sn.nextPolygon << "\n";
-        }*/
+        }
     };
 
     typedef SearchNode* SearchNodePtr;
