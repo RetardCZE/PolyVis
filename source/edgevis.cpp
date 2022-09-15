@@ -331,7 +331,7 @@ int body(ProgramOptionVariables pov)
                 verticesPoly[i].x = verticesPolyAnya[i].x;
                 verticesPoly[i].y = verticesPolyAnya[i].y;
             }
-            //Evis.visualise_polygon(verticesPoly, 1);
+            Evis.visualise_polygon(verticesPoly, 1);
             getchar();
             system("clear");
         }
