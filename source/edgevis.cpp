@@ -33,7 +33,7 @@
 #include "polyviz.h"
 #include "polyanya/parsers/map_parser.h"
 
-
+#include <iomanip>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #ifndef INPUT_MAPS_DIR
@@ -186,9 +186,30 @@ void local_visualise(parsers::GeomMesh &mesh, Edge& edge, std::vector<Point>& P,
     return;
 }
 
+tvg::RadialVisibilityRegion ComputeVisibilityRegion(
+        const tvg::FPoint &p,
+        const tvc::TriVis &vis,
+        std::optional<double> vis_radius,
+        double eps_min_edge_len
+) {
+    int num_expansions;
+    tvg::AbstractVisibilityRegion abs_vis_reg;
+    if (!vis.ComputeVisibilityRegion(p, vis_radius, abs_vis_reg, num_expansions)) {
+        LOGF_WRN("Visibility region from seed " << p << " could not be found!");
+        return {};
+    }
+    tvg::RadialVisibilityRegion vis_reg = vis.ConvertToVisibilityRegion(abs_vis_reg);
+    RemoveAntennas(vis_reg);
+    if (vis_radius) {
+        vis_reg = trivis::core::TriVis::ConvertToRadialVisibilityRegion(*vis_radius, vis_reg);
+    }
+    RemoveShortEdges(eps_min_edge_len, vis_reg);
+    return vis_reg;
+}
+
 int body(ProgramOptionVariables pov)
 {
-    std::cout << "Preparing meshes, initializing TriVis and PolyVis solvers.\n";
+    std::cout << "Preparing meshes, initializing Edgevis, TriVis and PolyVis solvers.\n";
 
     parsers::MapParser mapParser;
     parsers::Fade2DMesh fade2DMesh;
@@ -252,7 +273,6 @@ int body(ProgramOptionVariables pov)
     std::string name;
 
     parsers::GeomMesh geomMesh;
-    std::cout << pov.mesh_type << std::endl;
     if(pov.mesh_type == "polygonal"){
         geomMesh = geomMeshPoly;
     }else if(pov.mesh_type == "triangular"){
@@ -270,45 +290,53 @@ int body(ProgramOptionVariables pov)
     PolyVis solverPoly(geomMesh);
     edgevis::EdgeVisibility Evis(edgemesh);
     Evis.set_visual_mesh(geomMesh);
-    std::cout << edgemesh.is_convex();
 
     std::vector<polyanya::Point> verticesPolyAnya;
-    std::cout << "Precomputing visibility of edges.\n";
     Evis.switch_debug(false);
     double time;
     tvc::utils::SimpleClock clock;
 
+    std::cout << "\n\nMap: " << pov.input_map_name
+              << "\nType of mesh: " << pov.mesh_type
+              << "\nNumber of iterations: " <<  pov.n_random_samples;
+    std::cout << "\n" << std::endl;
+
     clock.Restart();
     Evis.precompute_edges_searchnodes();
     time = clock.TimeInSeconds();
-    std::cout << "\nEdge Visibility\n";
+    std::cout << "\nEdgevis\n";
     std::cout << "Preprocessing time for Edge Visibility was " <<
               time << " seconds.\n";
     clock.Restart();
     Evis.precompute_edges_optimnodesV1();
-
     time = clock.TimeInSeconds();
-    std::cout << "\nOptimNodeV1\n";
     std::cout << "Preprocessing time for OptimNodesV1 was " <<
               time << " seconds.\n";
 
-    clock.Restart();
+
     bool debug = pov.debug;
     bool save = pov.save;
-
     std::ofstream outfile;
     std::ofstream outfile_polyvis;
+    std::ofstream outfile_trivis;
     std::ofstream results;
     results.open("results.dat", std::ios::out | std::ios::trunc );
+    results << pov.input_map_name
+            << "\nType of mesh: " << pov.mesh_type
+            << "\nNumber of iterations: " <<  pov.n_random_samples
+            << "\n=======================================================\n";
     if(save){
         outfile.open("logger_edgevis.dat", std::ios::out | std::ios::trunc );
         outfile_polyvis.open("logger_polyvis.dat", std::ios::out | std::ios::trunc );
+        outfile_trivis.open("logger_trivis.dat", std::ios::out | std::ios::trunc );
     }
+    clock.Restart();
     for (auto pos : r_points){
         if(debug)
             Evis.reset_visu();
 
         verticesPoly = Evis.find_point_visibility(pos, debug);
+
         if(save){
             outfile << "--\n";
             outfile << pos << std::endl;
@@ -318,7 +346,6 @@ int body(ProgramOptionVariables pov)
             }
             outfile << std::endl;
         }
-
         if(debug) {
             anyaP.x = pos.x;
             anyaP.y = pos.y;
@@ -338,15 +365,10 @@ int body(ProgramOptionVariables pov)
 
     }
     time = clock.TimeInSeconds();
-    std::cout << "\nEdgevis\n";
-    std::cout << "Total computation time of "<< pov.n_random_samples << " random points was " <<
-              time << " seconds.\n";
-    std::cout << "Mean computation time of "<< pov.n_random_samples << " random points was " <<
-              time/pov.n_random_samples << " seconds/point.\n";
+    std::cout << "Total computation time: " << time << " seconds.\n";
+    std::cout << "Mean computation time: " << time/pov.n_random_samples << " seconds/point.\n";
     results << "EdgeVis:";
-    results << pov.input_map_name <<
-              "\nNumber of iterations: " <<  pov.n_random_samples <<
-              "\nTotal computation time:" << time <<
+    results << "\nTotal computation time:" << time <<
               "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
 
     clock.Restart();
@@ -365,18 +387,41 @@ int body(ProgramOptionVariables pov)
     }
     time = clock.TimeInSeconds();
     std::cout << "\nPolyVis\n";
-    std::cout << "Total computation time of "<< pov.n_random_samples << " random points was " <<
-              time << " seconds.\n";
-    std::cout << "Mean computation time of "<< pov.n_random_samples << " random points was " <<
-              time/pov.n_random_samples << " seconds/point.\n";
+    std::cout << "Total computation time: "<< time << " seconds.\n";
+    std::cout << "Mean computation time: "<< time/pov.n_random_samples << " seconds/point.\n";
 
     results << "\n===============================================================\n";
     results << "PolyVis:";
-    results << pov.input_map_name <<
-            "\nNumber of iterations: " <<  pov.n_random_samples <<
-            "\nTotal computation time:" << time <<
+    results << "\nTotal computation time:" << time <<
             "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
 
+    if(pov.mesh_type == "triangular") {
+        std::cout << "\nTriVis\n";
+        clock.Restart();
+        for (auto pos: random_points) {
+            auto verticesTriVis = ComputeVisibilityRegion(pos, vis, vis_radius, 1e-6);
+            if(save){
+                outfile_trivis << "--\n";
+                outfile_trivis << pos << std::endl;
+                outfile_trivis << verticesTriVis.vertices.size() << std::endl;
+                for (auto p : verticesTriVis.vertices){
+                    outfile_trivis << p.point << "; ";
+                }
+                outfile_trivis << std::endl;
+
+            }
+
+        }
+        time = clock.TimeInSeconds();
+        std::cout << "Total computation time: " << time << " seconds.\n";
+        std::cout << "Mean computation time: " << time / pov.n_random_samples << " seconds/point.\n";
+
+        results << "\n===============================================================\n";
+        results << "TriVis:";
+        results << "\nTotal computation time:" << time <<
+                "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
+    }
+    results.close();
     return 0;
 }
 
