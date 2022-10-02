@@ -1,0 +1,12 @@
+eapd_ciirc
+Type of mesh: polygonal
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:10.8226
+Average computation time per point:1.08226e-05
+
+===============================================================
+PolyVis:
+Total computation time:13.5071
+Average computation time per point:1.35071e-05

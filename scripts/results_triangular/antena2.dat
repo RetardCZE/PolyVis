@@ -1,0 +1,17 @@
+antena2
+Type of mesh: triangular
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:0.584504
+Average computation time per point:5.84504e-07
+
+===============================================================
+PolyVis:
+Total computation time:0.471002
+Average computation time per point:4.71002e-07
+
+===============================================================
+TriVis:
+Total computation time:0.620536
+Average computation time per point:6.20536e-07

@@ -1,0 +1,17 @@
+testgaps2
+Type of mesh: triangular
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:0.536134
+Average computation time per point:5.36134e-07
+
+===============================================================
+PolyVis:
+Total computation time:0.395898
+Average computation time per point:3.95898e-07
+
+===============================================================
+TriVis:
+Total computation time:0.484473
+Average computation time per point:4.84473e-07

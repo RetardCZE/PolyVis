@@ -1,0 +1,17 @@
+unsolvable
+Type of mesh: triangular
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:0.59963
+Average computation time per point:5.9963e-07
+
+===============================================================
+PolyVis:
+Total computation time:0.445372
+Average computation time per point:4.45372e-07
+
+===============================================================
+TriVis:
+Total computation time:0.581421
+Average computation time per point:5.81421e-07

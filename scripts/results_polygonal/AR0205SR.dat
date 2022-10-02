@@ -1,0 +1,12 @@
+AR0205SR
+Type of mesh: polygonal
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:4.98701
+Average computation time per point:4.98701e-06
+
+===============================================================
+PolyVis:
+Total computation time:4.4893
+Average computation time per point:4.4893e-06

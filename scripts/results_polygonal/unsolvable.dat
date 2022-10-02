@@ -1,0 +1,12 @@
+unsolvable
+Type of mesh: polygonal
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:0.663912
+Average computation time per point:6.63912e-07
+
+===============================================================
+PolyVis:
+Total computation time:0.417919
+Average computation time per point:4.17919e-07

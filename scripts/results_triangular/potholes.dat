@@ -1,0 +1,17 @@
+potholes
+Type of mesh: triangular
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:4.05855
+Average computation time per point:4.05855e-06
+
+===============================================================
+PolyVis:
+Total computation time:5.87478
+Average computation time per point:5.87478e-06
+
+===============================================================
+TriVis:
+Total computation time:6.02426
+Average computation time per point:6.02426e-06

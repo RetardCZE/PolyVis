@@ -330,10 +330,14 @@ int body(ProgramOptionVariables pov)
         outfile_polyvis.open("logger_polyvis.dat", std::ios::out | std::ios::trunc );
         outfile_trivis.open("logger_trivis.dat", std::ios::out | std::ios::trunc );
     }
+
     clock.Restart();
     for (auto pos : r_points){
-        if(debug)
+        if(debug) {
             Evis.reset_visu();
+            std::string m = pov.input_map_name + ".png";
+            rename("debug_visu.png",  m.c_str());
+        }
 
         verticesPoly = Evis.find_point_visibility(pos, debug);
 
@@ -346,7 +350,7 @@ int body(ProgramOptionVariables pov)
             }
             outfile << std::endl;
         }
-        if(debug) {
+        /*if(debug) {
             anyaP.x = pos.x;
             anyaP.y = pos.y;
             verticesPolyAnya = solverPoly.get_visibility_polygon(anyaP);
@@ -361,7 +365,7 @@ int body(ProgramOptionVariables pov)
             Evis.visualise_polygon(verticesPoly, 1);
             getchar();
             system("clear");
-        }
+        }*/
 
     }
     time = clock.TimeInSeconds();

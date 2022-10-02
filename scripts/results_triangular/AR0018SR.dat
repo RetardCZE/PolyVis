@@ -1,0 +1,17 @@
+AR0018SR
+Type of mesh: triangular
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:6.19947
+Average computation time per point:6.19947e-06
+
+===============================================================
+PolyVis:
+Total computation time:8.48259
+Average computation time per point:8.48259e-06
+
+===============================================================
+TriVis:
+Total computation time:10.1831
+Average computation time per point:1.01831e-05

@@ -1,0 +1,12 @@
+antena3
+Type of mesh: polygonal
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:0.736078
+Average computation time per point:7.36078e-07
+
+===============================================================
+PolyVis:
+Total computation time:0.438102
+Average computation time per point:4.38102e-07

@@ -1,0 +1,12 @@
+potholes
+Type of mesh: polygonal
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:4.90545
+Average computation time per point:4.90545e-06
+
+===============================================================
+PolyVis:
+Total computation time:3.67207
+Average computation time per point:3.67207e-06

@@ -628,6 +628,7 @@ namespace edgevis{
         cgm_drawer.DrawPlane(cgm::kColorBlack);
         cgm_drawer.DrawPolygon(border, cgm::kColorBlack);
         cgm_drawer.DrawPolygons(free, cgm::kColorWhite);
+        cgm_drawer.SaveToPng("debug_visu.png");
     }
 
     void

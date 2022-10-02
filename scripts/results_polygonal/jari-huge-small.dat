@@ -1,0 +1,12 @@
+jari-huge-small
+Type of mesh: polygonal
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:3.05631
+Average computation time per point:3.05631e-06
+
+===============================================================
+PolyVis:
+Total computation time:1.85305
+Average computation time per point:1.85305e-06

@@ -1,0 +1,12 @@
+simple
+Type of mesh: polygonal
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:0.537575
+Average computation time per point:5.37575e-07
+
+===============================================================
+PolyVis:
+Total computation time:0.353115
+Average computation time per point:3.53115e-07

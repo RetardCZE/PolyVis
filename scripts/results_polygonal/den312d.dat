@@ -1,0 +1,12 @@
+den312d
+Type of mesh: polygonal
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:2.23142
+Average computation time per point:2.23142e-06
+
+===============================================================
+PolyVis:
+Total computation time:1.59866
+Average computation time per point:1.59866e-06

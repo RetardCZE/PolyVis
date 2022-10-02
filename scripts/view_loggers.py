@@ -17,7 +17,11 @@ def cli():
 
 @cli.command('show-results')
 @click.option('-t', '--type', type= click.Choice(['triangular', 'polygonal']), default='triangular')
-def run_all(type):
+def show_results(type):
+    from fpdf import FPDF
+    from PIL import Image
+    pdf = FPDF()
+
     times = {}
     res = Path(f'results_{type}')
     for f in res.iterdir():
@@ -37,9 +41,47 @@ def run_all(type):
                     times[n] = [e, p, t]
                 except:
                     times[n] = [e, p]
+
             except:
                 print("something went wrong on", n)
+            try:
+                image = "images/" + n + ".png"
+                cover = Image.open(image)
+                width, height = cover.size
 
+                width, height = float(width * 0.264583), float(height * 0.264583)
+
+                pdf_size ={'w': 210, 'h': 297}
+
+                ratio = min(pdf_size['w']/width, pdf_size['h']/height)
+                if ratio < 1:
+                    ratio = 0.9 * ratio
+                else:
+                    ration = 1/ratio * 0.9
+
+                pdf.add_page()
+                pdf.image(image, 10.5, 29, ratio * width, ratio * height)
+                pdf.set_font('arial', 'B', 13.0)
+                pdf.set_xy(75, 0)
+                pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"Map:   {n}", border=0)
+                pdf.set_font('arial', 'B', 13.0)
+                pdf.set_xy(0, 9)
+                pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"EdgeVis:   {e} s", border=0)
+                pdf.set_xy(75, 9)
+                pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"PolyVis:   {p} s", border=0)
+                pdf.set_xy(150, 9)
+                pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"TriVis:    {t} s", border=0)
+
+                pdf.set_xy(0, 18)
+                pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"           {100 * e/e:.2f}%", border=0)
+                pdf.set_xy(75, 18)
+                pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"           {100 * p/e:.2f}%", border=0)
+                pdf.set_xy(150, 18)
+                pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"           {100 * t/e:.2f}%", border=0)
+            except FileNotFoundError:
+                pass
+
+    pdf.output("report.pdf", "F")
     for key in times.keys():
         print(key, " - ", times[key])
 
@@ -64,6 +106,7 @@ def run_all(number, type):
         except FileNotFoundError:
             print(f"{name} is not usable")
 
+    print(50*'-')
     times = {}
     res = Path(f'results_{type}')
     for f in res.iterdir():

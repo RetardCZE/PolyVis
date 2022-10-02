@@ -1,0 +1,12 @@
+gaps
+Type of mesh: polygonal
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:1.02791
+Average computation time per point:1.02791e-06
+
+===============================================================
+PolyVis:
+Total computation time:0.569479
+Average computation time per point:5.69479e-07

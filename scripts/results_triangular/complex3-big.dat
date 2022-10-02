@@ -1,0 +1,17 @@
+complex3-big
+Type of mesh: triangular
+Number of iterations: 1000000
+=======================================================
+EdgeVis:
+Total computation time:0.653829
+Average computation time per point:6.53829e-07
+
+===============================================================
+PolyVis:
+Total computation time:0.487949
+Average computation time per point:4.87949e-07
+
+===============================================================
+TriVis:
+Total computation time:0.674191
+Average computation time per point:6.74191e-07
