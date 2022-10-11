@@ -89,7 +89,7 @@ namespace cairo_geom_drawer {
             cairo_set_source_rgba(cr, fill_color_01.r, fill_color_01.g, fill_color_01.b, opacity);
             cairo_set_font_size(cr, 2.0);
             // TODO valgrind warning - leak_definitely_lost
-//            cairo_show_text(cr, text.c_str());
+            cairo_show_text(cr, text.c_str());
             cairo_fill(cr);
             cairo_stroke(cr);
             cairo_destroy(cr);

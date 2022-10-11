@@ -77,4 +77,40 @@ namespace edgevis {
 
     }
 
+    uint8_t
+    SegmentSegmentIntersectionGeneral(const Point &a, const Point &b, const Point &c, const Point &d, Point &p) {
+        robustOrientation aOri = Orient(c, d, a);
+        robustOrientation bOri = Orient(c, d, b);
+        robustOrientation cOri = Orient(a, b, c);
+        robustOrientation dOri = Orient(a, b, d);
+        if(cOri != dOri && aOri != bOri){
+            if (aOri == robustOrientation::kCollinear) {
+                p = a;
+                return 1;
+            }
+            if (bOri == robustOrientation::kCollinear) {
+                p = b;
+                return 1;
+            }
+            if (cOri == robustOrientation::kCollinear) {
+                p = c;
+                return 2;
+            }
+            if (dOri == robustOrientation::kCollinear) {
+                p = d;
+                return 2;
+            }
+            bool check = LineLineIntersectionNotCollinear(a, b, c, d, p);
+            if (check) {
+                return 0;
+            } else {
+                return 3;
+            }
+        }
+        return 4;
+        /*
+         * only if all special cases are checked we move to common intersection calculation. That can be done with line line.
+         */
+    }
+
 }

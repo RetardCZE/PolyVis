@@ -31,23 +31,32 @@ namespace edgevis{
         EdgeVisibility(Mesh& mesh);
         ~EdgeVisibility();
 
+        void
+        find_arbitrary_edge_visibility(int edgeParent, int edgeChild, std::vector<SearchNode> &leftVis,
+                                       std::vector<SearchNode> &rightVis);
+        std::vector<SearchNode> find_edge_visibility(int edge, bool side);
 
-        std::vector<SearchNode> find_edge_visibility(int edge_id, bool side);
         void set_visual_mesh(const parsers::GeomMesh &gmesh);
         bool switch_debug(bool on);
         void precompute_edges_searchnodes();
         const Mesh& mesh_reference();
         void precompute_edges_optimnodesV1();
         std::vector<Point> find_point_visibility(Point p, bool debug);
+        Point evaluate_intersection(SearchPoint& sp);
 
         void visualise_segment(Point A, Point B, int color, float opacity);
         void visualise_point(Point A, int color);
+        void visualise_named_point(Point A, int color, std::string str);
+        void visualise_vertex_indexes();
         void visualise_polygon(std::vector<Point>& p, int color);
         void reset_visu();
+
     private:
-        Point evaluate_intersection(SearchPoint& sp);
         std::vector<OptimNodeV1> compute_side_optimnodesV1(Edge &edge, bool right=true);
         void expand(SearchNode &node, std::vector<SearchNode> &visibility, bool side);
+        void get_arbitrary_edge_init_nodes(Edge edge, int &rightCount, int &leftCount,
+                                           edgevis::SearchNode *initLeftNodes,
+                                           edgevis::SearchNode *initRightNodes);
         int get_edge_init_nodes(Edge edge, bool side, SearchNode *initNodes);
         int find_visible(SearchNode &node, std::vector<int> &sorted_vertices, int *right_visible, int *left_visible);
         int expand_forward(SearchNode &node, SearchNode *newNodes);
