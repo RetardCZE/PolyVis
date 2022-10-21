@@ -1,0 +1,14 @@
+# Save all source files from polyanya library
+
+FILE(GLOB SRCFILES_HELPERS helpers/*.cpp)
+FILE(GLOB SRCFILES_SEARCH search/*.cpp)
+FILE(GLOB SRCFILES_STRUCTS structs/*.cpp)
+
+set(POLYANYA_SOURCE_FILES ${SRCFILES_HELPERS} ${SRCFILES_SEARCH} ${SRCFILES_STRUCTS})
+
+add_library(PolyAnya
+        ${POLYANYA_SOURCE_FILES}
+        )
+
+target_link_libraries(PolyAnya GeomMesh)
+target_compile_options(PolyAnya PUBLIC -std=c++17)

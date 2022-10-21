@@ -16,7 +16,6 @@ endif ()
 message("CMAKE_BUILD_TYPE is: ${CMAKE_BUILD_TYPE}")
 
 add_subdirectory(libs) # include trivis and polyanya
-
 # include boost:
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
@@ -62,20 +61,22 @@ target_link_libraries(EdgeVis_example
         cairo
         PolyAnya
         EdgeVis
+        GeomMesh
         ${FADE2D_LIBRARY}
         ${Boost_LIBRARIES})
 
-add_executable(EdgeVis_arbitrary_edge
-        edgevis_arbitrary_edge.cpp
-        ${SOURCES}
-        ${${PROJECT_NAME}_SRC})
-
-target_compile_definitions(EdgeVis_arbitrary_edge PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
-
-target_link_libraries(EdgeVis_arbitrary_edge
-        TriVis
-        cairo
-        PolyAnya
-        EdgeVis
-        ${FADE2D_LIBRARY}
-        ${Boost_LIBRARIES})
+# add_executable(EdgeVis_arbitrary_edge
+#         edgevis_arbitrary_edge.cpp
+#         ${SOURCES}
+#         ${${PROJECT_NAME}_SRC})
+#
+# target_compile_definitions(EdgeVis_arbitrary_edge PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
+#
+# target_link_libraries(EdgeVis_arbitrary_edge
+#         TriVis
+#         cairo
+#         PolyAnya
+#         EdgeVis
+#         GeomMesh
+#         ${FADE2D_LIBRARY}
+#         ${Boost_LIBRARIES})

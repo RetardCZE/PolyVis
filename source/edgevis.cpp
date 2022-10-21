@@ -24,14 +24,10 @@
 #include "edgevis/search/visibility_utils.h"
 #include "edgevis/search/visibility.h"
 
-#include "geom/geom.h"
-#include "geom/utils.h"
-#include "geom/cairo_geom_drawer.h"
+#include "drawing/cairo_geom_drawer.h"
 
-#include "polyanya/parsers/map_parser.h"
-
-#include "polyviz.h"
-#include "polyanya/parsers/map_parser.h"
+#include "geomMesh/parsers/map_parser.h"
+#include "polyanya/search/polyviz.h"
 
 #include <iomanip>
 #include <boost/program_options.hpp>
@@ -143,49 +139,6 @@ char ParseProgramOptions(
     return '0';
 }
 
-void local_visualise(parsers::GeomMesh &mesh, Edge& edge, std::vector<Point>& P, std::string name){
-    geom::Polygons<double> free;
-    geom::Points<double> vertices;
-    geom::Polygon<double> visibility;
-    geom::Point<double> vertex, vertex2;
-    geom::Polygon<double> polygon;
-    for(auto v : mesh.vertices){
-        vertices.push_back(v.point);
-    }
-    for(auto p : mesh.polygons){
-        free.push_back(p.polygon);
-    }
-    for(auto v : P){
-        vertex.x = v.x;
-        vertex.y = v.y;
-        visibility.push_back(vertex);
-    }
-    double x_min, x_max, y_min, y_max;
-    geom::ComputeLimits(free, x_min, x_max, y_min, y_max);
-    geom::Polygon<double> border = {
-            {x_min, y_min},
-            {x_min, y_max},
-            {x_max, y_max},
-            {x_max, y_min},
-    };
-    cgm::CairoGeomDrawer cgm_drawer(x_max, y_max, 1.0);
-
-    /// Create and save to PDF file
-    cgm_drawer.OpenPDF(name);
-    //cgm_drawer.OpenPDF("edgevis_testing.pdf");
-    cgm_drawer.DrawPlane(cgm::kColorBlack);
-    cgm_drawer.DrawPolygon(border, cgm::kColorBlack);
-    cgm_drawer.DrawPolygons(free, cgm::kColorWhite);
-    cgm_drawer.DrawPoints(visibility, 0.2, cgm::kColorGreen);
-    cgm_drawer.DrawPolygon(visibility, cgm::kColorLightGreen, 0.5);
-    vertex = vertices[edge.parent];
-    vertex2 = vertices[edge.child];
-    cgm_drawer.DrawLine(vertex, vertex2, 0.1, cgm::kColorRed, 0.5);
-    cgm_drawer.DrawPoint(vertex, 0.1, cgm::kColorBlue, 0.5);
-    cgm_drawer.Close();
-    return;
-}
-
 tvg::RadialVisibilityRegion ComputeVisibilityRegion(
         const tvg::FPoint &p,
         const tvc::TriVis &vis,
@@ -216,6 +169,7 @@ int body(ProgramOptionVariables pov)
     parsers::MergedMesh mergedMesh;
     parsers::GeomMesh geomMeshTri;
     parsers::GeomMesh geomMeshPoly;
+    parsers::GeomMesh IronHarvest;
 
     std::string mapName = pov.input_map_full_path;
 
@@ -223,6 +177,11 @@ int body(ProgramOptionVariables pov)
     mapParser.convertMapToMergedMesh(mapName, mergedMesh);
     mapParser.convertMergedMeshToGeomMesh(mergedMesh, geomMeshPoly);
     mapParser.convertFade2DMeshToGeomMesh(fade2DMesh, geomMeshTri);
+
+    std::string filename = "/home/jakub/Projects/IronHarvest/mesh-maps/iron-harvest/scene_mp_2p_01.mesh";
+    mapParser.readGeomMeshFromIronHarvestMesh(filename,
+                                              IronHarvest);
+    return 0;
 
 
     // Create and initialize TriVis object.
@@ -350,7 +309,7 @@ int body(ProgramOptionVariables pov)
             }
             outfile << std::endl;
         }
-        /*if(debug) {
+        if(debug) {
             anyaP.x = pos.x;
             anyaP.y = pos.y;
             verticesPolyAnya = solverPoly.get_visibility_polygon(anyaP);
@@ -364,8 +323,7 @@ int body(ProgramOptionVariables pov)
             }
             Evis.visualise_polygon(verticesPoly, 1);
             getchar();
-            system("clear");
-        }*/
+        }
 
     }
     time = clock.TimeInSeconds();

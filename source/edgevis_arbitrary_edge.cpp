@@ -23,8 +23,7 @@
 #include "geom/utils.h"
 #include "geom/cairo_geom_drawer.h"
 
-#include "polyanya/parsers/map_parser.h"
-#include "polyanya/parsers/map_parser.h"
+#include "geomMesh/parsers/map_parser.h"
 
 #include <iomanip>
 #include <boost/program_options.hpp>
