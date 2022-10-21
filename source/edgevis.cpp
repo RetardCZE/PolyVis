@@ -181,9 +181,6 @@ int body(ProgramOptionVariables pov)
     std::string filename = "/home/jakub/Projects/IronHarvest/mesh-maps/iron-harvest/scene_mp_2p_01.mesh";
     mapParser.readGeomMeshFromIronHarvestMesh(filename,
                                               IronHarvest);
-    return 0;
-
-
     // Create and initialize TriVis object.
     tvc::TriVis vis;
     {   // Load map from file and move it to TriVis (without copying).
@@ -240,6 +237,7 @@ int body(ProgramOptionVariables pov)
         std::cout << "Unknown mesh type.\n";
         return -1;
     }
+    geomMesh = IronHarvest;
 
     edgevis::Mesh edgemesh;
     edgemesh.read(geomMesh);
@@ -249,7 +247,7 @@ int body(ProgramOptionVariables pov)
     PolyVis solverPoly(geomMesh);
     edgevis::EdgeVisibility Evis(edgemesh);
     Evis.set_visual_mesh(geomMesh);
-
+    
     std::vector<polyanya::Point> verticesPolyAnya;
     Evis.switch_debug(false);
     double time;

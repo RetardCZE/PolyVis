@@ -359,7 +359,11 @@ parsers::MapParser::readGeomMeshFromIronHarvestMesh(const std::string &filename,
         std::cerr << "Wrong mesh version";
         return;
     }
-    int vertexCount, facesCount;
+    int vertexCount, facesCount, tempInt;
+    int faceIsTraversable, numEdges;
+    std::vector<int> vertexId;
+    std::vector<int> faceId;
+    std::vector<int> idConverter;
     geomMesh.vertices.clear();
     geomMesh.polygons.clear();
     geomMesh.obstacles.clear();
@@ -373,17 +377,72 @@ parsers::MapParser::readGeomMeshFromIronHarvestMesh(const std::string &filename,
         geomMesh.vertices.push_back(currentVertex);
     }
     for(int i = 0; i < facesCount; i++){
+        ifs >> faceIsTraversable;
+        ifs >> numEdges;
+        vertexId.clear();
+        for(int j = 0; j < numEdges; j++){
+            ifs >> tempInt;
+            vertexId.push_back(tempInt - 1);
+        }
+        faceId.clear();
+        for(int j = 0; j < numEdges; j++){
+            ifs >> tempInt;
+            faceId.push_back(tempInt - 1);
+        }
+        currentPolygon.polygon.clear();
+        currentPolygon.idxNeighPolygons.clear();
         currentPolygon.idxVertices.clear();
-        
-    }
-    std::cout << vertexCount << " " << facesCount << std::endl;
 
+        currentPolygon.idxVertices = vertexId;
+        for(auto v : currentPolygon.idxVertices){
+            currentPolygon.polygon.push_back(geomMesh.vertices[v].point);
+            if(faceIsTraversable){
+                geomMesh.vertices[v].idxNeighPolygons.push_back(v);
+            }else{
+                geomMesh.vertices[v].idxNeighPolygons.push_back(-1);
+            }
 
-    bool isBorder = false;
-    double scale = 1.0;
-    while (!ifs.eof()) {
-        ifs >> token;
+        }
+
+        for(auto p : faceId){
+            if(p >= 0) {
+                currentPolygon.idxNeighPolygons.push_back(p);
+            }else{
+                currentPolygon.idxNeighPolygons.push_back(-1);
+            }
+        }
+        if(faceIsTraversable){
+            geomMesh.polygons.push_back(currentPolygon);
+            idConverter.push_back(i);
+        }
     }
+    for(int i = 0; i < geomMesh.polygons.size(); i++){
+        for(int j = 0; j < geomMesh.polygons[i].idxNeighPolygons.size(); j++){
+            if(geomMesh.polygons[i].idxNeighPolygons[j] == -1) continue;
+            for(int k = 0; k < idConverter.size(); k++){
+                if(geomMesh.polygons[i].idxNeighPolygons[j] == idConverter[k]){
+                    geomMesh.polygons[i].idxNeighPolygons[j] = k;
+                    break;
+                }
+            }
+        }
+    }
+    for(int i = 0; i < geomMesh.vertices.size(); i++){
+        for(int j = 0; j < geomMesh.vertices[i].idxNeighPolygons.size(); j++){
+            if(geomMesh.vertices[i].idxNeighPolygons[j] == -1) continue;
+            for(int k = 0; k < idConverter.size(); k++){
+                if(geomMesh.vertices[i].idxNeighPolygons[j] == idConverter[k]){
+                    geomMesh.vertices[i].idxNeighPolygons[j] = k;
+                    break;
+                }
+                geomMesh.vertices[i].idxNeighPolygons[j] = -1;
+            }
+        }
+    }
+
+    std::cout << geomMesh.vertices.size() << " " << geomMesh.polygons.size() << std::endl;
+    ifs >> token; // to reach EOF
+    ifs.close();
     return;
 }
 
