@@ -362,6 +362,19 @@ namespace edgevis {
         }
     }
 
+    Point
+    Mesh::random_point(std::mt19937 &seed){
+        PointLocation pl;
+        pl.type = PointLocation::NOT_ON_MESH;
+        Point randomPoint;
+        while(pl.type == PointLocation::NOT_ON_MESH) {
+            randomPoint.x = std::uniform_real_distribution<double>(min_x, max_x)(seed);
+            randomPoint.y = std::uniform_real_distribution<double>(min_y, max_y)(seed);
+            pl = get_point_location(randomPoint);
+        }
+        return randomPoint;
+    }
+
     void Mesh::precalc_point_location() {
         for (Vertex &v : mesh_vertices) {
             slabs[v.p.x] = std::vector<int>(0); // initialises the vector

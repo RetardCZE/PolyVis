@@ -927,7 +927,13 @@ namespace edgevis{
         }
         for(auto p : this->gmesh.polygons){
             free.push_back(p.polygon);
+        }for(auto &p : free){
+            for(auto &n : p){
+                n.x = n.x - mesh.min_x;
+                n.y = n.y - mesh.min_y;
+            }
         }
+
         double x_min, x_max, y_min, y_max;
         geom::ComputeLimits(free, x_min, x_max, y_min, y_max);
         geom::Polygon<double> border = {
@@ -962,6 +968,12 @@ namespace edgevis{
         for(auto p : this->gmesh.polygons){
             free.push_back(p.polygon);
         }
+        for(auto &p : free){
+            for(auto &n : p){
+                n.x = n.x - mesh.min_x;
+                n.y = n.y - mesh.min_y;
+            }
+        }
         double x_min, x_max, y_min, y_max;
         geom::ComputeLimits(free, x_min, x_max, y_min, y_max);
         geom::Polygon<double> border = {
@@ -983,12 +995,18 @@ namespace edgevis{
         geom::Polygons<double> free;
         geom::Points<double> vertices;
         cgm_drawer.Close();
-        cgm_drawer = cgm::CairoGeomDrawer(this->mesh.max_x, this->mesh.max_y, 20);
+        cgm_drawer = cgm::CairoGeomDrawer(mesh.max_x - mesh.min_x, mesh.max_y - mesh.min_y, 20);
         for(auto v : this->gmesh.vertices){
             vertices.push_back(v.point);
         }
         for(auto p : this->gmesh.polygons){
             free.push_back(p.polygon);
+        }
+        for(auto &p : free){
+            for(auto &n : p){
+                n.x = n.x - mesh.min_x;
+                n.y = n.y - mesh.min_y;
+            }
         }
         double x_min, x_max, y_min, y_max;
         geom::ComputeLimits(free, x_min, x_max, y_min, y_max);
@@ -1010,10 +1028,10 @@ namespace edgevis{
         cgm::RGB colors[3] = {cgm::kColorRed, cgm::kColorGreen, cgm::kColorBlue};
         geom::Point<double> vertex, vertex2;
 
-        vertex.x = A.x;
-        vertex.y = A.y;
-        vertex2.x = B.x;
-        vertex2.y = B.y;
+        vertex.x = A.x - mesh.min_x;
+        vertex.y = A.y - mesh.min_y;
+        vertex2.x = B.x - mesh.min_x;
+        vertex2.y = B.y - mesh.min_y;
         cgm_drawer.DrawLine(vertex, vertex2, 0.1, colors[color], 0.5);
         cgm_drawer.DrawPoint(vertex, 0.1, colors[color]);
         cgm_drawer.SaveToPng("debug_visu.png");
@@ -1026,9 +1044,9 @@ namespace edgevis{
         cgm::RGB colors[4] = {cgm::kColorRed, cgm::kColorGreen, cgm::kColorBlue, cgm::kColorBeige};
         geom::Point<double> vertex, vertex2;
 
-        vertex.x = A.x;
-        vertex.y = A.y;
-        cgm_drawer.DrawPoint(vertex, 0.2, colors[color]);
+        vertex.x = A.x - mesh.min_x;
+        vertex.y = A.y - mesh.min_y;
+        cgm_drawer.DrawPoint(vertex, 1.0, colors[color]);
         cgm_drawer.SaveToPng("debug_visu.png");
         return;
 
@@ -1039,8 +1057,8 @@ namespace edgevis{
         cgm::RGB colors[4] = {cgm::kColorRed, cgm::kColorGreen, cgm::kColorBlue, cgm::kColorBeige};
         geom::Point<double> vertex, vertex2;
 
-        vertex.x = A.x;
-        vertex.y = A.y;
+        vertex.x = A.x - mesh.min_x;
+        vertex.y = A.y - mesh.min_y;
         cgm_drawer.DrawPoint(vertex, 0.2, colors[color], 0.5, str);
         return;
 
@@ -1054,8 +1072,8 @@ namespace edgevis{
         geom::Point<double> vertex;
 
         for(auto v : p){
-            vertex.x = v.x;
-            vertex.y = v.y;
+            vertex.x = v.x - mesh.min_x;
+            vertex.y = v.y - mesh.min_y;
             polygon.push_back(vertex);
         }
 

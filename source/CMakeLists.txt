@@ -35,7 +35,7 @@ set(${PROJECT_NAME}_SRC
         )
 
 set(${PROJECT_NAME}_COMPILE_DEFINITIONS
-        -DINPUT_MAPS_DIR="${PROJECT_SOURCE_DIR}/data/maps"
+        -DINPUT_MAPS_DIR="${PROJECT_SOURCE_DIR}/../../IronHarvest/mesh-maps/iron-harvest"
         )
 
 # add_executable(trivis_debug trivis_debug.cc ${${PROJECT_NAME}_SRC})

@@ -48,7 +48,8 @@ def show_results(type):
                 image = "images/" + n + ".png"
                 cover = Image.open(image)
                 width, height = cover.size
-
+                cover = cover.resize((int(width*0.2), int(height*0.2)))
+                width, height = cover.size
                 width, height = float(width * 0.264583), float(height * 0.264583)
 
                 pdf_size ={'w': 210, 'h': 297}
@@ -60,7 +61,7 @@ def show_results(type):
                     ration = 1/ratio * 0.9
 
                 pdf.add_page()
-                pdf.image(image, 10.5, 29, ratio * width, ratio * height)
+                #pdf.image(image, 10.5, 29, ratio * width, ratio * height)
                 pdf.set_font('arial', 'B', 13.0)
                 pdf.set_xy(75, 0)
                 pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"Map:   {n}", border=0)
@@ -69,16 +70,17 @@ def show_results(type):
                 pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"EdgeVis:   {e} s", border=0)
                 pdf.set_xy(75, 9)
                 pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"PolyVis:   {p} s", border=0)
-                pdf.set_xy(150, 9)
-                pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"TriVis:    {t} s", border=0)
+                # pdf.set_xy(150, 9)
+                # pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"TriVis:    {t} s", border=0)
 
                 pdf.set_xy(0, 18)
                 pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"           {100 * e/e:.2f}%", border=0)
                 pdf.set_xy(75, 18)
                 pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"           {100 * p/e:.2f}%", border=0)
-                pdf.set_xy(150, 18)
-                pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"           {100 * t/e:.2f}%", border=0)
-            except FileNotFoundError:
+                # pdf.set_xy(150, 18)
+                # pdf.cell(ln=0, h=5.0, align='L', w=0, txt=f"           {100 * t/e:.2f}%", border=0)
+            except FileNotFoundError as err:
+                print(repr(err), image)
                 pass
 
     pdf.output("report.pdf", "F")
@@ -91,7 +93,7 @@ def show_results(type):
 @click.option('-t', '--type', type= click.Choice(['triangular', 'polygonal']), default='triangular')
 def run_all(number, type):
     executable = "../build/EdgeVis_example"
-    maps = Path("../source/data/maps")
+    maps = Path("/home/jakub/Projects/IronHarvest/mesh-maps/iron-harvest")
     Path(f'results_{type}').mkdir(exist_ok=True)
     c = 0
     for m in maps.iterdir():
@@ -150,7 +152,7 @@ def run_single(map, number, save, folder):
     now.mkdir(exist_ok=True)
     os.chdir(now)
     executable = "../" + executable
-    arguments = ' -m ' + map + ' -n ' + str(number)
+    arguments = ' -m ' + map + ' -n ' + str(number) + ' -t triangular'
     if save:
         arguments += ' --save'
     command = executable + arguments
@@ -197,7 +199,6 @@ def analyze(edgevis, polyvis, trivis):
                         print(ePoly.area - pPoly.area)
                         plt.plot(*ePoly.exterior.xy, "-")
                         plt.plot(*pPoly.exterior.xy, "--")
-                        plt.show()
                         res[1] += 1
 
                 except NameError:

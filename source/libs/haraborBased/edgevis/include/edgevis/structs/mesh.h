@@ -11,6 +11,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <random>
 
 namespace edgevis {
 
@@ -208,6 +209,7 @@ namespace edgevis {
 
         bool is_convex();
 
+        Point random_point(std::mt19937 &seed);
         void precalc_point_location();
 
         void print(std::ostream &outfile);

@@ -1,16 +1,3 @@
-// === TRIVIS INCLUDES ===
-
-#include "trivis/core/tri_vis.h"
-#include "trivis/core/geom/robust_geometry.h"
-#include "trivis/core/geom/generic_geom_types.h"
-#include "trivis/core/utils/simple_clock.h"
-#include "trivis/core/utils/clipper_utils.h"
-#include "trivis/core/geom/generic_geom_utils.h"
-
-#include "trivis/map_coverage/map_coverage.h"
-#include "trivis/map_coverage/random_points.h"
-#include "trivis/map_coverage/macs.h"
-
 // === THIS PROJECT INCLUDES ===
 
 #include "data_loading/load_map.h"
@@ -28,6 +15,7 @@
 
 #include "geomMesh/parsers/map_parser.h"
 #include "polyanya/search/polyviz.h"
+#include "utils/simple_clock.h"
 
 #include <iomanip>
 #include <boost/program_options.hpp>
@@ -38,12 +26,6 @@
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
-
-namespace tv = trivis;
-namespace tvc = tv::core;
-namespace tvg = tvc::geom;
-namespace tve = trivis_examples;
-namespace dr = tve::drawing;
 namespace cgm = cairo_geom_drawer;
 
 /*
@@ -52,7 +34,7 @@ namespace cgm = cairo_geom_drawer;
 
 struct ProgramOptionVariables {
     std::string input_map_name = "undefined";
-    std::string input_map_extension = ".txt";
+    std::string input_map_extension = ".mesh";
     std::string input_map_dir = INPUT_MAPS_DIR;
     std::string input_map_full_path;
     std::string mesh_type = "polygonal";
@@ -139,29 +121,11 @@ char ParseProgramOptions(
     return '0';
 }
 
-tvg::RadialVisibilityRegion ComputeVisibilityRegion(
-        const tvg::FPoint &p,
-        const tvc::TriVis &vis,
-        std::optional<double> vis_radius,
-        double eps_min_edge_len
-) {
-    int num_expansions;
-    tvg::AbstractVisibilityRegion abs_vis_reg;
-    if (!vis.ComputeVisibilityRegion(p, vis_radius, abs_vis_reg, num_expansions)) {
-        LOGF_WRN("Visibility region from seed " << p << " could not be found!");
-        return {};
-    }
-    tvg::RadialVisibilityRegion vis_reg = vis.ConvertToVisibilityRegion(abs_vis_reg);
-    RemoveAntennas(vis_reg);
-    if (vis_radius) {
-        vis_reg = trivis::core::TriVis::ConvertToRadialVisibilityRegion(*vis_radius, vis_reg);
-    }
-    RemoveShortEdges(eps_min_edge_len, vis_reg);
-    return vis_reg;
-}
-
 int body(ProgramOptionVariables pov)
 {
+    double time;
+    custom::utils::SimpleClock clock;
+
     std::cout << "Preparing meshes, initializing Edgevis, TriVis and PolyVis solvers.\n";
 
     parsers::MapParser mapParser;
@@ -173,61 +137,31 @@ int body(ProgramOptionVariables pov)
 
     std::string mapName = pov.input_map_full_path;
 
-    mapParser.convertMapToFade2DMesh(mapName, fade2DMesh);
-    mapParser.convertMapToMergedMesh(mapName, mergedMesh);
-    mapParser.convertMergedMeshToGeomMesh(mergedMesh, geomMeshPoly);
-    mapParser.convertFade2DMeshToGeomMesh(fade2DMesh, geomMeshTri);
-
-    std::string filename = "/home/jakub/Projects/IronHarvest/mesh-maps/iron-harvest/scene_mp_2p_01.mesh";
-    mapParser.readGeomMeshFromIronHarvestMesh(filename,
+    /*
+     * mapParser.convertMapToFade2DMesh(mapName, fade2DMesh);
+     * mapParser.convertMapToMergedMesh(mapName, mergedMesh);
+     * mapParser.convertMergedMeshToGeomMesh(mergedMesh, geomMeshPoly);
+     * mapParser.convertFade2DMeshToGeomMesh(fade2DMesh, geomMeshTri);
+     */
+    mapParser.readGeomMeshFromIronHarvestMesh(mapName,
                                               IronHarvest);
-    // Create and initialize TriVis object.
-    tvc::TriVis vis;
-    {   // Load map from file and move it to TriVis (without copying).
-        tvg::PolyMap map;
-        std::string load_msg = tve::data_loading::LoadPolyMapSafely(pov.input_map_full_path, map, pov.map_scale);
-        if (load_msg != "ok") {
-            LOGF_FTL("Error while loading map. " << load_msg);
-            return EXIT_FAILURE;
-        }
-        map.RemoveDuplicatePoints();
-        map.RemoveCollinearPoints();
-        vis.SetMap(std::move(map));
-        // cannot use map anymore
-    }
-    vis.TriangulateMapConstrainedDelaunay();
-    vis.FillBucketing();
-    vis.OptimizeBuckets();
+    //std::string filename = "/home/jakub/Projects/IronHarvest/mesh-maps/iron-harvest/scene_mp_2p_01.mesh";
 
-    // Generate n random points in the map.
-    std::vector<double> triangle_accum_areas; // auxiliary structure to improve speed
+
     std::mt19937 rng(pov.random_seed); // random generator
-    tvg::FPoints random_points(pov.n_random_samples);
 
-    std::vector<edgevis::Point> verticesTri;
     std::vector<edgevis::Point> verticesPoly;
     std::vector<edgevis::Point> r_points;
     std::vector<polyanya::Point> p_points;
+
     edgevis::Point p;
     polyanya::Point anyaP;
-    std::optional<double> vis_radius = pov.vis_radius > 0.0 ? std::make_optional(pov.vis_radius) : std::nullopt;
-    std::cout << "Generating points. (TriVis feature, points are converted for polyanya)\n";
-    for (auto &rp: random_points) {
-        rp = tv::map_coverage::UniformRandomPointInRandomTriangle(vis.triangles(), triangle_accum_areas, rng);
-        p.x = rp.x;
-        p.y = rp.y;
-        anyaP.x = rp.x;
-        anyaP.y = rp.y;
-        r_points.push_back(p);
-        p_points.push_back(anyaP);
-    }
 
     std::vector<Point> r_v;
     std::vector<Point> l_v;
     std::vector<Point> v;
 
     std::string name;
-
     parsers::GeomMesh geomMesh;
     if(pov.mesh_type == "polygonal"){
         geomMesh = geomMeshPoly;
@@ -244,15 +178,24 @@ int body(ProgramOptionVariables pov)
     edgemesh.precalc_point_location();
     edgemesh.calculate_edges();
 
+    clock.Restart();
+    for (int i = 0; i < pov.n_random_samples; i++) {
+        auto rp = edgemesh.random_point(rng);
+        p.x = rp.x;
+        p.y = rp.y;
+        anyaP.x = rp.x;
+        anyaP.y = rp.y;
+        r_points.push_back(p);
+        p_points.push_back(anyaP);
+    }
+    time = clock.TimeInSeconds();
+    std::cout << pov.n_random_samples << " random points generated in: " << time << " seconds." << std::endl;
+
     PolyVis solverPoly(geomMesh);
     edgevis::EdgeVisibility Evis(edgemesh);
     Evis.set_visual_mesh(geomMesh);
-    
-    std::vector<polyanya::Point> verticesPolyAnya;
-    Evis.switch_debug(false);
-    double time;
-    tvc::utils::SimpleClock clock;
 
+    std::vector<polyanya::Point> verticesPolyAnya;
     std::cout << "\n\nMap: " << pov.input_map_name
               << "\nType of mesh: " << pov.mesh_type
               << "\nNumber of iterations: " <<  pov.n_random_samples;
@@ -355,32 +298,6 @@ int body(ProgramOptionVariables pov)
     results << "\nTotal computation time:" << time <<
             "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
 
-    if(pov.mesh_type == "triangular") {
-        std::cout << "\nTriVis\n";
-        clock.Restart();
-        for (auto pos: random_points) {
-            auto verticesTriVis = ComputeVisibilityRegion(pos, vis, vis_radius, 1e-6);
-            if(save){
-                outfile_trivis << "--\n";
-                outfile_trivis << pos << std::endl;
-                outfile_trivis << verticesTriVis.vertices.size() << std::endl;
-                for (auto p : verticesTriVis.vertices){
-                    outfile_trivis << p.point << "; ";
-                }
-                outfile_trivis << std::endl;
-
-            }
-
-        }
-        time = clock.TimeInSeconds();
-        std::cout << "Total computation time: " << time << " seconds.\n";
-        std::cout << "Mean computation time: " << time / pov.n_random_samples << " seconds/point.\n";
-
-        results << "\n===============================================================\n";
-        results << "TriVis:";
-        results << "\nTotal computation time:" << time <<
-                "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
-    }
     results.close();
     return 0;
 }
