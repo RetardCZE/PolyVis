@@ -955,6 +955,46 @@ namespace edgevis{
         this->reset_visu();
     }
 
+    void
+    EdgeVisibility::visualise_heatmap(std::vector<Point> &points, std::vector<double> &compT, double tMax, double tMin){
+        cgm_drawer.Close();
+
+        geom::Polygons<double> free;
+        geom::Points<double> vertices;
+        int i = 0;
+        cgm_drawer = cgm::CairoGeomDrawer(mesh.max_x - mesh.min_x, mesh.max_y - mesh.min_y, 20);
+        for(auto p : this->gmesh.polygons){
+            free.push_back(p.polygon);
+        }for(auto &p : free){
+            for(auto &n : p){
+                n.x = n.x - mesh.min_x;
+                n.y = n.y - mesh.min_y;
+            }
+        }
+
+        double x_min, x_max, y_min, y_max;
+        geom::ComputeLimits(free, x_min, x_max, y_min, y_max);
+        geom::Polygon<double> border = {
+                {x_min, y_min},
+                {x_min, y_max},
+                {x_max, y_max},
+                {x_max, y_min},
+        };
+        cgm_drawer.OpenPDF("heatmap.pdf");
+        cgm_drawer.DrawPlane(cgm::kColorBlack);
+        cgm_drawer.DrawPolygon(border, cgm::kColorBlack);
+        cgm_drawer.DrawPolygons(free, cgm::kColorWhite);
+
+        for(int i = 0; i < points.size(); i++){
+            auto pos = points[i];
+            auto t = (compT[i] - tMin) / (tMax - tMin);
+            this->visualise_heat_point(pos, t);
+        }
+
+
+        this->reset_visu();
+    }
+
 
     void
     EdgeVisibility::set_visual_mesh(const parsers::GeomMesh &gmesh) {
@@ -1048,6 +1088,20 @@ namespace edgevis{
         vertex.y = A.y - mesh.min_y;
         cgm_drawer.DrawPoint(vertex, 1.0, colors[color]);
         cgm_drawer.SaveToPng("debug_visu.png");
+        return;
+
+    }
+
+    void
+    EdgeVisibility::visualise_heat_point(Point A, double heat){
+        geom::Point<double> vertex, vertex2;
+
+        vertex.x = A.x - mesh.min_x;
+        vertex.y = A.y - mesh.min_y;
+        int b = std::max(0, int(255*(1 - 2*heat)));
+        int r = std::max(0, int(255*(2*heat - 1)));
+        int g = 255 - b -r;
+        cgm_drawer.DrawPoint(vertex, 0.2, cgm::RGB({r,g,b}));
         return;
 
     }

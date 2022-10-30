@@ -40,6 +40,7 @@ struct ProgramOptionVariables {
     std::string mesh_type = "polygonal";
     bool debug = false;
     bool save = false;
+    bool heatmap = false;
     double map_scale = -1.0;
     double vis_radius = -1.0;
     int n_random_samples = 1;
@@ -84,7 +85,10 @@ void AddProgramOptions(
              "Run in debug mode.")
             ("save",
              po::bool_switch(&pov.save)->default_value(pov.save),
-             "Log resulting polygons to files (cannot measure performance)..");
+             "Log resulting polygons to files (cannot measure performance)..")
+            ("heatmap",
+             po::bool_switch(&pov.heatmap)->default_value(pov.heatmap),
+             "Create heatmap of computation time");
 }
 
 char ParseProgramOptions(
@@ -216,9 +220,9 @@ int body(ProgramOptionVariables pov)
 
     bool debug = pov.debug;
     bool save = pov.save;
+    bool heatmap = pov.heatmap;
     std::ofstream outfile;
     std::ofstream outfile_polyvis;
-    std::ofstream outfile_trivis;
     std::ofstream results;
     results.open("results.dat", std::ios::out | std::ios::trunc );
     results << pov.input_map_name
@@ -228,9 +232,10 @@ int body(ProgramOptionVariables pov)
     if(save){
         outfile.open("logger_edgevis.dat", std::ios::out | std::ios::trunc );
         outfile_polyvis.open("logger_polyvis.dat", std::ios::out | std::ios::trunc );
-        outfile_trivis.open("logger_trivis.dat", std::ios::out | std::ios::trunc );
     }
 
+    std::vector<double> times;
+    double tMax = 0, tMin = 100, t;
     clock.Restart();
     for (auto pos : r_points){
         if(debug) {
@@ -240,6 +245,12 @@ int body(ProgramOptionVariables pov)
         }
 
         verticesPoly = Evis.find_point_visibility(pos, debug);
+        if(heatmap){
+            t = clock.TimeInSeconds();
+            times.push_back(t);
+            tMax = std::max(tMax, t);
+            tMin = std::min(tMin, t);
+        }
 
         if(save){
             outfile << "--\n";
@@ -273,6 +284,9 @@ int body(ProgramOptionVariables pov)
     results << "EdgeVis:";
     results << "\nTotal computation time:" << time <<
               "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
+
+    if(heatmap)
+        Evis.visualise_heatmap(r_points, times, tMax, tMin);
 
     clock.Restart();
     for (auto pos : p_points){
