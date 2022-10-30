@@ -1,4 +1,4 @@
-#include "edgevis/search/visibility_utils.h"
+#include "edgevis/search/expansion.h"
 #include <vector>
 
 namespace edgevis

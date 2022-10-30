@@ -8,7 +8,7 @@
 #include "edgevis/structs/mesh.h"
 #include "edgevis/structs/edge.h"
 #include "edgevis/structs/searchnode.h"
-#include "edgevis/search/visibility_utils.h"
+#include "edgevis/search/expansion.h"
 #include "edgevis/search/visibility.h"
 
 #include "drawing/cairo_geom_drawer.h"

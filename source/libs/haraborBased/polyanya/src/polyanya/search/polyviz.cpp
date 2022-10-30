@@ -29,14 +29,14 @@ void PolyVis::expand_edge(polyanya::SearchNodePtr n, polyanya::Point root, int l
     }
     this->expansions++;
 
-    int num_succ = polyanya::get_successors2(*n, root, *(this->mesh), successors);
+    int num_succ = polyanya::expand(*n, root, *(this->mesh), successors);
 
     /*
      * Very important to alloc locally in function. Pointer to a element is passed in recursion, so
      * for each recursion level nodes needs to be kept separately!!!
      */
     polyanya::SearchNode* nodes = new polyanya::SearchNode [num_succ];
-    const int num_nodes = this->si->succ_to_node2(n, successors, num_succ, nodes);
+    const int num_nodes = this->si->successors2nodes(n, successors, num_succ, nodes);
     for(int i = 0; i < num_nodes; i++){
         n = &nodes[i];
         this->expand_edge(n, root, level + 1);
@@ -49,8 +49,7 @@ std::vector<polyanya::Point>
 PolyVis::get_visibility_polygon(polyanya::Point position){
     this->expansions = 0;
     this->vertices.clear();
-    this->si->set_start_goal(position, position); //TODO: reimplement SearchInstance to get rid of useless parts
-    std::vector<polyanya::SearchNodePtr> list = this->si->gen_initial_nodes2(); // custom version - minor updates
+    std::vector<polyanya::SearchNodePtr> list = this->si->getInitNodes(position); // custom version - minor updates
 
     polyanya::SearchNodePtr n;
     while(!list.empty()){

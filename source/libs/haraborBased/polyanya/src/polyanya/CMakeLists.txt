@@ -10,5 +10,5 @@ add_library(PolyAnya
         ${POLYANYA_SOURCE_FILES}
         )
 
-target_link_libraries(PolyAnya GeomMesh)
+target_link_libraries(PolyAnya GeomMesh  Predicates Triangle Clipper cairo)
 target_compile_options(PolyAnya PUBLIC -std=c++17)
