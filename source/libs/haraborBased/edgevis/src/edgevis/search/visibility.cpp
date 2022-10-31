@@ -571,16 +571,39 @@ namespace edgevis{
         e.leftPoly = e.rightPoly = NULL;
         int numLeft;
         int numRight;
+        this->visualise_segment(mesh.mesh_vertices[edgeParent].p,
+                                mesh.mesh_vertices[edgeChild].p,
+                               0, 0.5);
 
         SearchNode* leftNodes = new edgevis::SearchNode[mesh.max_poly_sides + 2];
         SearchNode* rightNodes = new edgevis::SearchNode[mesh.max_poly_sides + 2];
         this->get_arbitrary_edge_init_nodes(e, numRight, numLeft, leftNodes, rightNodes);
 
-        for(int i = 0; i < numLeft; i++){
-            expand(leftNodes[i], leftVis, false); // here side should be deprecated
-
-        }for(int i = 0; i < numRight; i++){
-            expand(rightNodes[i], rightVis, true); // here side should be deprecated
+          std::cout << numLeft << " | " << numRight << std::endl;
+        /*
+         * for(int i = 0; i < numLeft; i++){
+         *     this->visualise_segment(mesh.mesh_vertices[leftNodes[i].transitionR.p].p,
+         *                             mesh.mesh_vertices[leftNodes[i].transitionL.p].p,
+         *                             2, 0.5);
+         *     getchar();
+         * }
+         * for(int i = 0; i < numRight; i++){
+         *     this->visualise_segment(mesh.mesh_vertices[rightNodes[i].transitionR.p].p,
+         *                             mesh.mesh_vertices[rightNodes[i].transitionL.p].p,
+         *                             1, 0.5);
+         *     getchar();
+         * }
+         * getchar();
+        */
+        if(numLeft){
+            for(int i = 0; i < numLeft; i++){
+                expand(leftNodes[i], leftVis, false); // here side should be deprecated
+            }
+        }
+        if(numRight){
+            for(int i = 0; i < numRight; i++){
+                expand(rightNodes[i], rightVis, true); // here side should be deprecated
+            }
         }
         return;
     }
@@ -601,18 +624,20 @@ namespace edgevis{
         bool show, is_used;
         int new_p;
         std::vector<int> polygons, used;
+
         for(auto p :  mesh.mesh_vertices[edge.parent].polygons) {
             polygons.push_back(p);
         }
+
         while(polygons.size()){
             int p = polygons.front();
             used.push_back(p);
             polygons.erase(polygons.begin());
-
             if(p == -1) continue;
 
             show = false;
             for(auto e : mesh.mesh_polygons[p].edges){
+                if(mesh.mesh_edges[e] == edge) continue; // non oriented equality
                 Point point;
                 uint8_t check = SegmentSegmentIntersectionGeneral(mesh.mesh_vertices[edge.parent].p,
                                                                   mesh.mesh_vertices[edge.child].p,
@@ -637,19 +662,23 @@ namespace edgevis{
                         polygons.push_back(new_p);
                     }
 
-                }else if(check == 2 && point != mesh.mesh_vertices[edge.parent].p && point != mesh.mesh_vertices[edge.child].p){
+                }else if(check == 2 && point != mesh.mesh_vertices[edge.parent].p){
                     show = true;
-                    for(auto new_p : mesh.mesh_vertices[e].polygons){
-                        is_used = false;
-                        for(auto u : used){
-                            if(new_p == u){
-                                is_used = true;
-                                break;
+                    if(point != mesh.mesh_vertices[edge.child].p){
+                        for(auto new_p : mesh.mesh_vertices[e].polygons){
+                            is_used = false;
+                            for(auto u : used){
+                                if(new_p == u){
+                                    is_used = true;
+                                    break;
+                                }
+                            }
+                            if(!is_used && new_p != -1){
+                                polygons.push_back(new_p);
                             }
                         }
-                        if(!is_used && new_p != -1){
-                            polygons.push_back(new_p);
-                        }
+                    }else{
+                        tmp_edges.push_back(e);
                     }
                 }else{
                     tmp_edges.push_back(e);
@@ -660,6 +689,14 @@ namespace edgevis{
             }
             tmp_edges.clear();
         }
+        /*
+         * for(auto e : edges){
+         *     this->visualise_segment(mesh.mesh_vertices[mesh.mesh_edges[e].parent].p,
+         *                             mesh.mesh_vertices[mesh.mesh_edges[e].child].p,
+         *                             1, 0.5);
+         * }
+         * getchar();
+         */
         int current_edge = edges.front();
         int p,c, beforeP;
         int current_point = mesh.mesh_edges[current_edge].child;
@@ -668,7 +705,7 @@ namespace edgevis{
         orderedVerts.push_back(current_point);
         orderedLeftPoly.push_back(mesh.mesh_edges[current_edge].leftPoly);
         orderedRightPoly.push_back(mesh.mesh_edges[current_edge].rightPoly);
-
+        bool disconnected;
         while(edges.size()){
             if(current_point==edge.parent){
                 p = orderedVerts.size() - 1;
@@ -676,6 +713,7 @@ namespace edgevis{
             if(current_point==edge.child){
                 c = orderedVerts.size() - 1;
             }
+            disconnected = true;
             for(int i = 0; i<edges.size(); i++){
                 if(current_point == mesh.mesh_edges[edges[i]].parent){
                     current_edge = edges[i];
@@ -684,17 +722,32 @@ namespace edgevis{
                     edges.erase(edges.begin()+i);
                     orderedLeftPoly.push_back(mesh.mesh_edges[current_edge].leftPoly);
                     orderedRightPoly.push_back(mesh.mesh_edges[current_edge].rightPoly);
+                    disconnected = false;
                     break;
-                }else if(current_point == mesh.mesh_edges[edges[i]].child ){
+                }else if(current_point == mesh.mesh_edges[edges[i]].child ) {
                     current_edge = edges[i];
-                    current_point =  mesh.mesh_edges[current_edge].parent;
+                    current_point = mesh.mesh_edges[current_edge].parent;
                     orderedVerts.push_back(current_point);
-                    edges.erase(edges.begin()+i);
+                    edges.erase(edges.begin() + i);
                     orderedLeftPoly.push_back(mesh.mesh_edges[current_edge].rightPoly);
                     orderedRightPoly.push_back(mesh.mesh_edges[current_edge].leftPoly);
+                    disconnected = false;
                     break;
                 }
-
+            }
+            if(disconnected){ //disconnected
+                if(current_point == edge.parent){
+                    current_point = edge.child;
+                    orderedVerts.push_back(current_point);
+                    orderedLeftPoly.push_back(-2);
+                    orderedRightPoly.push_back(-2);
+                }
+                if(current_point == edge.child){
+                    current_point = edge.parent;
+                    orderedVerts.push_back(current_point);
+                    orderedLeftPoly.push_back(-2);
+                    orderedRightPoly.push_back(-2);
+                }
             }
         }
         if(current_point==edge.parent){
@@ -703,11 +756,11 @@ namespace edgevis{
         if(current_point==edge.child){
             c = orderedVerts.size() - 1;
         }
-
         beforeP = p;
         robustOrientation winding = robustOrientation::kCollinear;
+
         while(winding == robustOrientation::kCollinear){
-            beforeP = beforeP > 0 ? beforeP - 1 : orderedVerts.size();
+            beforeP = beforeP > 0 ? beforeP - 1 : orderedVerts.size()-1;
             winding = Orient(mesh.mesh_vertices[orderedVerts[beforeP]].p,
                              mesh.mesh_vertices[orderedVerts[p]].p,
                              mesh.mesh_vertices[orderedVerts[c]].p);
@@ -716,7 +769,7 @@ namespace edgevis{
             }
         }
         if(winding == robustOrientation::kCollinear){
-            beforeP = beforeP > 0 ? beforeP - 1 : orderedVerts.size();
+            beforeP = beforeP > 0 ? beforeP - 1 : orderedVerts.size()-1;
             winding = Orient(mesh.mesh_vertices[orderedVerts[beforeP]].p,
                              mesh.mesh_vertices[orderedVerts[c]].p,
                              mesh.mesh_vertices[orderedVerts[p]].p);
@@ -751,7 +804,6 @@ namespace edgevis{
             orderedRightPoly = rewindedRightPoly;
             orderedLeftPoly = rewindedLeftPoly;
         }
-
         // right side
         i = p;
         tmp.leftRootVertex = edge.child;
@@ -762,6 +814,10 @@ namespace edgevis{
             tmp.rightVertex = orderedVerts[i];
             tmp.leftVertex = orderedVerts[(i+1) % S];
             tmp.nextPolygon = orderedRightPoly[(i+1) % S];
+            if(tmp.nextPolygon == -2){
+                i = (i + 1) % S;
+                continue;
+            }
             tmp.comingFrom = orderedLeftPoly[(i+1) % S];
             tmp.rootR.p = tmp.rightRootVertex;
             tmp.rootR.isIntersection = false;
@@ -836,6 +892,10 @@ namespace edgevis{
             tmp.rightVertex = orderedVerts[i];
             tmp.leftVertex = orderedVerts[(i+1) % S];
             tmp.nextPolygon = orderedRightPoly[(i+1) % S];
+            if(tmp.nextPolygon == -2){
+                i = (i + 1) % S;
+                continue;
+            }
             tmp.comingFrom = orderedLeftPoly[(i+1) % S];
             tmp.rootR.p = tmp.rightRootVertex;
             tmp.rootR.isIntersection = false;
@@ -921,7 +981,7 @@ namespace edgevis{
         geom::Points<double> vertices;
         int i = 0;
 
-        cgm_drawer = cgm::CairoGeomDrawer(this->mesh.max_x, this->mesh.max_y, 20);
+        cgm_drawer = cgm::CairoGeomDrawer(mesh.max_x - mesh.min_x, mesh.max_y - mesh.min_y, 20);
         for(auto v : this->gmesh.vertices){
             vertices.push_back(v.point);
         }
@@ -1086,7 +1146,7 @@ namespace edgevis{
 
         vertex.x = A.x - mesh.min_x;
         vertex.y = A.y - mesh.min_y;
-        cgm_drawer.DrawPoint(vertex, 1.0, colors[color]);
+        cgm_drawer.DrawPoint(vertex, 0.2, colors[color]);
         cgm_drawer.SaveToPng("debug_visu.png");
         return;
 

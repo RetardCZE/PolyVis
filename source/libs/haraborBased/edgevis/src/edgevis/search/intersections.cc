@@ -83,15 +83,9 @@ namespace edgevis {
         robustOrientation bOri = Orient(c, d, b);
         robustOrientation cOri = Orient(a, b, c);
         robustOrientation dOri = Orient(a, b, d);
+        // this is passed only if lines are intersecting and not fully collinear (4 points in line)
         if(cOri != dOri && aOri != bOri){
-            if (aOri == robustOrientation::kCollinear) {
-                p = a;
-                return 1;
-            }
-            if (bOri == robustOrientation::kCollinear) {
-                p = b;
-                return 1;
-            }
+            // if one of segment point is collinear, it means it has to be the intersection
             if (cOri == robustOrientation::kCollinear) {
                 p = c;
                 return 2;
@@ -100,6 +94,16 @@ namespace edgevis {
                 p = d;
                 return 2;
             }
+            // same as 1st check but for 2nd intersection
+            if (aOri == robustOrientation::kCollinear) {
+                p = a;
+                return 1;
+            }
+            if (bOri == robustOrientation::kCollinear) {
+                p = b;
+                return 1;
+            }
+            // if intersection is not defined by segment defining points it has to be calculated
             bool check = LineLineIntersectionNotCollinear(a, b, c, d, p);
             if (check) {
                 return 0;

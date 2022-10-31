@@ -87,7 +87,7 @@ namespace cairo_geom_drawer {
             auto *cr = cairo_create(surface_ptr_);
             cairo_arc(cr, p.x * res_, pic_size_y_ - p.y * res_, radius * res_, 0.0, 2 * M_PI);
             cairo_set_source_rgba(cr, fill_color_01.r, fill_color_01.g, fill_color_01.b, opacity);
-            cairo_set_font_size(cr, 2.0);
+            cairo_set_font_size(cr, 10.0);
             // TODO valgrind warning - leak_definitely_lost
             cairo_show_text(cr, text.c_str());
             cairo_fill(cr);

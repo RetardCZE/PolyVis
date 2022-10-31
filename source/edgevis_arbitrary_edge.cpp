@@ -1,29 +1,21 @@
-// === TRIVIS INCLUDES ===
-
-#include "trivis/core/tri_vis.h"
-#include "trivis/core/geom/robust_geometry.h"
-#include "trivis/core/geom/generic_geom_types.h"
-#include "trivis/core/utils/simple_clock.h"
-#include "trivis/core/utils/clipper_utils.h"
-#include "trivis/core/geom/generic_geom_utils.h"
-
-#include "trivis/map_coverage/map_coverage.h"
-#include "trivis/map_coverage/random_points.h"
-#include "trivis/map_coverage/macs.h"
 
 // === THIS PROJECT INCLUDES ===
+#include "data_loading/load_map.h"
+#include "drawing/drawing.h"
+#include "logging/logging.h"
 
+#include "drawing/random_colors.h"
 #include "edgevis/structs/mesh.h"
 #include "edgevis/structs/edge.h"
 #include "edgevis/structs/searchnode.h"
-#include "edgevis/search/visibility_utils.h"
+#include "edgevis/search/expansion.h"
 #include "edgevis/search/visibility.h"
 
-#include "geom/geom.h"
-#include "geom/utils.h"
-#include "geom/cairo_geom_drawer.h"
+#include "drawing/cairo_geom_drawer.h"
 
 #include "geomMesh/parsers/map_parser.h"
+#include "polyanya/search/polyviz.h"
+#include "utils/simple_clock.h"
 
 #include <iomanip>
 #include <boost/program_options.hpp>
@@ -35,9 +27,6 @@
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
-namespace tv = trivis;
-namespace tvc = tv::core;
-namespace tvg = tvc::geom;
 namespace cgm = cairo_geom_drawer;
 
 /*
@@ -46,10 +35,10 @@ namespace cgm = cairo_geom_drawer;
 
 struct ProgramOptionVariables {
     std::string input_map_name = "undefined";
-    std::string input_map_extension = ".txt";
+    std::string input_map_extension = ".mesh";
     std::string input_map_dir = INPUT_MAPS_DIR;
     std::string input_map_full_path;
-    std::string mesh_type = "polygonal";
+    std::string mesh_type = "triangular";
     bool debug = false;
     bool save = false;
     double map_scale = -1.0;
@@ -143,13 +132,18 @@ int body(ProgramOptionVariables pov)
     parsers::MergedMesh mergedMesh;
     parsers::GeomMesh geomMeshTri;
     parsers::GeomMesh geomMeshPoly;
+    parsers::GeomMesh IronHarvest;
 
     std::string mapName = pov.input_map_full_path;
 
-    mapParser.convertMapToFade2DMesh(mapName, fade2DMesh);
-    mapParser.convertMapToMergedMesh(mapName, mergedMesh);
-    mapParser.convertMergedMeshToGeomMesh(mergedMesh, geomMeshPoly);
-    mapParser.convertFade2DMeshToGeomMesh(fade2DMesh, geomMeshTri);
+    /*
+     * mapParser.convertMapToFade2DMesh(mapName, fade2DMesh);
+     * mapParser.convertMapToMergedMesh(mapName, mergedMesh);
+     * mapParser.convertMergedMeshToGeomMesh(mergedMesh, geomMeshPoly);
+     * mapParser.convertFade2DMeshToGeomMesh(fade2DMesh, geomMeshTri);
+     */
+    mapParser.readGeomMeshFromIronHarvestMesh(mapName,
+                                              IronHarvest);
 
     std::vector<edgevis::Point> verticesTri;
     std::vector<edgevis::Point> verticesPoly;
@@ -167,10 +161,11 @@ int body(ProgramOptionVariables pov)
         geomMesh = geomMeshPoly;
     }else if(pov.mesh_type == "triangular"){
         geomMesh = geomMeshTri;
-    }else{
+    }else {
         std::cout << "Unknown mesh type.\n";
         return -1;
     }
+    geomMesh = IronHarvest;
 
     edgevis::Mesh edgemesh;
     edgemesh.read(geomMesh);
@@ -186,21 +181,29 @@ int body(ProgramOptionVariables pov)
     for(auto e : Evis.mesh_reference().mesh_edges){
         Evis.reset_visu();
         std::vector<SearchNode> rVis, lVis;
-        Evis.find_arbitrary_edge_visibility(145, 112, lVis, rVis);
-        Evis.visualise_segment(Evis.mesh_reference().mesh_vertices[145].p,
-                               Evis.mesh_reference().mesh_vertices[112].p,
+        // 2542, 3595 |  2542, 2579 | 2579, 2712
+        int parent = 2542;
+        int child = 2579;
+        Evis.find_arbitrary_edge_visibility(parent, child, lVis, rVis);
+        Evis.visualise_segment(Evis.mesh_reference().mesh_vertices[parent].p,
+                               Evis.mesh_reference().mesh_vertices[child].p,
                                0, 0.5);
         std::vector<Point> rPoints, lPoints;
-        for(auto sn : rVis){
-            rPoints.push_back(Evis.evaluate_intersection(sn.transitionR));
-            rPoints.push_back(Evis.evaluate_intersection(sn.transitionL));
+        if(rVis.size() > 0){
+            for(auto sn : rVis){
+                rPoints.push_back(Evis.evaluate_intersection(sn.transitionR));
+                rPoints.push_back(Evis.evaluate_intersection(sn.transitionL));
+            }
+            Evis.visualise_polygon(rPoints, 2);
         }
-        for(auto sn : lVis){
-            lPoints.push_back(Evis.evaluate_intersection(sn.transitionR));
-            lPoints.push_back(Evis.evaluate_intersection(sn.transitionL));
+        if(lVis.size() > 0){
+            for(auto sn : lVis){
+                lPoints.push_back(Evis.evaluate_intersection(sn.transitionR));
+                lPoints.push_back(Evis.evaluate_intersection(sn.transitionL));
+            }
+            Evis.visualise_polygon(lPoints, 1);
         }
-        Evis.visualise_polygon(lPoints, 1);
-        Evis.visualise_polygon(rPoints, 2);
+
         getchar();
     }
 

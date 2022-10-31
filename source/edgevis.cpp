@@ -37,7 +37,7 @@ struct ProgramOptionVariables {
     std::string input_map_extension = ".mesh";
     std::string input_map_dir = INPUT_MAPS_DIR;
     std::string input_map_full_path;
-    std::string mesh_type = "polygonal";
+    std::string mesh_type = "triangular";
     bool debug = false;
     bool save = false;
     bool heatmap = false;
