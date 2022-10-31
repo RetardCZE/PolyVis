@@ -579,22 +579,7 @@ namespace edgevis{
         SearchNode* rightNodes = new edgevis::SearchNode[mesh.max_poly_sides + 2];
         this->get_arbitrary_edge_init_nodes(e, numRight, numLeft, leftNodes, rightNodes);
 
-          std::cout << numLeft << " | " << numRight << std::endl;
-        /*
-         * for(int i = 0; i < numLeft; i++){
-         *     this->visualise_segment(mesh.mesh_vertices[leftNodes[i].transitionR.p].p,
-         *                             mesh.mesh_vertices[leftNodes[i].transitionL.p].p,
-         *                             2, 0.5);
-         *     getchar();
-         * }
-         * for(int i = 0; i < numRight; i++){
-         *     this->visualise_segment(mesh.mesh_vertices[rightNodes[i].transitionR.p].p,
-         *                             mesh.mesh_vertices[rightNodes[i].transitionL.p].p,
-         *                             1, 0.5);
-         *     getchar();
-         * }
-         * getchar();
-        */
+        std::vector<Point> lPoints;
         if(numLeft){
             for(int i = 0; i < numLeft; i++){
                 expand(leftNodes[i], leftVis, false); // here side should be deprecated
@@ -851,7 +836,7 @@ namespace edgevis{
                 }
                 j = (j + 1) % S;
             }
-            j= i > 0 ? i - 1 : S - 1;
+            j= i;
             while(j!=p){
                 if(tmp.transitionL.p == orderedVerts[c])break;
                 if(!tmp.rootR.isIntersection){
@@ -927,7 +912,7 @@ namespace edgevis{
                 }
                 j = (j + 1) % S;
             }
-            j= i > 0 ? i - 1 : S - 1;
+            j= i;
             while(j!=c){
                 if(tmp.transitionL.p == orderedVerts[p]) break;
                 if(!tmp.rootR.isIntersection){

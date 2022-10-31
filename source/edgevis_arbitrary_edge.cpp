@@ -178,34 +178,33 @@ int body(ProgramOptionVariables pov)
 
     Evis.precompute_edges_searchnodes();
     Evis.precompute_edges_optimnodesV1();
-    for(auto e : Evis.mesh_reference().mesh_edges){
-        Evis.reset_visu();
-        std::vector<SearchNode> rVis, lVis;
-        // 2542, 3595 |  2542, 2579 | 2579, 2712
-        int parent = 2542;
-        int child = 2579;
-        Evis.find_arbitrary_edge_visibility(parent, child, lVis, rVis);
-        Evis.visualise_segment(Evis.mesh_reference().mesh_vertices[parent].p,
-                               Evis.mesh_reference().mesh_vertices[child].p,
-                               0, 0.5);
-        std::vector<Point> rPoints, lPoints;
-        if(rVis.size() > 0){
-            for(auto sn : rVis){
-                rPoints.push_back(Evis.evaluate_intersection(sn.transitionR));
-                rPoints.push_back(Evis.evaluate_intersection(sn.transitionL));
-            }
-            Evis.visualise_polygon(rPoints, 2);
-        }
-        if(lVis.size() > 0){
-            for(auto sn : lVis){
-                lPoints.push_back(Evis.evaluate_intersection(sn.transitionR));
-                lPoints.push_back(Evis.evaluate_intersection(sn.transitionL));
-            }
-            Evis.visualise_polygon(lPoints, 1);
-        }
 
-        getchar();
+    Evis.reset_visu();
+    std::vector<SearchNode> rVis, lVis;
+    // 2542, 3595 |  2542, 2579 | 2579, 2712
+    int parent = 2712;
+    int child = 2579;
+    Evis.find_arbitrary_edge_visibility(parent, child, lVis, rVis);
+    Evis.visualise_segment(Evis.mesh_reference().mesh_vertices[parent].p,
+                           Evis.mesh_reference().mesh_vertices[child].p,
+                           0, 0.5);
+    std::vector<Point> rPoints, lPoints;
+    if(rVis.size() > 0){
+        for(auto sn : rVis){
+            rPoints.push_back(Evis.evaluate_intersection(sn.transitionR));
+            rPoints.push_back(Evis.evaluate_intersection(sn.transitionL));
+        }
+        Evis.visualise_polygon(rPoints, 2);
     }
+    if(lVis.size() > 0){
+        for(auto sn : lVis){
+            lPoints.push_back(Evis.evaluate_intersection(sn.transitionR));
+            lPoints.push_back(Evis.evaluate_intersection(sn.transitionL));
+        }
+        Evis.visualise_polygon(lPoints, 1);
+    }
+
+
 
     return 0;
 }

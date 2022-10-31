@@ -433,9 +433,6 @@ parsers::MapParser::readGeomMeshFromIronHarvestMesh(const std::string &filename,
             geomMesh.vertices[v].idxNeighPolygons.push_back(i);
         }
     }
-
-
-    std::cout << geomMesh.vertices.size() << " " << geomMesh.polygons.size() << std::endl;
     ifs >> token; // to reach EOF
     ifs.close();
     return;
