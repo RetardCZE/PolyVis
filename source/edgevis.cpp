@@ -286,11 +286,17 @@ int body(ProgramOptionVariables pov)
               "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
 
     if(heatmap)
-        Evis.visualise_heatmap(r_points, times, tMax, tMin);
-
+        Evis.visualise_heatmap(r_points, times, tMax, tMin, "evis_heatmap.pdf");
+    times.clear();
     clock.Restart();
     for (auto pos : p_points){
         verticesPolyAnya = solverPoly.get_visibility_polygon(pos);
+        if(heatmap){
+            t = clock.TimeInSeconds();
+            times.push_back(t);
+            tMax = std::max(tMax, t);
+            tMin = std::min(tMin, t);
+        }
         if(save){
             outfile_polyvis << "--\n";
             outfile_polyvis << pos << std::endl;
@@ -311,6 +317,9 @@ int body(ProgramOptionVariables pov)
     results << "PolyVis:";
     results << "\nTotal computation time:" << time <<
             "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
+
+    if(heatmap)
+        Evis.visualise_heatmap(r_points, times, tMax, tMin, "poly_heatmap.pdf");
 
     results.close();
     return 0;

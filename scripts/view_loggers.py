@@ -97,9 +97,13 @@ def run_all(number, type):
     Path(f'results_{type}').mkdir(exist_ok=True)
     c = 0
     for m in maps.iterdir():
+        if(m.suffix != '.mesh'):
+            continue
+
         print(60*'-')
         c += 1
         name = m.stem
+        print(name)
         arguments = ' -m ' + name + ' -n ' + str(number) + ' -t ' + type
         command = executable + arguments
         out = subprocess.run(command, shell=True)
@@ -143,7 +147,7 @@ def run_all(number, type):
 @click.option('-f', '--folder', type=str, default='')
 def run_single(map, number, save, folder):
     date = datetime.utcnow()
-    executable = "../build/EdgeVis_example"
+    executable = "build/EdgeVis_example"
 
     if not folder:
         now = Path('.') / str(date)
@@ -171,6 +175,7 @@ def analyze(edgevis, polyvis, trivis):
             el = 1
             pl = 1
             while(True):
+                print(res[0] + res[1] + res[2], end = '                  \r')
                 try:
                     # --
                     el = e.readline()
@@ -193,12 +198,14 @@ def analyze(edgevis, polyvis, trivis):
                     pVerts = np.array([eval(v) for v in pVerts])
                     ePoly = geometry.Polygon([[p[0], p[1]] for p in eVerts])
                     pPoly = geometry.Polygon([[p[0], p[1]] for p in pVerts])
-                    if abs(ePoly.area - pPoly.area) < 1e-8:
+                    diff = abs(ePoly.area - pPoly.area)
+                    relDiff = diff / max(ePoly.area, pPoly.area)
+                    if relDiff < 1e-6:
                         res[0] += 1
                     else:
-                        print(ePoly.area - pPoly.area)
-                        plt.plot(*ePoly.exterior.xy, "-")
-                        plt.plot(*pPoly.exterior.xy, "--")
+                        print(relDiff)
+                        #plt.plot(*ePoly.exterior.xy, "-")
+                        #plt.plot(*pPoly.exterior.xy, "--")
                         res[1] += 1
 
                 except NameError:

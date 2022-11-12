@@ -47,10 +47,11 @@ namespace edgevis{
 
         void visualise_segment(Point A, Point B, int color, float opacity);
         void visualise_point(Point A, int color);
-        void visualise_heat_point(Point A, double heat);
+        void visualise_heat_point(Point A, double heat, double heightIncrement, double widthIncrement);
         void visualise_named_point(Point A, int color, std::string str);
         void visualise_vertex_indexes();
-        void visualise_heatmap(std::vector<Point> &points, std::vector<double> &compT, double tMax, double tMin);
+        void visualise_heatmap(std::vector<Point> &points, std::vector<double> &compT, double tMax, double tMin,
+                               std::string name);
         void visualise_polygon(std::vector<Point>& p, int color);
         void reset_visu();
 

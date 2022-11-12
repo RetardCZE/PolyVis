@@ -1001,8 +1001,28 @@ namespace edgevis{
     }
 
     void
-    EdgeVisibility::visualise_heatmap(std::vector<Point> &points, std::vector<double> &compT, double tMax, double tMin){
+    EdgeVisibility::visualise_heatmap(std::vector<Point> &points, std::vector<double> &compT, double tMax, double tMin,
+                                      std::string name) {
         cgm_drawer.Close();
+
+        int resolution = 300;
+        double width = mesh.max_x - mesh.min_x;
+        double height = mesh.max_y - mesh.min_y;
+        double widthIncrement = width / resolution;
+        double heightIncrement = height / resolution;
+        std::vector<std::vector<double>> timeCols;
+        std::vector<std::vector<int>> countCols;
+        std::vector<double> timeRows;
+        std::vector<int> countRows;
+
+        for(int row = 0; row < resolution; row++){
+            timeRows.push_back(0.0);
+            countRows.push_back(1);
+        }
+        for(int col = 0; col < resolution; col++){
+            timeCols.push_back(timeRows);
+            countCols.push_back(countRows);
+        }
 
         geom::Polygons<double> free;
         geom::Points<double> vertices;
@@ -1025,17 +1045,38 @@ namespace edgevis{
                 {x_max, y_max},
                 {x_max, y_min},
         };
-        cgm_drawer.OpenPDF("heatmap.pdf");
+        cgm_drawer.OpenPDF(name);
         cgm_drawer.DrawPlane(cgm::kColorBlack);
         cgm_drawer.DrawPolygon(border, cgm::kColorBlack);
         cgm_drawer.DrawPolygons(free, cgm::kColorWhite);
 
         for(int i = 0; i < points.size(); i++){
             auto pos = points[i];
-            auto t = (compT[i] - tMin) / (tMax - tMin);
-            this->visualise_heat_point(pos, t);
+            pos.x = pos.x - mesh.min_x;
+            pos.y = pos.y - mesh.min_y;
+            // auto t = (compT[i] - tMin + 0.00001) / (tMax - tMin);
+            auto t = compT[i];
+            //std::cout << pos << std::endl;
+            timeCols[int(pos.x / widthIncrement)][int(pos.y / heightIncrement)] = timeCols[int(pos.x / widthIncrement)][int(pos.y / heightIncrement)] + t;
+            countCols[int(pos.x / widthIncrement)][int(pos.y / heightIncrement)]++;
         }
-
+        double tMax2 = 0;
+        double tMin2 = 1;
+        for(int col = 0; col < resolution; col++){
+            for(int row = 0; row < resolution; row++){
+                double heat = ((timeCols[col][row] / countCols[col][row]) - tMin) / (tMax - tMin);
+                timeCols[col][row] = heat;
+                if(tMax2 < heat) tMax2 = heat;
+                if(tMin2 > heat and heat > 0) tMin2 = heat;
+            }
+        }
+        for(int col = 0; col < resolution; col++){
+            for(int row = 0; row < resolution; row++){
+                Point p = {col * widthIncrement, row*heightIncrement};
+                double heat = (timeCols[col][row] - tMin2) / (tMax2 - tMin2);
+                this->visualise_heat_point(p, heat, widthIncrement, heightIncrement);
+            }
+        }
 
         this->reset_visu();
     }
@@ -1138,15 +1179,35 @@ namespace edgevis{
     }
 
     void
-    EdgeVisibility::visualise_heat_point(Point A, double heat){
-        geom::Point<double> vertex, vertex2;
+    EdgeVisibility::visualise_heat_point(Point A, double heat, double heightIncrement, double widthIncrement) {
+        geom::Point<double> vertex;
+        geom::Polygon<double> polygon;
+        if(heat <= 0) return;
 
-        vertex.x = A.x - mesh.min_x;
-        vertex.y = A.y - mesh.min_y;
         int b = std::max(0, int(255*(1 - 2*heat)));
         int r = std::max(0, int(255*(2*heat - 1)));
         int g = 255 - b -r;
-        cgm_drawer.DrawPoint(vertex, 0.2, cgm::RGB({r,g,b}));
+
+        vertex.x = A.x;
+        vertex.y = A.y;
+        polygon.push_back(vertex);
+
+        vertex.x = A.x;
+        vertex.y = A.y + heightIncrement;
+        polygon.push_back(vertex);
+
+        vertex.x = A.x + widthIncrement;
+        vertex.y = A.y + heightIncrement;
+        polygon.push_back(vertex);
+
+        vertex.x = A.x + widthIncrement;
+        vertex.y = A.y;
+        polygon.push_back(vertex);
+
+
+
+        cgm_drawer.DrawPolygon(polygon, cgm::RGB({r,g,b}), 0.5);
+
         return;
 
     }

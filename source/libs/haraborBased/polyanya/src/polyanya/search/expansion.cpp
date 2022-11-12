@@ -1,11 +1,4 @@
 #include "polyanya/search/expansion.h"
-#include "polyanya/structs/searchnode.h"
-#include "polyanya/structs/successor.h"
-#include "polyanya/structs/mesh.h"
-#include "polyanya/helpers/geometry.h"
-#include "polyanya/structs/vertex.h"
-#include "polyanya/structs/point.h"
-#include "polyanya/structs/consts.h"
 #include <cassert>
 #include <vector>
 
@@ -55,11 +48,30 @@ inline int binary_search(const std::vector<int>& arr, const int N,
     return best_so_far;
 }
 
+Orientation get_orientation_switchable(const Point& a, const Point& b, const Point& c, bool robust){
+    if(robust){
+        switch(Orient(a, b, c)){
+            case robustOrientation::kLeftTurn:
+                return Orientation::CCW;
+                break;
+            case robustOrientation::kCollinear:
+                return Orientation::COLLINEAR;
+                break;
+            case robustOrientation::kRightTurn:
+                return Orientation::CW;
+                break;
+        }
+    }else{
+        return get_orientation(a,b,c);
+    }
+}
+
 int expand(SearchNode& node, const Point& start, const Mesh& mesh,
            Successor* successors)
 {
     // If the next polygon is -1 we dont have any successors (we shouldnt even look for them)
     if(node.next_polygon == -1) return 0;
+    bool useRobustGeom = true;
 
     const Polygon& polygon = mesh.mesh_polygons[node.next_polygon];
     const std::vector<Vertex>& mesh_vertices = mesh.mesh_vertices;
@@ -118,7 +130,7 @@ int expand(SearchNode& node, const Point& start, const Mesh& mesh,
         // Now we need to check the orientation of root-L-t2.
         // TODO: precompute a shared term for getting orientation,
         // like t2 - root.
-        switch (get_orientation(root, L, t2))
+        switch (get_orientation_switchable(root, L, t2, useRobustGeom))
         {
             case Orientation::CCW:
             {
@@ -167,7 +179,7 @@ int expand(SearchNode& node, const Point& start, const Mesh& mesh,
                                   line_intersect(t2, t3, root, L));
 
                 // Now we need to check the orientation of root-R-t2.
-                switch (get_orientation(root, R, t2))
+                switch (get_orientation_switchable(root, R, t2, useRobustGeom))
                 {
                     case Orientation::CW:
                     {

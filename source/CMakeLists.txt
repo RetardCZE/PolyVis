@@ -38,14 +38,6 @@ set(${PROJECT_NAME}_COMPILE_DEFINITIONS
         -DINPUT_MAPS_DIR="${PROJECT_SOURCE_DIR}/../../IronHarvest/mesh-maps/iron-harvest"
         )
 
-# add_executable(trivis_debug trivis_debug.cc ${${PROJECT_NAME}_SRC})
-# target_compile_definitions(trivis_debug PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
-# target_link_libraries(trivis_debug TriVis ${Boost_LIBRARIES} cairo)
-#
-# add_executable(trivis_examples trivis_examples.cc ${${PROJECT_NAME}_SRC})
-# target_compile_definitions(trivis_examples PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
-# target_link_libraries(trivis_examples TriVis ${Boost_LIBRARIES} cairo)
-
 FILE(GLOB SRC src/*.cpp)
 set(SOURCES ${SRC})
 
@@ -65,16 +57,16 @@ target_link_libraries(EdgeVis_example
         ${FADE2D_LIBRARY}
         ${Boost_LIBRARIES})
 
-add_executable(EdgeVis_arbitrary_edge
-        edgevis_arbitrary_edge.cpp
-        ${SOURCES}
-        ${${PROJECT_NAME}_SRC})
-target_compile_definitions(EdgeVis_arbitrary_edge PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
-target_link_libraries(EdgeVis_arbitrary_edge
-        cairo
-        TriVis
-        PolyAnya
-        EdgeVis
-        GeomMesh
-        ${FADE2D_LIBRARY}
-        ${Boost_LIBRARIES})
+# add_executable(EdgeVis_arbitrary_edge
+#         edgevis_arbitrary_edge.cpp
+#         ${SOURCES}
+#         ${${PROJECT_NAME}_SRC})
+# target_compile_definitions(EdgeVis_arbitrary_edge PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
+# target_link_libraries(EdgeVis_arbitrary_edge
+#         cairo
+#         TriVis
+#         PolyAnya
+#         EdgeVis
+#         GeomMesh
+#         ${FADE2D_LIBRARY}
+#         ${Boost_LIBRARIES})
