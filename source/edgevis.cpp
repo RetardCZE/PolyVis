@@ -41,6 +41,7 @@ struct ProgramOptionVariables {
     bool debug = false;
     bool save = false;
     bool heatmap = false;
+    bool machine = false;
     double map_scale = -1.0;
     double vis_radius = -1.0;
     int n_random_samples = 1;
@@ -88,7 +89,10 @@ void AddProgramOptions(
              "Log resulting polygons to files (cannot measure performance)..")
             ("heatmap",
              po::bool_switch(&pov.heatmap)->default_value(pov.heatmap),
-             "Create heatmap of computation time");
+             "Create heatmap of computation time")
+            ("machine",
+             po::bool_switch(&pov.machine)->default_value(pov.machine),
+             "Save output in format dedicated for further SW processing.");
 }
 
 char ParseProgramOptions(
@@ -149,8 +153,7 @@ int body(ProgramOptionVariables pov)
      */
     mapParser.readGeomMeshFromIronHarvestMesh(mapName,
                                               IronHarvest);
-    //std::string filename = "/home/jakub/Projects/IronHarvest/mesh-maps/iron-harvest/scene_mp_2p_01.mesh";
-
+    pov.mesh_type = "triangular";
 
     std::mt19937 rng(pov.random_seed); // random generator
 
@@ -207,13 +210,16 @@ int body(ProgramOptionVariables pov)
 
     clock.Restart();
     Evis.precompute_edges_searchnodes();
+    double prepTime, prepOptim1Time;
     time = clock.TimeInSeconds();
+    prepTime = time;
     std::cout << "\nEdgevis\n";
     std::cout << "Preprocessing time for Edge Visibility was " <<
               time << " seconds.\n";
     clock.Restart();
     Evis.precompute_edges_optimnodesV1();
     time = clock.TimeInSeconds();
+    prepOptim1Time = time;
     std::cout << "Preprocessing time for OptimNodesV1 was " <<
               time << " seconds.\n";
 
@@ -225,10 +231,17 @@ int body(ProgramOptionVariables pov)
     std::ofstream outfile_polyvis;
     std::ofstream results;
     results.open("results.dat", std::ios::out | std::ios::trunc );
-    results << pov.input_map_name
-            << "\nType of mesh: " << pov.mesh_type
-            << "\nNumber of iterations: " <<  pov.n_random_samples
-            << "\n=======================================================\n";
+    if(!pov.machine){
+        results << pov.input_map_name
+                << "\nType of mesh: " << pov.mesh_type
+                << "\nNumber of iterations: " <<  pov.n_random_samples
+                << "\n=======================================================\n";
+    }else{
+        results << pov.input_map_name << "\n"
+                << pov.mesh_type << "\n"
+                << pov.n_random_samples << "\n";
+    }
+
     if(save){
         outfile.open("logger_edgevis.dat", std::ios::out | std::ios::trunc );
         outfile_polyvis.open("logger_polyvis.dat", std::ios::out | std::ios::trunc );
@@ -236,6 +249,8 @@ int body(ProgramOptionVariables pov)
 
     std::vector<double> times;
     double tMax = 0, tMin = 100, t;
+    double edgePolyNodes, edgePolyNodesSum;
+    double PolyNodesSum = 0;
     clock.Restart();
     for (auto pos : r_points){
         if(debug) {
@@ -244,7 +259,9 @@ int body(ProgramOptionVariables pov)
             rename("debug_visu.png",  m.c_str());
         }
 
-        verticesPoly = Evis.find_point_visibility(pos, debug);
+        verticesPoly = Evis.find_point_visibility_optim1(pos, debug, edgePolyNodes);
+        PolyNodesSum = PolyNodesSum + verticesPoly.size();
+        edgePolyNodesSum = edgePolyNodesSum + edgePolyNodes;
         if(heatmap){
             t = clock.TimeInSeconds();
             times.push_back(t);
@@ -281,16 +298,30 @@ int body(ProgramOptionVariables pov)
     time = clock.TimeInSeconds();
     std::cout << "Total computation time: " << time << " seconds.\n";
     std::cout << "Mean computation time: " << time/pov.n_random_samples << " seconds/point.\n";
-    results << "EdgeVis:";
-    results << "\nTotal computation time:" << time <<
-              "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
+    std::cout << "Mean number of nodes that were checked: " << edgePolyNodesSum / pov.n_random_samples << std::endl;
+    std::cout << "Mean number of resulting visibility polygon nodes: " << PolyNodesSum / pov.n_random_samples << std::endl;
+    if(!pov.machine){
+        results << "EdgeVis:";
+        results << "\nTotal computation time:" << time <<
+                "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
+    }else{
+        results << time << " " <<
+        prepTime << " " <<
+        prepOptim1Time << " " <<
+        edgePolyNodesSum / pov.n_random_samples << " " <<
+        PolyNodesSum / pov.n_random_samples << "\n";
+    }
 
     if(heatmap)
         Evis.visualise_heatmap(r_points, times, tMax, tMin, "evis_heatmap.pdf");
+
     times.clear();
     clock.Restart();
+    double maxDepthSum = 0, expansionsSum = 0;
     for (auto pos : p_points){
         verticesPolyAnya = solverPoly.get_visibility_polygon(pos);
+        expansionsSum = expansionsSum + solverPoly.expansions;
+        maxDepthSum = maxDepthSum + solverPoly.max_depth;
         if(heatmap){
             t = clock.TimeInSeconds();
             times.push_back(t);
@@ -312,11 +343,18 @@ int body(ProgramOptionVariables pov)
     std::cout << "\nPolyVis\n";
     std::cout << "Total computation time: "<< time << " seconds.\n";
     std::cout << "Mean computation time: "<< time/pov.n_random_samples << " seconds/point.\n";
+    std::cout << "Mean number of edge expansions: " << expansionsSum/pov.n_random_samples << "\n";
+    std::cout << "Mean maximal depth of expansion: " << maxDepthSum/pov.n_random_samples << "\n";
 
-    results << "\n===============================================================\n";
-    results << "PolyVis:";
-    results << "\nTotal computation time:" << time <<
-            "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
+    if(!pov.machine){
+        results << "\n===============================================================\n";
+        results << "PolyVis:";
+        results << "\nTotal computation time:" << time <<
+                "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
+    }else{
+        results << time << " " << expansionsSum/pov.n_random_samples << " " << maxDepthSum/pov.n_random_samples << "\n";
+    }
+
 
     if(heatmap)
         Evis.visualise_heatmap(r_points, times, tMax, tMin, "poly_heatmap.pdf");

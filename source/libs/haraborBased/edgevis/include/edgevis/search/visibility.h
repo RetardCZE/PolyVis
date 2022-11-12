@@ -38,11 +38,11 @@ namespace edgevis{
         std::vector<SearchNode> find_edge_visibility(int edge, bool side);
 
         void set_visual_mesh(const parsers::GeomMesh &gmesh);
-        bool switch_debug(bool on);
+
         void precompute_edges_searchnodes();
         const Mesh& mesh_reference();
         void precompute_edges_optimnodesV1();
-        std::vector<Point> find_point_visibility(Point p, bool debug);
+        std::vector<Point> find_point_visibility_optim1(Point p, bool debug, double &steps);
         Point evaluate_intersection(SearchPoint& sp);
 
         void visualise_segment(Point A, Point B, int color, float opacity);

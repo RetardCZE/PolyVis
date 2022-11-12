@@ -7,8 +7,12 @@ import time
 from datetime import datetime
 import os
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 from matplotlib.patches import Polygon
 from shapely import geometry
+import pandas as pd
+from matplotlib.backends.backend_pdf import PdfPages
+
 
 @click.group('cli')
 def cli():
@@ -96,6 +100,7 @@ def run_all(number, type):
     maps = Path("/home/jakub/Projects/IronHarvest/mesh-maps/iron-harvest")
     Path(f'results_{type}').mkdir(exist_ok=True)
     c = 0
+    bad = []
     for m in maps.iterdir():
         if(m.suffix != '.mesh'):
             continue
@@ -104,41 +109,187 @@ def run_all(number, type):
         c += 1
         name = m.stem
         print(name)
-        arguments = ' -m ' + name + ' -n ' + str(number) + ' -t ' + type
+        arguments = ' -m ' + name + ' -n ' + str(number) + ' -t ' + type + ' --machine'
         command = executable + arguments
         out = subprocess.run(command, shell=True)
         try:
             os.replace("results.dat", f'results_{type}/{name}.dat')
         except FileNotFoundError:
+            bad.append(name)
             print(f"{name} is not usable")
 
+    print(bad)
     print(50*'-')
-    times = {}
+
+@cli.command('report-all')
+@click.option('-t', '--type', type= click.Choice(['triangular', 'polygonal']), default='triangular')
+def analyze(type):
+    executable = "../build/EdgeVis_example"
+    maps = Path("/home/jakub/Projects/IronHarvest/mesh-maps/iron-harvest")
+    Path(f'results_{type}').mkdir(exist_ok=True)
+    table = {}
     res = Path(f'results_{type}')
+    df = pd.DataFrame()
+    df2 = pd.DataFrame()
+    headers = ['map',
+               'PolyVis t',
+               'PolyVis exp',
+               'PolyVis depth',
+               'EdgeVis t',
+               'preprocessing edge',
+               'preprocessing v1',
+               'nodes v1',
+               'EdgeVis vertices',
+               'PolyVis / v1'
+               ]
+    df[headers[0]] = []
+    # PolyVis
+    df[headers[1]] = []
+    df[headers[2]] = []
+    df[headers[3]] = []
+    # EdgeVis v1
+    df[headers[4]] = []
+    df[headers[5]] = []
+    df[headers[6]] = []
+    df[headers[7]] = []
+    df[headers[8]] = []
+    df[headers[9]] = []
+
+    dfs = []
+    lines = 0
     for f in res.iterdir():
         with f.open('r') as r:
-            try:
-                n = r.readline().strip('\n')
-                for i in range(5):
-                    r.readline()
-                e = float(r.readline().split(':')[-1])
-                for i in range(4):
-                    r.readline()
-                p = float(r.readline().split(':')[-1])
-                try:
-                    for i in range(4):
-                        r.readline()
-                    t = float(r.readline().split(':')[-1])
-                    times[n] = [e, p, t]
-                except:
-                    times[n] = [e, p]
-            except:
-                print("something went wrong on", n)
+            name = r.readline().replace('\n', '')
+            if len(name) == 0:
+                print(f.stem)
+                continue
+            r.readline()
+            r.readline()
+            df2[headers[0]] = [name]
+            dataLine1 = (r.readline().replace('\n', '')).split(' ')
+            df2[headers[4]] = [float(dataLine1[0])]
+            df2[headers[5]] = [float(dataLine1[1])]
+            df2[headers[6]] = [float(dataLine1[2])]
+            df2[headers[7]] = [float(dataLine1[3])]
+            df2[headers[8]] = [float(dataLine1[4])]
 
-    for key in times.keys():
-        print(key, " - ", times[key])
+            dataLine2 = (r.readline().replace('\n', '')).split(' ')
+            # PolyVis
+            df2[headers[1]] = [float(dataLine2[0])]
+            df2[headers[2]] = [float(dataLine2[1])]
+            df2[headers[3]] = [float(dataLine2[2])]
 
+            df2[headers[9]] = [float(dataLine2[0]) / float(dataLine1[0])]
+            df = df.append(df2, ignore_index=True)
+        lines += 1
+        if lines > 19:
+            lines = 0
+            dfs.append(df.copy())
+            df = pd.DataFrame()
+            df[headers[0]] = []
+            # PolyVis
+            df[headers[1]] = []
+            df[headers[2]] = []
+            df[headers[3]] = []
+            # EdgeVis v1
+            df[headers[4]] = []
+            df[headers[5]] = []
+            df[headers[6]] = []
+            df[headers[7]] = []
+            df[headers[8]] = []
+            df[headers[9]] = []
+    if lines > 0:
+        dfs.append(df)
 
+    for df in dfs:
+        df.update(df[[headers[4],
+                      headers[5],
+                      headers[6],
+                      headers[7],
+                      headers[8],
+                      headers[9],
+                      headers[1],
+                      headers[2],
+                      headers[3]]].astype(float))
+        df.update(df[[headers[4],
+                      headers[5],
+                      headers[6],
+                      headers[7],
+                      headers[8],
+                      headers[9],
+                      headers[1],
+                      headers[2],
+                      headers[3]]].applymap('{:,.3f}'.format))
+
+    pdf = PdfPages('report_time.pdf')
+    for df in dfs:
+        fig = plt.figure()
+        ax = fig.gca()
+        ax.axis('off')
+
+        dataFrameTimes = df[[headers[0], headers[4], headers[1], headers[9]]].copy()
+        r, c = dataFrameTimes.shape
+        # plot the real table
+        table = ax.table(cellText=np.vstack([dataFrameTimes.columns, dataFrameTimes.values]),
+                         cellColours=[['lightgray'] * c] * (r+1),
+                         loc='upper center',
+                         )
+        table.auto_set_font_size(False)
+        table.set_fontsize(6)
+        table.auto_set_column_width(col=list(range(c)))  # Provide integer list of columns to adjust
+
+        # need to draw here so the text positions are calculated
+        fig.canvas.draw()
+        pdf.savefig()
+        plt.close()
+    pdf.close()
+
+    pdf = PdfPages('report_steps.pdf')
+    for df in dfs:
+
+        fig = plt.figure()
+        ax = fig.gca()
+        ax.axis('off')
+
+        dataFrameTimes = df[[headers[0], headers[2], headers[3], headers[7], headers[8]]].copy()
+        r, c = dataFrameTimes.shape
+        # plot the real table
+        table = ax.table(cellText=np.vstack([dataFrameTimes.columns, dataFrameTimes.values]),
+                         cellColours=[['lightgray'] * c] * (r + 1),
+                         loc='upper center',
+                         )
+        table.auto_set_font_size(False)
+        table.set_fontsize(6)
+        table.auto_set_column_width(col=list(range(c)))  # Provide integer list of columns to adjust
+
+        # need to draw here so the text positions are calculated
+        fig.canvas.draw()
+        pdf.savefig()
+        plt.close()
+    pdf.close()
+
+    pdf = PdfPages('report_preprocessing.pdf')
+    for df in dfs:
+        fig = plt.figure()
+        ax = fig.gca()
+        ax.axis('off')
+
+        dataFrameTimes = df[[headers[0], headers[6], headers[5]]].copy()
+        r, c = dataFrameTimes.shape
+        # plot the real table
+        table = ax.table(cellText=np.vstack([dataFrameTimes.columns, dataFrameTimes.values]),
+                         cellColours=[['lightgray'] * c] * (r + 1),
+                         loc='upper center',
+                         )
+        table.auto_set_font_size(False)
+        table.set_fontsize(6)
+        table.auto_set_column_width(col=list(range(c)))  # Provide integer list of columns to adjust
+
+        # need to draw here so the text positions are calculated
+        fig.canvas.draw()
+        pdf.savefig()
+        plt.close()
+    pdf.close()
 
 @cli.command('run-single')
 @click.option('-m', '--map', type=str, default='potholes')

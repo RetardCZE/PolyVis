@@ -25,10 +25,11 @@ class PolyVis{
         ~PolyVis();
         std::vector<polyanya::Point> get_visibility_polygon(polyanya::Point position);
         std::vector<polyanya::Point> generate_points(int n);
+        int expansions = 0;
+        int max_depth = 0;
 
     private:
         void expand_edge(polyanya::SearchNodePtr, polyanya::Point root, int level);
-        int expansions = 0;
         std::vector<polyanya::Point> vertices;
         polyanya::SearchInstance* si;
         polyanya::Mesh* mesh;

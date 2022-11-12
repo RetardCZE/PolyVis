@@ -10,12 +10,6 @@ namespace edgevis{
         cgm_drawer.Close();
     }
 
-    bool
-    EdgeVisibility::switch_debug(bool on) {
-        this->debug = on;
-        return on;
-    }
-
     const Mesh& EdgeVisibility::mesh_reference() {
         return mesh;
 
@@ -174,7 +168,8 @@ namespace edgevis{
     }
 
     std::vector<Point>
-    EdgeVisibility::find_point_visibility(Point p, bool debug) {
+    EdgeVisibility::find_point_visibility_optim1(Point p, bool debug, double &steps) {
+        steps = 0;
         std::vector<Point> out;
         PointLocation pl = mesh.get_point_location(p);
         std::vector<Edge*> edges = this->get_init_edges(pl);
@@ -198,6 +193,7 @@ namespace edgevis{
                 vec = &e->rightOptimNodesV1;
             }
             for(auto node : *vec){
+                steps++;
                 if(node.root_L.isIntersection){
                     left_parent = node.root_L.i.a;
                     left_child = node.P.isIntersection ? node.root_L.i.b : node.P.p;

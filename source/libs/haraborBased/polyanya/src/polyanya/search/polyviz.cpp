@@ -25,6 +25,7 @@ void PolyVis::expand_edge(polyanya::SearchNodePtr n, polyanya::Point root, int l
     if(n->next_polygon == -1){
         this->vertices.push_back(n->right);
         this->vertices.push_back(n->left);
+        if(level > max_depth) max_depth = level;
         return;
     }
     this->expansions++;
@@ -48,6 +49,7 @@ void PolyVis::expand_edge(polyanya::SearchNodePtr n, polyanya::Point root, int l
 std::vector<polyanya::Point>
 PolyVis::get_visibility_polygon(polyanya::Point position){
     this->expansions = 0;
+    this->max_depth = 0;
     this->vertices.clear();
     std::vector<polyanya::SearchNodePtr> list = this->si->getInitNodes(position); // custom version - minor updates
 
