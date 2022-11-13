@@ -39,6 +39,21 @@ namespace edgevis
         SearchPoint root_R, root_L;  // root
         SearchPoint P;
         bool isAlwaysVisible;
+
+        bool operator==(OptimNodeV1& A) const {
+            if (P == A.P && root_R == A.root_R && root_L == A.root_L) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        bool operator!=(OptimNodeV1& A) const {
+            if (P == A.P && root_R == A.root_R && root_L == A.root_L) {
+                return false;
+            } else {
+                return true;
+            }
+        }
         /*
         friend std::ostream& operator<<(std::ostream& stream, const OptimNode& on)
         {

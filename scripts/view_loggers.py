@@ -131,17 +131,26 @@ def analyze(type):
     res = Path(f'results_{type}')
     df = pd.DataFrame()
     df2 = pd.DataFrame()
-    headers = ['map',
-               'PolyVis t',
-               'PolyVis exp',
-               'PolyVis depth',
-               'EdgeVis t',
-               'preprocessing edge',
-               'preprocessing v1',
-               'nodes v1',
-               'EdgeVis vertices',
-               'PolyVis / v1'
+    headers = ['map',   # 0
+               'PolyVis t',   #1
+               'PolyVis exp',   #2
+               'PolyVis depth',   #3
+                  #
+               'EdgeVis t',   #4
+               'preprocessing edge',   #5
+               'preprocessing v1',   #6
+               'nodes v1',   #7
+               'EdgeVis vertices',   #8
+               'PolyVis / v1',   #9
+                  #
+               'EdgeVis2 t',   #10
+               'preprocessing edge2',   #11
+               'preprocessing v2',   #12
+               'nodes v2',   #13
+               'EdgeVis2 vertices',   #14
+               'PolyVis / v2'   #15
                ]
+    print(len(headers))
     df[headers[0]] = []
     # PolyVis
     df[headers[1]] = []
@@ -154,6 +163,13 @@ def analyze(type):
     df[headers[7]] = []
     df[headers[8]] = []
     df[headers[9]] = []
+
+    df[headers[10]] = []
+    df[headers[11]] = []
+    df[headers[12]] = []
+    df[headers[13]] = []
+    df[headers[14]] = []
+    df[headers[15]] = []
 
     dfs = []
     lines = 0
@@ -173,12 +189,23 @@ def analyze(type):
             df2[headers[7]] = [float(dataLine1[3])]
             df2[headers[8]] = [float(dataLine1[4])]
 
+            dataLine3 = (r.readline().replace('\n', '')).split(' ')
+
+            df2[headers[10]] = [float(dataLine3[0])]
+            df2[headers[11]] = [float(dataLine3[1])]
+            df2[headers[12]] = [float(dataLine3[2])]
+            df2[headers[13]] = [float(dataLine3[3])]
+            df2[headers[14]] = [float(dataLine3[4])]
+
+
+
             dataLine2 = (r.readline().replace('\n', '')).split(' ')
             # PolyVis
             df2[headers[1]] = [float(dataLine2[0])]
             df2[headers[2]] = [float(dataLine2[1])]
             df2[headers[3]] = [float(dataLine2[2])]
 
+            df2[headers[15]] = [float(dataLine2[0]) / float(dataLine3[0])]
             df2[headers[9]] = [float(dataLine2[0]) / float(dataLine1[0])]
             df = df.append(df2, ignore_index=True)
         lines += 1
@@ -198,6 +225,13 @@ def analyze(type):
             df[headers[7]] = []
             df[headers[8]] = []
             df[headers[9]] = []
+
+            df[headers[10]] = []
+            df[headers[11]] = []
+            df[headers[12]] = []
+            df[headers[13]] = []
+            df[headers[14]] = []
+            df[headers[15]] = []
     if lines > 0:
         dfs.append(df)
 
@@ -227,7 +261,7 @@ def analyze(type):
         ax = fig.gca()
         ax.axis('off')
 
-        dataFrameTimes = df[[headers[0], headers[4], headers[1], headers[9]]].copy()
+        dataFrameTimes = df[[headers[0], headers[4], headers[10], headers[1], headers[9], headers[15]]].copy()
         r, c = dataFrameTimes.shape
         # plot the real table
         table = ax.table(cellText=np.vstack([dataFrameTimes.columns, dataFrameTimes.values]),
@@ -251,7 +285,7 @@ def analyze(type):
         ax = fig.gca()
         ax.axis('off')
 
-        dataFrameTimes = df[[headers[0], headers[2], headers[3], headers[7], headers[8]]].copy()
+        dataFrameTimes = df[[headers[0], headers[2], headers[3], headers[13], headers[14], headers[7], headers[8]]].copy()
         r, c = dataFrameTimes.shape
         # plot the real table
         table = ax.table(cellText=np.vstack([dataFrameTimes.columns, dataFrameTimes.values]),
@@ -274,7 +308,7 @@ def analyze(type):
         ax = fig.gca()
         ax.axis('off')
 
-        dataFrameTimes = df[[headers[0], headers[6], headers[5]]].copy()
+        dataFrameTimes = df[[headers[0], headers[6], headers[5], headers[12]]].copy()
         r, c = dataFrameTimes.shape
         # plot the real table
         table = ax.table(cellText=np.vstack([dataFrameTimes.columns, dataFrameTimes.values]),

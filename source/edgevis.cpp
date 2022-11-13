@@ -9,7 +9,7 @@
 #include "edgevis/structs/edge.h"
 #include "edgevis/structs/searchnode.h"
 #include "edgevis/search/expansion.h"
-#include "edgevis/search/visibility.h"
+#include "edgevis/search/edge_visibility.h"
 
 #include "drawing/cairo_geom_drawer.h"
 
@@ -223,6 +223,13 @@ int body(ProgramOptionVariables pov)
     std::cout << "Preprocessing time for OptimNodesV1 was " <<
               time << " seconds.\n";
 
+    clock.Restart();
+    Evis.precompute_edges_optimnodesV2();
+    time = clock.TimeInSeconds();
+    prepOptim1Time = time;
+    std::cout << "Preprocessing time for OptimNodesV2 was " <<
+              time << " seconds.\n";
+
 
     bool debug = pov.debug;
     bool save = pov.save;
@@ -258,6 +265,7 @@ int body(ProgramOptionVariables pov)
             std::string m = pov.input_map_name + ".png";
             rename("debug_visu.png",  m.c_str());
         }
+
 
         verticesPoly = Evis.find_point_visibility_optim1(pos, debug, edgePolyNodes);
         PolyNodesSum = PolyNodesSum + verticesPoly.size();
@@ -296,6 +304,7 @@ int body(ProgramOptionVariables pov)
 
     }
     time = clock.TimeInSeconds();
+    std::cout << "EdgeVis v1: " << "\n";
     std::cout << "Total computation time: " << time << " seconds.\n";
     std::cout << "Mean computation time: " << time/pov.n_random_samples << " seconds/point.\n";
     std::cout << "Mean number of nodes that were checked: " << edgePolyNodesSum / pov.n_random_samples << std::endl;
@@ -310,6 +319,70 @@ int body(ProgramOptionVariables pov)
         prepOptim1Time << " " <<
         edgePolyNodesSum / pov.n_random_samples << " " <<
         PolyNodesSum / pov.n_random_samples << "\n";
+    }
+
+    if(heatmap)
+        Evis.visualise_heatmap(r_points, times, tMax, tMin, "evis_heatmap.pdf");
+
+    PolyNodesSum = 0;
+    edgePolyNodesSum = 0;
+    times.clear();
+    clock.Restart();
+    for (auto pos : r_points){
+        verticesPoly = Evis.find_point_visibility_optim2(pos, debug, edgePolyNodes);
+        PolyNodesSum = PolyNodesSum + verticesPoly.size();
+        edgePolyNodesSum = edgePolyNodesSum + edgePolyNodes;
+        if(heatmap){
+            t = clock.TimeInSeconds();
+            times.push_back(t);
+            tMax = std::max(tMax, t);
+            tMin = std::min(tMin, t);
+        }
+
+        if(save){
+            outfile << "--\n";
+            outfile << pos << std::endl;
+            outfile << verticesPoly.size() << std::endl;
+            for (auto p : verticesPoly){
+                outfile << p << "; ";
+            }
+            outfile << std::endl;
+        }
+        if(debug) {
+            Evis.reset_visu();
+            anyaP.x = pos.x;
+            anyaP.y = pos.y;
+            verticesPolyAnya = solverPoly.get_visibility_polygon(anyaP);
+
+            Evis.visualise_point(pos, 0);
+            Evis.visualise_polygon(verticesPoly, 2);
+            verticesPoly.resize(verticesPolyAnya.size());
+            for (int i = 0; i < verticesPolyAnya.size(); i++) {
+                verticesPoly[i].x = verticesPolyAnya[i].x;
+                verticesPoly[i].y = verticesPolyAnya[i].y;
+            }
+            Evis.visualise_polygon(verticesPoly, 1);
+            std::cout << "visualized evis2" << std::endl;
+            getchar();
+        }
+
+    }
+    time = clock.TimeInSeconds();
+    std::cout << "EdgeVis v2: " << "\n";
+    std::cout << "Total computation time: " << time << " seconds.\n";
+    std::cout << "Mean computation time: " << time/pov.n_random_samples << " seconds/point.\n";
+    std::cout << "Mean number of nodes that were checked: " << edgePolyNodesSum / pov.n_random_samples << std::endl;
+    std::cout << "Mean number of resulting visibility polygon nodes: " << PolyNodesSum / pov.n_random_samples << std::endl;
+    if(!pov.machine){
+        results << "EdgeVis:";
+        results << "\nTotal computation time:" << time <<
+                "\nAverage computation time per point:" << time/pov.n_random_samples << std::endl;
+    }else{
+        results << time << " " <<
+                prepTime << " " <<
+                prepOptim1Time << " " <<
+                edgePolyNodesSum / pov.n_random_samples << " " <<
+                PolyNodesSum / pov.n_random_samples << "\n";
     }
 
     if(heatmap)

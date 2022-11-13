@@ -37,14 +37,15 @@ namespace edgevis{
                                        std::vector<SearchNode> &rightVis);
         std::vector<SearchNode> find_edge_visibility(int edge, bool side);
 
-        void set_visual_mesh(const parsers::GeomMesh &gmesh);
-
         void precompute_edges_searchnodes();
         const Mesh& mesh_reference();
         void precompute_edges_optimnodesV1();
+        void precompute_edges_optimnodesV2();
         std::vector<Point> find_point_visibility_optim1(Point p, bool debug, double &steps);
+        std::vector<Point> find_point_visibility_optim2(Point p, bool debug, double &steps);
         Point evaluate_intersection(SearchPoint& sp);
 
+        void set_visual_mesh(const parsers::GeomMesh &gmesh);
         void visualise_segment(Point A, Point B, int color, float opacity);
         void visualise_point(Point A, int color);
         void visualise_heat_point(Point A, double heat, double heightIncrement, double widthIncrement);
@@ -66,10 +67,13 @@ namespace edgevis{
         int expand_forward(SearchNode &node, SearchNode *newNodes);
         void back_propagation(SearchNode &node);
         void compute_optimnodesv1(SearchNode &node, OptimNodeV1 &o1, OptimNodeV1 &o2);
+        bool check_visibility_on2(Point &a, OptimNodeV2 &on, Edge &e, bool right);
 
         std::vector<Edge*> get_init_edges(PointLocation pl);
         Edge current_edge;
         bool searchnodes_precomputed = false;
+        bool optimnodes1_precomputed = false;
+        bool optimnodes2_precomputed = false;
         int save_cntr = 0;
 
         Mesh mesh;
