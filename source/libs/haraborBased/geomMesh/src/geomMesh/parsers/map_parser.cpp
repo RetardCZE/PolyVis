@@ -340,7 +340,6 @@ parsers::MapParser::convertFade2DMeshToGeomMesh(const parsers::Fade2DMesh &fade2
 
 void
 parsers::MapParser::readGeomMeshFromIronHarvestMesh(const std::string &filename, parsers::GeomMesh &geomMesh){
-    std::cout << filename << std::endl;
     std::ifstream ifs(filename.c_str());
     if (ifs.fail()) {
         std::cout << "File " << filename << " cannot be opened or found." << std::endl;
@@ -369,6 +368,7 @@ parsers::MapParser::readGeomMeshFromIronHarvestMesh(const std::string &filename,
     geomMesh.obstacles.clear();
     parsers::GeomVertex currentVertex;
     parsers::GeomPolygon currentPolygon;
+    geom::Polygon<double> currentObstacle;
     ifs >> vertexCount;
     ifs >> facesCount;
     for(int i = 0; i < vertexCount; i++){
@@ -404,7 +404,6 @@ parsers::MapParser::readGeomMeshFromIronHarvestMesh(const std::string &filename,
              * }
              */
         }
-
         for(auto p : faceId){
             if(p >= 0) {
                 currentPolygon.idxNeighPolygons.push_back(p);
@@ -415,6 +414,9 @@ parsers::MapParser::readGeomMeshFromIronHarvestMesh(const std::string &filename,
         if(faceIsTraversable){
             geomMesh.polygons.push_back(currentPolygon);
             idConverter.push_back(i);
+        }else{
+            currentObstacle = currentPolygon.polygon;
+            geomMesh.obstacles.push_back(currentObstacle);
         }
     }
     for(int i = 0; i < geomMesh.polygons.size(); i++){
