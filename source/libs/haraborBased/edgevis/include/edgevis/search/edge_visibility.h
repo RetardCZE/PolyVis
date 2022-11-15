@@ -71,6 +71,7 @@ namespace edgevis{
 
         std::vector<Edge*> get_init_edges(PointLocation pl);
         Edge current_edge;
+        std::vector<SearchNode*> deleteQueue;
         bool searchnodes_precomputed = false;
         bool optimnodes1_precomputed = false;
         bool optimnodes2_precomputed = false;

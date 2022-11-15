@@ -8,6 +8,9 @@ namespace edgevis{
 
     EdgeVisibility::~EdgeVisibility(){
         cgm_drawer.Close();
+        for(auto n : deleteQueue){
+            delete n;
+        }
     }
 
     const Mesh& EdgeVisibility::mesh_reference() {
@@ -80,7 +83,7 @@ namespace edgevis{
         int num;
 
         SearchNode* nodes = new edgevis::SearchNode[mesh.max_poly_sides + 2];
-
+        deleteQueue.push_back(nodes);
         num = this->expand_forward(node, nodes);
 
         for(int i = 0; i < num; i++){
@@ -98,6 +101,7 @@ namespace edgevis{
 
         SearchPoint tmp;
         SearchNode* nodes = new edgevis::SearchNode[mesh.max_poly_sides + 2];
+        deleteQueue.push_back(nodes);
         num = this->get_edge_init_nodes(mesh.mesh_edges[edge], side, nodes);
         for(int i = 0; i < num; i++){
             expand(nodes[i], vis, side);
@@ -380,6 +384,7 @@ namespace edgevis{
                 expand(rightNodes[i], rightVis, true); // here side should be deprecated
             }
         }
+        delete leftNodes, rightNodes;
         return;
     }
 

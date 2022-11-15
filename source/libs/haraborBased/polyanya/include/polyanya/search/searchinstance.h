@@ -58,7 +58,13 @@ class SearchInstance
             int num_succ, SearchNode* nodes
         );
 
-
+        void reset_node_pool(){
+            if (node_pool)
+            {
+                delete node_pool;
+                node_pool = new warthog::mem::cpool(sizeof(SearchNode));
+            }
+        }
         SearchInstance() { }
         SearchInstance(MeshPtr m) : mesh(m) { init(); }
         SearchInstance(SearchInstance const &) = delete;

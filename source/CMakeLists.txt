@@ -36,6 +36,7 @@ set(${PROJECT_NAME}_SRC
 
 set(${PROJECT_NAME}_COMPILE_DEFINITIONS
         -DINPUT_MAPS_DIR="${PROJECT_SOURCE_DIR}/../../IronHarvest/mesh-maps/iron-harvest"
+        -DINPUT_CONVERTED_MAPS_DIR="${PROJECT_SOURCE_DIR}/../../IronHarvest/converted-maps/maps"
         )
 
 FILE(GLOB SRC src/*.cpp)

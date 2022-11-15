@@ -27,11 +27,12 @@ class PolyVis{
         std::vector<polyanya::Point> generate_points(int n);
         int expansions = 0;
         int max_depth = 0;
+        polyanya::SearchInstance* si;
 
     private:
         void expand_edge(polyanya::SearchNodePtr, polyanya::Point root, int level);
         std::vector<polyanya::Point> vertices;
-        polyanya::SearchInstance* si;
+
         polyanya::Mesh* mesh;
         std::ifstream my_file;
         polyanya::Successor* successors;

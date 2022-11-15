@@ -109,7 +109,7 @@ def run_all(number, type):
         c += 1
         name = m.stem
         print(name)
-        arguments = ' -m ' + name + ' -n ' + str(number) + ' -t ' + type + ' --machine'
+        arguments = ' -m ' + name + ' -n ' + str(number) + ' -t ' + type
         command = executable + arguments
         out = subprocess.run(command, shell=True)
         try:
@@ -117,6 +117,8 @@ def run_all(number, type):
         except FileNotFoundError:
             bad.append(name)
             print(f"{name} is not usable")
+        if c > 2:
+            break
 
     print(bad)
     print(50*'-')
@@ -131,24 +133,31 @@ def analyze(type):
     res = Path(f'results_{type}')
     df = pd.DataFrame()
     df2 = pd.DataFrame()
-    headers = ['map',   # 0
-               'PolyVis t',   #1
-               'PolyVis exp',   #2
-               'PolyVis depth',   #3
-                  #
-               'EdgeVis t',   #4
-               'preprocessing edge',   #5
-               'preprocessing v1',   #6
-               'nodes v1',   #7
-               'EdgeVis vertices',   #8
-               'PolyVis / v1',   #9
-                  #
-               'EdgeVis2 t',   #10
-               'preprocessing edge2',   #11
-               'preprocessing v2',   #12
-               'nodes v2',   #13
-               'EdgeVis2 vertices',   #14
-               'PolyVis / v2'   #15
+    headers = ['map',  # 0
+
+               'PT time',  #1
+               'PT exp',  #2
+               'PT depth',  #3
+               #
+               'E1 t',  #4
+               'edge prep',  #5
+               'E1 prep',  #6
+               'E1 nodes',  #7
+               'E1 vertices',  #8
+               'PP/E1',  #9
+               #
+               'E2 t',  #10
+               'edge2 prep',  #11
+               'E2 prep',  #12
+               'E2 nodes',  #13
+               'E2 vertices',  #14
+               'PP/E2',   #15
+
+               'PP t',  # 16
+               'PP exp',  # 17
+               'PP depth',  # 18
+
+               'PP/PT'
                ]
     print(len(headers))
     df[headers[0]] = []
@@ -170,6 +179,11 @@ def analyze(type):
     df[headers[13]] = []
     df[headers[14]] = []
     df[headers[15]] = []
+
+    df[headers[16]] = []
+    df[headers[17]] = []
+    df[headers[18]] = []
+    df[headers[19]] = []
 
     dfs = []
     lines = 0
@@ -200,13 +214,19 @@ def analyze(type):
 
 
             dataLine2 = (r.readline().replace('\n', '')).split(' ')
+            dataLine4 = (r.readline().replace('\n', '')).split(' ')
             # PolyVis
             df2[headers[1]] = [float(dataLine2[0])]
             df2[headers[2]] = [float(dataLine2[1])]
             df2[headers[3]] = [float(dataLine2[2])]
 
-            df2[headers[15]] = [float(dataLine2[0]) / float(dataLine3[0])]
-            df2[headers[9]] = [float(dataLine2[0]) / float(dataLine1[0])]
+            df2[headers[16]] = [float(dataLine4[0])]
+            df2[headers[17]] = [float(dataLine4[1])]
+            df2[headers[18]] = [float(dataLine4[2])]
+
+            df2[headers[15]] = [float(dataLine4[0]) / float(dataLine3[0])]
+            df2[headers[9]] = [float(dataLine4[0]) / float(dataLine1[0])]
+            df2[headers[19]] = [float(dataLine4[0]) / float(dataLine2[0])]
             df = df.append(df2, ignore_index=True)
         lines += 1
         if lines > 19:
@@ -232,28 +252,53 @@ def analyze(type):
             df[headers[13]] = []
             df[headers[14]] = []
             df[headers[15]] = []
+
+            df[headers[16]] = []
+            df[headers[17]] = []
+            df[headers[18]] = []
+            df[headers[19]] = []
     if lines > 0:
         dfs.append(df)
 
     for df in dfs:
-        df.update(df[[headers[4],
+        df.update(df[[headers[1],
+                      headers[2],
+                      headers[3],
+                      headers[4],
                       headers[5],
                       headers[6],
                       headers[7],
                       headers[8],
                       headers[9],
-                      headers[1],
+                      headers[10],
+                      headers[11],
+                      headers[12],
+                      headers[13],
+                      headers[14],
+                      headers[15],
+                      headers[16],
+                      headers[17],
+                      headers[18],
+                      headers[19]]].astype(float))
+        df.update(df[[headers[1],
                       headers[2],
-                      headers[3]]].astype(float))
-        df.update(df[[headers[4],
+                      headers[3],
+                      headers[4],
                       headers[5],
                       headers[6],
                       headers[7],
                       headers[8],
                       headers[9],
-                      headers[1],
-                      headers[2],
-                      headers[3]]].applymap('{:,.3f}'.format))
+                      headers[10],
+                      headers[11],
+                      headers[12],
+                      headers[13],
+                      headers[14],
+                      headers[15],
+                      headers[16],
+                      headers[17],
+                      headers[18],
+                      headers[19]]].applymap('{:,.3f}'.format))
 
     pdf = PdfPages('report_time.pdf')
     for df in dfs:
@@ -261,7 +306,7 @@ def analyze(type):
         ax = fig.gca()
         ax.axis('off')
 
-        dataFrameTimes = df[[headers[0], headers[4], headers[10], headers[1], headers[9], headers[15]]].copy()
+        dataFrameTimes = df[[headers[0], headers[16], headers[10], headers[15], headers[4], headers[9], headers[1], headers[19]]].copy()
         r, c = dataFrameTimes.shape
         # plot the real table
         table = ax.table(cellText=np.vstack([dataFrameTimes.columns, dataFrameTimes.values]),
@@ -285,7 +330,7 @@ def analyze(type):
         ax = fig.gca()
         ax.axis('off')
 
-        dataFrameTimes = df[[headers[0], headers[2], headers[3], headers[13], headers[14], headers[7], headers[8]]].copy()
+        dataFrameTimes = df[[headers[0], headers[2], headers[17], headers[18], headers[3], headers[13], headers[14], headers[7], headers[8]]].copy()
         r, c = dataFrameTimes.shape
         # plot the real table
         table = ax.table(cellText=np.vstack([dataFrameTimes.columns, dataFrameTimes.values]),
