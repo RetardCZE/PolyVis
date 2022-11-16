@@ -117,8 +117,7 @@ def run_all(number, type):
         except FileNotFoundError:
             bad.append(name)
             print(f"{name} is not usable")
-        if c > 2:
-            break
+
 
     print(bad)
     print(50*'-')
