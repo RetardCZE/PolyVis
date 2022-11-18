@@ -58,7 +58,7 @@ namespace edgevis{
                                std::string name);
         void visualise_polygon(std::vector<Point> &p, int color, bool draw);
         void reset_visu();
-        int widthCV = 800;
+        int widthCV = 1200;
 
     private:
         std::vector<OptimNodeV1> compute_side_optimnodesV1(Edge &edge, bool right=true);
