@@ -2,7 +2,7 @@
 namespace edgevis {
 
     std::vector<Point>
-    EdgeVisibility::find_point_visibility_optim1(Point p, bool debug, double &steps) {
+    EdgeVisibility::find_point_visibility_optim1(Point p, bool debug, double &steps, int &debugEdge) {
         steps = 0;
         std::vector<Point> out;
         PointLocation pl = mesh.get_point_location(p);
@@ -20,13 +20,26 @@ namespace edgevis {
         Point I;
         Point segment_holder[2];
         std::vector<OptimNodeV1> *vec;
+        std::vector<Point> debugger;
+        if(debug)
+            debugEdge = debugEdge % edges.size();
+        int counter = 0;
         for (Edge* e :edges) {
+            if(debug && counter!=debugEdge){
+                counter++;
+                continue;
+            }
+            counter++;
+
             if (pl.poly1 == e->rightPoly && e->leftOptimNodesV1.size() > 0) {
                 vec = &e->leftOptimNodesV1;
             }else if((pl.poly1 == e->leftPoly && e->rightOptimNodesV1.size() > 0)) {
                 vec = &e->rightOptimNodesV1;
             }
             for(auto node : *vec){
+                if(debug){
+                    debugger.push_back(this->evaluate_intersection(node.P));
+                }
                 steps++;
                 if(node.root_L.isIntersection){
                     left_parent = node.root_L.i.a;
@@ -81,6 +94,13 @@ namespace edgevis {
                 }
                 last_point = this->evaluate_intersection(node.P);
                 last_state = current_state;
+            }
+
+            if(debug){
+                this->reset_visu();
+                if(debugger.size() > 0)
+                    this->visualise_polygon(debugger, 2, false);
+                break;
             }
         }
 

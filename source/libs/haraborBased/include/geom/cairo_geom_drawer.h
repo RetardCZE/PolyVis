@@ -58,6 +58,10 @@ namespace cairo_geom_drawer {
             cairo_surface_write_to_png(surface_ptr_, png_file.c_str());
         }
 
+        cairo_surface_t * GetSurfacePtr(){
+            return surface_ptr_;
+        }
+
         void Close() {
             is_open_ = false;
             cairo_surface_flush(surface_ptr_);

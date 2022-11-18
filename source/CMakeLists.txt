@@ -13,6 +13,11 @@ else ()
     MESSAGE(STATUS "Found FADE2D")
 endif ()
 
+find_package(Curses REQUIRED)
+include_directories(${CURSES_INCLUDE_DIR})
+find_package( OpenCV REQUIRED )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+
 message("CMAKE_BUILD_TYPE is: ${CMAKE_BUILD_TYPE}")
 
 add_subdirectory(libs) # include trivis and polyanya
@@ -20,6 +25,18 @@ add_subdirectory(libs) # include trivis and polyanya
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
+
+# set(WITH_IPP ON)
+# set(WITH_QT OFF)
+# set(WITH_OPENGL ON)
+# set(FORCE_VTK ON)
+# set(WITH_TBB ON)
+# set(WITH_GDAL ON)
+# set(WITH_XINE ON)
+# set(BUILD_EXAMPLES ON)
+# set(ENABLE_PRECOMPILED_HEADERS OFF)
+# set(WITH_GTK_2_X ON)
+
 add_definitions(-DBOOST_LOG_DYN_LINK)
 find_package(Boost 1.65 REQUIRED COMPONENTS program_options system filesystem log_setup log)
 
@@ -51,6 +68,8 @@ target_compile_definitions(EdgeVis_example PRIVATE ${${PROJECT_NAME}_COMPILE_DEF
 
 target_link_libraries(EdgeVis_example
         cairo
+        ${CURSES_LIBRARIES}
+        ${OpenCV_LIBS}
         TriVis
         PolyAnya
         EdgeVis

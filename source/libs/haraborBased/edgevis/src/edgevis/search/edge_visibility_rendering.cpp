@@ -1,6 +1,40 @@
 #include "edgevis/search/edge_visibility.h"
 
 namespace edgevis {
+    using namespace cv;
+    void EdgeVisibility::visualiseOnline(Point p){
+        auto surface = cgm_drawer.GetSurfacePtr();
+        double relative_x = (p.x - mesh.min_x) / (mesh.max_x - mesh.min_x);
+        double relative_y = (p.y - mesh.min_y) / (mesh.max_y - mesh.min_y);
+        double w = cairo_image_surface_get_width(surface);
+        double h = cairo_image_surface_get_height(surface);
+
+        cv::Mat m(h, w, CV_8UC4);
+        memcpy(m.data, cairo_image_surface_get_data(surface), 4 * w * h);
+
+        if(widthCV > w){
+            std::cout << "Maximum zoom out reached" << std::endl;
+            widthCV = w;
+        }
+        int heightCV = widthCV * int(h/w);
+        cv::Range cols(int(w*relative_x) - widthCV/2, int(w*relative_x) + widthCV/2);
+        cv::Range rows((h - int(h*relative_y)) - heightCV/2,(h - int(h*relative_y)) + heightCV/2);
+        if(rows.start < 0) rows.start = 0;
+        if(rows.end >= w) rows.end = w-1;
+        if(cols.start < 0) cols.start = 0;
+        if(cols.end >= h) cols.end = h-1;
+
+        Mat rez = m(rows, cols);
+        Mat dst;
+        if(w > h)
+            resize(rez, dst, Size(windowWidth, int(windowWidth * h / w)), 0, 0, INTER_CUBIC);
+        if(h > w)
+            resize(rez, dst, Size(int(windowHeight * w / h), windowHeight), 0, 0, INTER_CUBIC);
+
+        imshow("Map", dst);
+        return;
+    }
+
 
     void EdgeVisibility::visualise_vertex_indexes() {
         cgm_drawer.Close();
@@ -10,7 +44,7 @@ namespace edgevis {
         geom::Points<double> vertices;
         int i = 0;
 
-        cgm_drawer = cgm::CairoGeomDrawer(mesh.max_x - mesh.min_x, mesh.max_y - mesh.min_y, 20);
+        cgm_drawer = cgm::CairoGeomDrawer(mesh.max_x - mesh.min_x, mesh.max_y - mesh.min_y, 5);
         for(auto v : this->gmesh.vertices){
             vertices.push_back(v.point);
         }
@@ -165,7 +199,7 @@ namespace edgevis {
         geom::Polygons<double> free;
         geom::Points<double> vertices;
         cgm_drawer.Close();
-        cgm_drawer = cgm::CairoGeomDrawer(mesh.max_x - mesh.min_x, mesh.max_y - mesh.min_y, 20);
+        cgm_drawer = cgm::CairoGeomDrawer(mesh.max_x - mesh.min_x, mesh.max_y - mesh.min_y, 5);
         for(auto v : this->gmesh.vertices){
             vertices.push_back(v.point);
         }
@@ -210,14 +244,15 @@ namespace edgevis {
     }
 
     void
-    EdgeVisibility::visualise_point(Point A, int color){
+    EdgeVisibility::visualise_point(Point A, int color, bool draw) {
         cgm::RGB colors[4] = {cgm::kColorRed, cgm::kColorGreen, cgm::kColorBlue, cgm::kColorBeige};
         geom::Point<double> vertex, vertex2;
 
         vertex.x = A.x - mesh.min_x;
         vertex.y = A.y - mesh.min_y;
         cgm_drawer.DrawPoint(vertex, 0.2, colors[color]);
-        cgm_drawer.SaveToPng("debug_visu.png");
+        if(draw)
+            cgm_drawer.SaveToPng("debug_visu.png");
         return;
 
     }
@@ -269,7 +304,7 @@ namespace edgevis {
     }
 
     void
-    EdgeVisibility::visualise_polygon(std::vector<Point>& p, int color) {
+    EdgeVisibility::visualise_polygon(std::vector<Point> &p, int color, bool draw) {
         cgm::RGB colors[4] = {cgm::kColorRed, cgm::kColorGreen, cgm::kColorBlue, cgm::kColorYellow};
         cgm::RGB light_colors[4] = {cgm::kColorLightPink, cgm::kColorLightGreen, cgm::kColorLightBlue, cgm::kColorLightYellow};
         geom::Polygon<double> polygon;
@@ -287,7 +322,8 @@ namespace edgevis {
         for( int i = 0; i < polygon.size() - 1; i++){
             cgm_drawer.DrawLine(polygon[i], polygon[i+1], 0.1, colors[color], 0.3);
         }
-        cgm_drawer.SaveToPng("debug_visu.png");
+        if(draw)
+            cgm_drawer.SaveToPng("debug_visu.png");
         return;
     }
 }

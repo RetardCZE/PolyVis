@@ -20,6 +20,10 @@
 #include <iomanip>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+#include <iostream>
+#include <ncurses.h>
+#include <opencv2/opencv.hpp>
+
 #ifndef INPUT_MAPS_DIR
 #define INPUT_MAPS_DIR "."
 #endif
@@ -266,6 +270,59 @@ int body(ProgramOptionVariables pov) {
         }
 
         clock.Restart();
+        int input;
+        Point pos = r_points[0];
+        bool end = false;
+        int cEdge;
+        if(debug){
+            std::cout << "Controls: \n"
+                      << " Move point: arrows (up, down, left, right) \n"
+                      << " Zoom in: + \n"
+                      << " Zoom out: -\n"
+                      << " Change edge: Spacebar"
+                      << " Quit: q \n";
+            while(!end){
+                verticesPoly = Evis.find_point_visibility_optim1(pos, debug, edgePolyNodes, cEdge);
+                PolyNodesSum = PolyNodesSum + verticesPoly.size();
+                edgePolyNodesSum = edgePolyNodesSum + edgePolyNodes;
+                if(debug) {
+                    Evis.visualise_point(pos, 0, false);
+                    if(verticesPoly.size() > 0)
+                        Evis.visualise_polygon(verticesPoly, 1, false);
+                    Evis.visualiseOnline(pos);
+                    input = cv::waitKey(30);
+                    switch(input){
+                        case 82:
+                            pos.y = pos.y + 0.2;
+                            break;
+                        case 84:
+                            pos.y = pos.y - 0.2;
+                            break;
+                        case 81:
+                            pos.x = pos.x - 0.2;
+                            break;
+                        case 83:
+                            pos.x = pos.x + 0.2;
+                            break;
+                        case 113:
+                            end = true;
+                            break;
+                        case 43:
+                            Evis.widthCV = Evis.widthCV * 0.9;
+                            break;
+                        case 45:
+                            Evis.widthCV = Evis.widthCV * 1.1;
+                            break;
+                        case 32:
+                            cEdge++;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            return 1;
+        }
         for (auto pos: r_points) {
             /*
             if(debug) {
@@ -276,7 +333,7 @@ int body(ProgramOptionVariables pov) {
             */
 
 
-            verticesPoly = Evis.find_point_visibility_optim1(pos, debug, edgePolyNodes);
+            verticesPoly = Evis.find_point_visibility_optim1(pos, debug, edgePolyNodes, cEdge);
             PolyNodesSum = PolyNodesSum + verticesPoly.size();
             edgePolyNodesSum = edgePolyNodesSum + edgePolyNodes;
             /*
@@ -296,23 +353,7 @@ int body(ProgramOptionVariables pov) {
              *     }
              *     outfile << std::endl;
              * }
-             * if(debug) {
-             *     anyaP.x = pos.x;
-             *     anyaP.y = pos.y;
-             *     verticesPolyAnya = polyvisTriangular.get_visibility_polygon(anyaP);
-             *
-             *     Evis.visualise_point(pos, 0);
-             *     Evis.visualise_polygon(verticesPoly, 2);
-             *     verticesPoly.resize(verticesPolyAnya.size());
-             *     for (int i = 0; i < verticesPolyAnya.size(); i++) {
-             *         verticesPoly[i].x = verticesPolyAnya[i].x;
-             *         verticesPoly[i].y = verticesPolyAnya[i].y;
-             *     }
-             *     Evis.visualise_polygon(verticesPoly, 1);
-             *     getchar();
-             * }
              */
-
         }
         time = clock.TimeInSeconds();
         std::cout << "EdgeVis v1: " << "\n";
@@ -442,16 +483,16 @@ int body(ProgramOptionVariables pov) {
         expansionsSum = expansionsSum + polyvisPolygonal.expansions;
         maxDepthSum = maxDepthSum + polyvisPolygonal.max_depth;
 
-        if(debug) {
+        if(false) {
             Evis2.reset_visu();
-            Evis2.visualise_point({pos.x, pos.y}, 0);
+            Evis2.visualise_point({pos.x, pos.y}, 0, true);
 
             verticesPoly.resize(verticesPolyAnya.size());
             for (int i = 0; i < verticesPolyAnya.size(); i++) {
                 verticesPoly[i].x = verticesPolyAnya[i].x;
                 verticesPoly[i].y = verticesPolyAnya[i].y;
             }
-            Evis2.visualise_polygon(verticesPoly, 1);
+            Evis2.visualise_polygon(verticesPoly, 1, true);
             getchar();
         }
         //if(heatmap){
