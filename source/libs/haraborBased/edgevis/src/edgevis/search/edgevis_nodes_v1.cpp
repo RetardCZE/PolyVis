@@ -129,11 +129,10 @@ namespace edgevis {
         if (vec->size() > 0) {
             for (auto sn: *vec) {
                 this->compute_optimnodesv1(sn, on1, on2);
-
-                if (on1 != v.back()) {
+                if (!(on1.P == v.back().P)) {
                     v.push_back(on1);
                 }
-                if (on2 != v.back()) {
+                if (!(on2.P == v.back().P)) {
                     v.push_back(on2);
                 }
             }
