@@ -44,8 +44,11 @@ namespace edgevis{
         const Mesh& mesh_reference();
         void precompute_edges_optimnodesV1();
         void precompute_edges_optimnodesV2();
+        void precompute_edges_optimnodesV3();
+
         std::vector<Point> find_point_visibility_optim1(Point p, bool debug, double &steps, int &debugEdge);
         std::vector<Point> find_point_visibility_optim2(Point p, bool debug, double &steps);
+        std::vector<Point> find_point_visibility_optim3(Point p, bool debug, double &steps, int &debugEdge);
         Point evaluate_intersection(SearchPoint& sp);
 
         void set_visual_mesh(const parsers::GeomMesh &gmesh);
@@ -58,10 +61,9 @@ namespace edgevis{
                                std::string name);
         void visualise_polygon(std::vector<Point> &p, int color, bool draw);
         void reset_visu();
-        int widthCV = 1200;
+        int widthCV = 600;
 
     private:
-        std::vector<OptimNodeV1> compute_side_optimnodesV1(Edge &edge, bool right=true);
         void expand(SearchNode &node, std::vector<SearchNode> &visibility, bool side);
         void get_arbitrary_edge_init_nodes(Edge edge, int &rightCount, int &leftCount,
                                            edgevis::SearchNode *initLeftNodes,
@@ -70,8 +72,14 @@ namespace edgevis{
         int find_visible(SearchNode &node, std::vector<int> &sorted_vertices, int *right_visible, int *left_visible);
         int expand_forward(SearchNode &node, SearchNode *newNodes);
         void back_propagation(SearchNode &node);
+
+        std::vector<OptimNodeV1> compute_side_optimnodesV1(Edge &edge, bool right=true);
         void compute_optimnodesv1(SearchNode &node, OptimNodeV1 &o1, OptimNodeV1 &o2);
         bool check_visibility_on2(Point &a, OptimNodeV2 &on, Edge &e, bool right);
+
+        std::vector<OptimNodeV3> compute_side_optimnodesV3(Edge &edge, bool right=true);
+        void optimnodesV3_compute_roots_positions(std::vector<OptimNodeV3> &list);
+        bool optimnodeV3_is_further(OptimNodeV3 &base, OptimNodeV3 &compared, bool right);
 
         std::vector<Edge*> get_init_edges(PointLocation pl);
         Edge current_edge;
@@ -79,6 +87,7 @@ namespace edgevis{
         bool searchnodes_precomputed = false;
         bool optimnodes1_precomputed = false;
         bool optimnodes2_precomputed = false;
+        bool optimnodes3_precomputed = false;
         int save_cntr = 0;
 
         int windowWidth = 1400;

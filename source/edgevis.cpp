@@ -163,7 +163,7 @@ int body(ProgramOptionVariables pov) {
 
     std::mt19937 rng(pov.random_seed); // random generator
 
-    std::vector<edgevis::Point> verticesPoly;
+    std::vector<edgevis::Point> verticesPoly, verticesPoly2;
     std::vector<edgevis::Point> r_points;
     std::vector<polyanya::Point> p_points;
 
@@ -248,6 +248,13 @@ int body(ProgramOptionVariables pov) {
         std::cout << "Preprocessing time for OptimNodesV2 was " <<
                   time << " seconds.\n";
 
+        clock.Restart();
+        Evis.precompute_edges_optimnodesV3();
+        time = clock.TimeInSeconds();
+        prepOptim1Time = time;
+        std::cout << "Preprocessing time for OptimNodesV3 was " <<
+                  time << " seconds.\n";
+
 
 
         std::ofstream outfile;
@@ -273,7 +280,7 @@ int body(ProgramOptionVariables pov) {
         int input;
         Point pos = r_points[0];
         bool end = false;
-        int cEdge;
+        int cEdge = 0;
         if(debug){
             std::cout << "Controls: \n"
                       << " Move point: arrows (up, down, left, right) \n"
@@ -285,12 +292,18 @@ int body(ProgramOptionVariables pov) {
                 verticesPoly = Evis.find_point_visibility_optim1(pos, debug, edgePolyNodes, cEdge);
                 PolyNodesSum = PolyNodesSum + verticesPoly.size();
                 edgePolyNodesSum = edgePolyNodesSum + edgePolyNodes;
+
                 if(debug) {
                     Evis.visualise_point(pos, 0, false);
                     if(verticesPoly.size() > 0)
                         Evis.visualise_polygon(verticesPoly, 1, false);
+                    verticesPoly2 = Evis.find_point_visibility_optim3(pos, debug, edgePolyNodes, cEdge);
+                    if(verticesPoly2.size() > 0)
+                        Evis.visualise_polygon(verticesPoly2, 2, false);
+
                     Evis.visualiseOnline(pos);
-                    input = cv::waitKey(30);
+                    input = cv::waitKey(0);
+
                     switch(input){
                         case 82:
                             pos.y = pos.y + 0.2;
@@ -404,6 +417,44 @@ int body(ProgramOptionVariables pov) {
                     edgePolyNodesSum / pov.n_random_samples << " " <<
                     PolyNodesSum / pov.n_random_samples << "\n";
         }
+
+        PolyNodesSum = 0;
+        edgePolyNodesSum = 0;
+        times.clear();
+        clock.Restart();
+        int ctr = 0;
+        for (auto pos: r_points) {
+            /*
+            if(ctr == -1){ debug = true; Evis.reset_visu();
+                cEdge++;
+                verticesPoly = Evis.find_point_visibility_optim1(pos, debug, edgePolyNodes, cEdge);
+                Evis.visualise_point(pos,0,true);
+            Evis.visualise_polygon(verticesPoly,2,true);}
+             */
+            verticesPoly = Evis.find_point_visibility_optim3(pos, debug, edgePolyNodes, cEdge);
+            PolyNodesSum = PolyNodesSum + verticesPoly.size();
+            edgePolyNodesSum = edgePolyNodesSum + edgePolyNodes;
+            ctr++;
+        }
+        time = clock.TimeInSeconds();
+        std::cout << "EdgeVis v3: " << "\n";
+        std::cout << "Total computation time: " << time << " seconds.\n";
+        std::cout << "Mean computation time: " << time / pov.n_random_samples << " seconds/point.\n";
+        std::cout << "Mean number of nodes that were checked: " << edgePolyNodesSum / pov.n_random_samples << std::endl;
+        std::cout << "Mean number of resulting visibility polygon nodes: " << PolyNodesSum / pov.n_random_samples
+                  << std::endl;
+        if (!pov.machine) {
+            results << "EdgeVis:";
+            results << "\nTotal computation time:" << time <<
+                    "\nAverage computation time per point:" << time / pov.n_random_samples << std::endl;
+        } else {
+            results << time << " " <<
+                    prepTime << " " <<
+                    prepOptim1Time << " " <<
+                    edgePolyNodesSum / pov.n_random_samples << " " <<
+                    PolyNodesSum / pov.n_random_samples << "\n";
+        }
+
 
         times.clear();
         clock.Restart();

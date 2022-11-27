@@ -298,7 +298,7 @@ namespace edgevis {
 
         vertex.x = A.x - mesh.min_x;
         vertex.y = A.y - mesh.min_y;
-        cgm_drawer.DrawPoint(vertex, 0.2, colors[color], 0.5, str);
+        cgm_drawer.DrawPoint(vertex, 0.1, colors[color], 0.1, str);
         return;
 
     }

@@ -15,6 +15,7 @@ struct Edge
     std::vector<SearchNode> right_nodes, left_nodes;
     std::vector<OptimNodeV1> rightOptimNodesV1, leftOptimNodesV1;
     std::vector<OptimNodeV2> rightOptimNodesV2, leftOptimNodesV2;
+    std::vector<OptimNodeV3> rightOptimNodesV3, leftOptimNodesV3;
     bool operator==(Edge& A) const {
         if (parent == A.parent && child == A.child) {
             return true;
