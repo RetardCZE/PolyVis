@@ -61,7 +61,7 @@ namespace edgevis {
                 temp.leftVertex = e->parent;
                 temp.rightVertex = e->child;
                 temp.nextPolygon = e->leftPoly;
-            };
+            }
             initNodes[num++] = temp;
         }
         return num;
@@ -409,20 +409,9 @@ namespace edgevis {
         for(int i = 0; i < num; i++){
             expand_TEA(nodes[i]);
         }
-
-        std::vector<Point> result;
-        result.resize(vis.size());
-        Point r, l;
-        int i = 0;
-        result.push_back(this->evaluate_intersection(vis[i++].transitionR));
-        result.push_back(this->evaluate_intersection(vis[i++].transitionL));
-        for( ; i < visSize; i++){
-            r = this->evaluate_intersection(vis[i].transitionR);
-            l = this->evaluate_intersection(vis[i].transitionL);
-            if(r != result.back()) result.push_back(r);
-            if(l != result.back()) result.push_back(l);
-        }
-        visSize = 0;
+        std::vector<Point> result(vis);
+        vis.clear();
+        free_points.clear();
         delete[] nodes;
         return result;
     }
@@ -430,42 +419,33 @@ namespace edgevis {
     std::vector<Point>
     Mesh:: find_point_visibility_PEA(Point p, bool debug) {
         int num;
-        std::vector<SearchNode> vis;
+        visSize = 0;
+        vis.clear();
         SearchPoint tmp;
         SearchNode* nodes = new edgevis::SearchNode[this->max_poly_sides + 2];
         num = get_point_init_nodes(p, nodes);
-
         for(int i = 0; i < num; i++){
-            expand_PEA(nodes[i], vis, 0);
+            expand_PEA(nodes[i]);
         }
-
-        std::vector<Point> result;
-        Point r, l;
-        int i = 0;
-        int S = vis.size();
-        result.push_back(this->evaluate_intersection(vis[i++].transitionR));
-        result.push_back(this->evaluate_intersection(vis[i++].transitionL));
-        for(i ; i < S; i++){
-            r = this->evaluate_intersection(vis[i].transitionR);
-            l = this->evaluate_intersection(vis[i].transitionL);
-            if(r != result.back()) result.push_back(r);
-            if(l != result.back()) result.push_back(l);
-        }
+        std::vector<Point> result(vis);
         vis.clear();
         free_points.clear();
-        delete nodes;
+        delete[] nodes;
         return result;
     }
 
     void Mesh::expand_TEA(SearchNode &n) {
         if(n.nextPolygon == -1){
-            vis.push_back(n);
+            Point r, l;
+            r = this->evaluate_intersection(n.transitionR);
+            l = this->evaluate_intersection(n.transitionL);
+            if(r != vis.back()) vis.push_back(r);
+            if(l != vis.back()) vis.push_back(l);
             return;
         }
         int num;
-        SearchNode* nodes = new edgevis::SearchNode[this->max_poly_sides + 2];
+        SearchNode* nodes = new edgevis::SearchNode[2];
         num = this->expand_TEA_once(n, nodes);
-        assert(num != 3);
 
         for(int i = 0; i < num; i++){
             expand_TEA(nodes[i]);
@@ -473,9 +453,13 @@ namespace edgevis {
         delete nodes;
         return;
     }
-    void Mesh::expand_PEA(SearchNode& n, std::vector<SearchNode> &visibility, int level){
+    void Mesh::expand_PEA(SearchNode &n) {
         if(n.nextPolygon == -1){
-            visibility.push_back(n);
+            Point r, l;
+            r = this->evaluate_intersection(n.transitionR);
+            l = this->evaluate_intersection(n.transitionL);
+            if(r != vis.back()) vis.push_back(r);
+            if(l != vis.back()) vis.push_back(l);
             return;
         }
         int num;
@@ -485,15 +469,14 @@ namespace edgevis {
         }else{
             num = this->expand_PEA_once(n, nodes);
         }
-
         for(int i = 0; i < num; i++){
-            expand_PEA(nodes[i], visibility, level + 1);
+            expand_PEA(nodes[i]);
         }
         delete nodes;
         return;
     }
-    int Mesh::expand_TEA_once(SearchNode& node, SearchNode *newNodes){
-        SearchNode temp = init_temp_node(node);
+    int Mesh::expand_TEA_once(SearchNode &node, SearchNode *newNodes){
+        init_temp_node(node);
         Point parent, right_child, left_child;
         int right_child_int, left_child_int;
         right_child_int = node.transitionR.isIntersection ? node.transitionR.i.b : node.transitionR.p;
@@ -656,7 +639,7 @@ namespace edgevis {
 
     int Mesh::expand_PEA_once(SearchNode& node, SearchNode *newNodes){
         // Temporary searchnode object for creating new nodes
-        SearchNode temp = init_temp_node(node);
+        init_temp_node(node);
         int right_child, left_child;
         Point parent;
 
@@ -665,6 +648,8 @@ namespace edgevis {
         parent = this->free_points[-node.rootR.p - 1];
 
         const Polygon &expander = this->mesh_polygons[node.nextPolygon];
+        const std::vector<int> &V = expander.vertices;
+        const std::vector<int> &P = expander.polygons;
         int S = expander.vertices.size();
 
         int offset;
@@ -674,72 +659,69 @@ namespace edgevis {
         uint8_t rCheck = 0;
         uint8_t lCheck = 0;
         // last visible point when going ccw -> left point or cw -> right point
-        int right_visible, left_visible;
-        int visible = find_visible(node, &right_visible, &left_visible, S);
+        int right_visible, left_visible, visible;
+        bool right_collinear, left_collinear;
+
+        visible = find_visible_binary_tree(node, offset, &right_visible, &left_visible, &right_collinear, &left_collinear);
 
         SearchPoint right_intersection, left_intersection;
         int count = 0;
-        if(right_visible == 0){
-            right_intersection.p = sortedV[right_visible];
+        if(right_visible == offset){
+            right_intersection.p = V[right_visible];
             right_intersection.isIntersection = false;
-        }else if (Orient(parent,
-                   this->mesh_vertices[right_child].p,
-                   this->mesh_vertices[sortedV[right_visible]].p, useRobustOrientatation)
-            ==
-            robustOrientation::kCollinear) {
-            right_intersection.p = sortedV[right_visible];
+        }else if (right_collinear) {
+            right_intersection.p = V[right_visible];
             right_intersection.isIntersection = false;
         } else {
             right_intersection.isIntersection = true;
             right_intersection.i.a = node.rootR.p;
             right_intersection.i.b = right_child;
-            right_intersection.i.c = sortedV[right_visible];
-            right_intersection.i.d = sortedV[right_visible-1];
+            right_intersection.i.c = V[right_visible];
+            right_intersection.i.d = V[right_visible-1];
         }
 
-        if(left_visible == S-1){
-            left_intersection.p = sortedV[left_visible];
+        if(left_visible == (offset+S-1) % S){
+            left_intersection.p = V[left_visible];
             left_intersection.isIntersection = false;
-        }else if (Orient(parent,
-                   this->mesh_vertices[left_child].p,
-                   this->mesh_vertices[sortedV[left_visible]].p, useRobustOrientatation)
-            ==
-            robustOrientation::kCollinear) {
-            left_intersection.p = sortedV[left_visible];
+        }else if (left_collinear) {
+            left_intersection.p = V[left_visible];
             left_intersection.isIntersection = false;
         } else {
             left_intersection.isIntersection = true;
             left_intersection.i.a = node.rootR.p;
             left_intersection.i.b = left_child;
-            left_intersection.i.c = sortedV[left_visible];
-            left_intersection.i.d = sortedV[left_visible+1];
+            left_intersection.i.c = V[left_visible];
+            left_intersection.i.d = V[(left_visible+1)% S];
         }
 
+
         i = right_visible;
+        int newI;
         if(right_intersection.isIntersection) {
-            i--;
+            i = i == 0 ? S - 1 : i - 1;
             temp.transitionR = right_intersection;
         }else{
             temp.transitionR = right_intersection;
         }
 
-        while(i < left_visible){
-            temp.transitionL.p = sortedV[i + 1];
+        while(i != left_visible){
+            newI = (i + 1) % S;
+            temp.transitionL.p = V[newI];
             temp.transitionL.isIntersection = false;
-            temp.nextPolygon = sortedP[i + 1];
-            temp.leftVertex = sortedV[i + 1];
-            temp.rightVertex = sortedV[i];
+            temp.nextPolygon = P[newI];
+            temp.leftVertex = V[newI];
+            temp.rightVertex = V[i];
             newNodes[count++] = temp;
-            i++;
-            temp.transitionR.p = sortedV[i];
+            i = newI;
+            temp.transitionR.p = V[i];
             temp.transitionR.isIntersection = false;
         }
-
         if(left_intersection.isIntersection) {
+            newI = (i + 1) % S;
             temp.transitionL = left_intersection;
-            temp.nextPolygon = sortedP[i + 1];
-            temp.leftVertex = sortedV[i + 1];
-            temp.rightVertex = sortedV[i];
+            temp.nextPolygon = P[newI];
+            temp.leftVertex = V[newI];
+            temp.rightVertex = V[i];
             newNodes[count++] = temp;
         }
         return count;

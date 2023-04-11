@@ -270,13 +270,18 @@ int body(ProgramOptionVariables pov) {
         EdgeVis3.visualise_point(points.back(), 0, true);
     }
 
-    if(false)
+    if(true)
     {
         edgevis::Mesh EdgeVis2(geomMeshPoly);
         EdgeVis2.useRobustOrientatation = pov.robust;
         clock.Restart();
         for (auto pos: points) {
+            //EdgeVis2.reset_visu();
             verticesPoly = EdgeVis2.find_point_visibility_PEA(pos, debug);
+
+            //EdgeVis2.visualise_polygon(verticesPoly, 2, false);
+            //EdgeVis2.visualise_point(pos, 0, true);
+            //getchar();
         }
 
         time = clock.TimeInSeconds();

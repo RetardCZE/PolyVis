@@ -16,7 +16,7 @@ namespace edgevis {
         this->reset_visu();
         sortedV = new int[this->max_poly_sides + 2];
         sortedP = new int[this->max_poly_sides + 2];
-        vis.resize(1000);
+        vis.reserve(1000);
     }
 
     Mesh::~Mesh(){

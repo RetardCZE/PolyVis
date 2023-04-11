@@ -45,7 +45,7 @@ namespace edgevis {
         geom::Polygons<double> free;
         geom::Points<double> vertices;
         cgm_drawer.Close();
-        cgm_drawer = cgm::CairoGeomDrawer(this->max_x - this->min_x, this->max_y - this->min_y, 20);
+        cgm_drawer = cgm::CairoGeomDrawer(this->max_x - this->min_x, this->max_y - this->min_y, 10);
         for(auto v : this->gmesh.vertices){
             vertices.push_back(v.point);
         }

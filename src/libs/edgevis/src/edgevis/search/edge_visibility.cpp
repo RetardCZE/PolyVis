@@ -40,8 +40,7 @@ namespace edgevis{
     Mesh::expand_forward(SearchNode &node, SearchNode *newNodes) {
         // Temporary searchnode object for creating new nodes
 
-        SearchNode temp = init_temp_node(node);
-
+        init_temp_node(node);
         // right visibility border
 
         int right_parent, right_child, left_parent, left_child;

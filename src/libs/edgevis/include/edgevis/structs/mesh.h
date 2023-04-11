@@ -200,7 +200,8 @@ namespace edgevis {
         int* sortedV;
         int* sortedP;
         int visSize = 0;
-        std::vector<SearchNode> vis;
+        SearchNode temp;
+        std::vector<Point> vis;
 
         // 1 for PEA and TEA, 2 for edges (only arbitrary ones)
         std::vector<Point> free_points;
@@ -210,6 +211,7 @@ namespace edgevis {
         bool optimnodes2_precomputed = false;
         bool optimnodes3_precomputed = false;
 
+        bool debug = false;
         Edge current_edge;
         std::vector<SearchNode*> deleteQueue;
 
@@ -250,8 +252,8 @@ namespace edgevis {
          */
         std::vector<Edge*> get_init_edges(PointLocation pl);
         void expand_TEA(SearchNode &n);
-        void expand_PEA(SearchNode& n, std::vector<SearchNode> &visibility, int level);
-        int expand_TEA_once(SearchNode& node, SearchNode *newNodes);
+        void expand_PEA(SearchNode &n);
+        int expand_TEA_once(SearchNode &node, SearchNode *newNodes);
         int expand_PEA_once(SearchNode& node, SearchNode *newNodes);
         /********************************************/
 
@@ -259,6 +261,9 @@ namespace edgevis {
          * edgevis_utils.cpp
          */
         int find_visible(SearchNode &node, int *right_visible, int *left_visible, int vCount);
+        int find_visible_binary_tree(SearchNode &node, const int offset, int *right_visible, int *left_visible,
+                                     bool *right_collinear, bool *left_collinear);
+        void init_temp_node(SearchNode &node);
         /********************************************/
     public:
         int T, P;
