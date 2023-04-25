@@ -463,7 +463,7 @@ namespace edgevis {
             return;
         }
         int num;
-        SearchNode* nodes = new edgevis::SearchNode[this->max_poly_sides + 2];
+        SearchNode* nodes = new edgevis::SearchNode[this->max_poly_sides - 1];
         if(mesh_polygons[n.nextPolygon].vertices.size() == 3){
             num = this->expand_TEA_once(n, nodes);
         }else{
@@ -677,7 +677,7 @@ namespace edgevis {
             right_intersection.i.a = node.rootR.p;
             right_intersection.i.b = right_child;
             right_intersection.i.c = V[right_visible];
-            right_intersection.i.d = V[right_visible-1];
+            right_intersection.i.d = V[right_visible > 0 ? right_visible-1 : S-1];
         }
 
         if(left_visible == (offset+S-1) % S){

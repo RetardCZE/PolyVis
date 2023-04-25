@@ -23,9 +23,6 @@ namespace edgevis
     int
     Mesh::find_visible_binary_tree(SearchNode &node, const int offset, int *right_visible, int *left_visible,
                                    bool *right_collinear, bool *left_collinear) {
-        /*
-         * For both PEA and PEA-E - common linear search -> optimize to binary tree
-         */
         const Polygon &expander = this->mesh_polygons[node.nextPolygon];
         const std::vector<int> &V = expander.vertices;
         const int S = expander.vertices.size();

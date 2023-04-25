@@ -7,10 +7,11 @@
 #include "polyanya/search/expansion.h"
 #include "geomMesh/parsers/map_parser.h"
 
-#include "geom/geom.h"
-#include "geom/colors.h"
+#include "geomMesh/parsers/utils.h"
 #include "geom/utils.h"
-#include "geom/cairo_geom_drawer.h"
+
+#include "draw/colors.h"
+#include "draw/cairo_geom_drawer.h"
 
 #include <string>
 #include <iostream>

@@ -1,5 +1,6 @@
 // === THIS PROJECT INCLUDES ===
 #include "edgevis/structs/mesh.h"
+#include "polyanya/search/polyviz.h"
 
 #include "geomMesh/parsers/map_parser.h"
 
@@ -251,13 +252,18 @@ int body(ProgramOptionVariables pov) {
         std::cout << std::endl;
     }
 
-    if(true)
+    if(false)
     {
         edgevis::Mesh EdgeVis3(geomMesh);
         EdgeVis3.useRobustOrientatation = pov.robust;
         clock.Restart();
         for (auto pos: points) {
+            //EdgeVis3.reset_visu();
             verticesPoly = EdgeVis3.find_point_visibility_TEA(pos, debug);
+
+            //EdgeVis3.visualise_polygon(verticesPoly, 2, false);
+            //EdgeVis3.visualise_point(pos, 0, true);
+            //getchar();
         }
 
         time = clock.TimeInSeconds();
@@ -292,6 +298,51 @@ int body(ProgramOptionVariables pov) {
         EdgeVis2.reset_visu();
         EdgeVis2.visualise_polygon(verticesPoly, 2, true);
         EdgeVis2.visualise_point(points.back(), 0, true);
+    }
+
+    if(false)
+    {
+
+        polyanya::PolyVis polyvis(geomMesh);
+        std::vector<polyanya::Point> pointsP = polyvis.generate_points(pov.n_random_samples);
+        pointsP.clear();
+        for(auto pos : points){
+            pointsP.push_back({pos.x, pos.y});
+        }
+        std::vector<polyanya::Point> results;
+        clock.Restart();
+        for (auto pos: pointsP) {
+            results = polyvis.get_visibility_polygon(pos);
+        }
+
+        time = clock.TimeInSeconds();
+        std::cout << "TEA original: " << "\n";
+        std::cout << "Total computation time: " << time << " seconds.\n";
+        std::cout << "Mean computation time: " << time / pov.n_random_samples << " seconds/point.\n";
+        std::cout << std::endl;
+    }
+
+
+    if(true)
+    {
+
+        polyanya::PolyVis polyvis(geomMeshPoly);
+        std::vector<polyanya::Point> pointsP = polyvis.generate_points(pov.n_random_samples);
+        pointsP.clear();
+        for(auto pos : points){
+            pointsP.push_back({pos.x, pos.y});
+        }
+        std::vector<polyanya::Point> results;
+        clock.Restart();
+        for (auto pos: pointsP) {
+            results = polyvis.get_visibility_polygon(pos);
+        }
+
+        time = clock.TimeInSeconds();
+        std::cout << "PEA original: " << "\n";
+        std::cout << "Total computation time: " << time << " seconds.\n";
+        std::cout << "Mean computation time: " << time / pov.n_random_samples << " seconds/point.\n";
+        std::cout << std::endl;
     }
 
     return 0;

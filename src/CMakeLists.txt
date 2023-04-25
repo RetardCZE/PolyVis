@@ -59,6 +59,7 @@ target_link_libraries(EdgeVis_example
         cairo
         ${OpenCV_LIBS}
         EdgeVis
+        PolyAnya
         GeomMesh
         ${FADE2D_LIBRARY}
         ${Boost_LIBRARIES})
