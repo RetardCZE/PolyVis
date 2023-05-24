@@ -12,7 +12,6 @@ namespace edgevis{
         SearchNode* nodes = new edgevis::SearchNode[this->max_poly_sides + 2];
         deleteQueue.push_back(nodes);
         num = this->expand_forward(node, nodes);
-
         for(int i = 0; i < num; i++){
             this->back_propagation(nodes[i]);
             expand(nodes[i], visibility, side, level + 1, draw);
@@ -38,11 +37,175 @@ namespace edgevis{
 
     int
     Mesh::expand_forward(SearchNode &node, SearchNode *newNodes) {
-        // Temporary searchnode object for creating new nodes
+        init_temp_node(node);
+        Point right_parent, left_parent, right_child, left_child;
+        int right_parent_int, left_parent_int, right_child_int, left_child_int;
+        right_child_int = node.transitionR.isIntersection ? node.transitionR.i.b : node.transitionR.p;
+        left_child_int = node.transitionL.isIntersection ? node.transitionL.i.b : node.transitionL.p;
+        right_child = this->mesh_vertices[right_child_int].p;
+        left_child = this->mesh_vertices[left_child_int].p;
 
+        right_parent_int = node.rootL.isIntersection ? node.rootL.i.a : node.rootL.p;
+        left_parent_int = node.rootR.isIntersection ? node.rootR.i.a : node.rootR.p;
+        right_parent = this->mesh_vertices[right_parent_int].p;
+        left_parent = this->mesh_vertices[left_parent_int].p;
+
+        const Polygon &expander = this->mesh_polygons[node.nextPolygon];
+        int S = expander.vertices.size();
+        assert(S == 3);
+
+        int a, b, c, A, B, C, num;
+        num = 0;
+
+        if (expander.vertices[0] == node.rightVertex)
+        {
+            // t1 = V[0], t2 = V[1], t3 = V[2]
+            b = expander.vertices[0];
+            c = expander.vertices[1];
+            a = expander.vertices[2];
+
+            B = expander.polygons[1];
+            A = expander.polygons[0];
+            C = expander.polygons[2];
+        }
+        else if (expander.vertices[0] == node.leftVertex)
+        {
+            b = expander.vertices[1];
+            c = expander.vertices[2];
+            a = expander.vertices[0];
+
+            B = expander.polygons[2];
+            A = expander.polygons[1];
+            C = expander.polygons[0];
+        }
+        else
+        {
+            b = expander.vertices[2];
+            c = expander.vertices[0];
+            a = expander.vertices[1];
+
+            B = expander.polygons[0];
+            A = expander.polygons[2];
+            C = expander.polygons[1];
+        }
+
+        /*      c
+         *  C /   \  B
+         *   /     \
+         *  a---^---b
+         *      A
+         */
+        SearchPoint rightIntersection, leftIntersection;
+
+        robustOrientation rOri = Orient(right_parent, right_child, mesh_vertices[c].p, useRobustOrientatation);
+        if(rOri == robustOrientation::kLeftTurn) {
+            robustOrientation lOri = Orient(left_parent, left_child, mesh_vertices[c].p, useRobustOrientatation);
+            if (lOri == robustOrientation::kRightTurn) {
+                // In between
+                if (node.transitionR.isIntersection) {
+                    rightIntersection.isIntersection = true;
+                    rightIntersection.i.a = right_parent_int;
+                    rightIntersection.i.b = right_child_int;
+                    rightIntersection.i.c = b;
+                    rightIntersection.i.d = c;
+                } else {
+                    rightIntersection.isIntersection = false;
+                    rightIntersection.p = b;
+                }
+                if (node.transitionL.isIntersection) {
+                    leftIntersection.isIntersection = true;
+                    leftIntersection.i.a = left_parent_int;
+                    leftIntersection.i.b = left_child_int;
+                    leftIntersection.i.c = c;
+                    leftIntersection.i.d = a;
+                } else {
+                    leftIntersection.isIntersection = false;
+                    leftIntersection.p = a;
+                }
+                temp.transitionR = rightIntersection;
+                temp.transitionL.isIntersection = false;
+                temp.transitionL.p = c;
+                temp.nextPolygon = B;
+                temp.leftVertex = c;
+                temp.rightVertex = b;
+                newNodes[num++] = temp;
+
+                temp.transitionL = leftIntersection;
+                temp.transitionR.isIntersection = false;
+                temp.transitionR.p = c;
+                temp.nextPolygon = C;
+                temp.leftVertex = a;
+                temp.rightVertex = c;
+                newNodes[num++] = temp;
+            } else {
+                // Left
+                if (node.transitionR.isIntersection) {
+                    rightIntersection.isIntersection = true;
+                    rightIntersection.i.a = right_parent_int;
+                    rightIntersection.i.b = right_child_int;
+                    rightIntersection.i.c = b;
+                    rightIntersection.i.d = c;
+                } else {
+                    rightIntersection.isIntersection = false;
+                    rightIntersection.p = b;
+                }
+                if (lOri == robustOrientation::kCollinear) {
+                    leftIntersection.isIntersection = false;
+                    leftIntersection.p = c;
+                } else {
+                    leftIntersection.isIntersection = true;
+                    leftIntersection.i.a = left_parent_int;
+                    leftIntersection.i.b = left_child_int;
+                    leftIntersection.i.c = b;
+                    leftIntersection.i.d = c;
+                }
+                temp.transitionR = rightIntersection;
+                temp.transitionL = leftIntersection;
+                temp.nextPolygon = B;
+                temp.leftVertex = c;
+                temp.rightVertex = b;
+                newNodes[num++] = temp;
+            }
+        } else {
+            // Right
+            if (rOri == robustOrientation::kCollinear) {
+                rightIntersection.isIntersection = false;
+                rightIntersection.p = c;
+            } else {
+                rightIntersection.isIntersection = true;
+                rightIntersection.i.a = right_parent_int;
+                rightIntersection.i.b = right_child_int;
+                rightIntersection.i.c = c;
+                rightIntersection.i.d = a;
+            }
+            if (node.transitionL.isIntersection) {
+                leftIntersection.isIntersection = true;
+                leftIntersection.i.a = left_parent_int;
+                leftIntersection.i.b = left_child_int;
+                leftIntersection.i.c = c;
+                leftIntersection.i.d = a;
+            } else {
+                leftIntersection.isIntersection = false;
+                leftIntersection.p = a;
+            }
+
+            temp.transitionR = rightIntersection;
+            temp.transitionL = leftIntersection;
+            temp.nextPolygon = C;
+            temp.leftVertex = a;
+            temp.rightVertex = c;
+            newNodes[num++] = temp;
+        }
+
+        return num;
+    }
+
+    /*{
+        // Temporary searchnode object for creating new nodes
+        //std::cout << "[expand_forward] start" << std::endl;
         init_temp_node(node);
         // right visibility border
-
+        //std::cout << "[expand_forward] after init" << std::endl;
         int right_parent, right_child, left_parent, left_child;
         right_child = node.transitionR.isIntersection ? node.transitionR.i.b : node.transitionR.p;
         right_parent = node.rootL.isIntersection ? node.rootL.i.a : node.rootL.p;
@@ -51,48 +214,46 @@ namespace edgevis{
         left_parent = node.rootR.isIntersection ? node.rootR.i.a : node.rootR.p;
 
         const Polygon &expander = this->mesh_polygons[node.nextPolygon];
+        const std::vector<int> &V = expander.vertices;
+        const std::vector<int> &P = expander.polygons;
         int S = expander.vertices.size();
 
         int offset;
-        offset = normalise(expander, node.rightVertex, sortedV, sortedP);
+        //std::cout << "[expand_forward] pre normalise" << std::endl;
+        offset = normalise(expander, node.rightVertex);
 
         int i;
+        //std::cout << "[expand_forward] after normalise" << std::endl;
         uint8_t rCheck = 0;
         uint8_t lCheck = 0;
         // last visible point when going ccw -> left point or cw -> right point
         int right_visible, left_visible;
-        int visible = find_visible(node, &right_visible, &left_visible, S);
-        // std::cout << left_visible << " | " << right_visible << std::endl;
+        bool right_collinear, left_collinear;
+        int visible = find_visible_binary_tree(node, offset, &right_visible, &left_visible, &right_collinear, &left_collinear);
+
         SearchPoint right_intersection, left_intersection;
         int count = 0;
 
-        if (Orient(this->mesh_vertices[right_parent].p,
-                   this->mesh_vertices[right_child].p,
-                   this->mesh_vertices[sortedV[right_visible]].p, useRobustOrientatation)
-            ==
-            robustOrientation::kCollinear) {
-            right_intersection.p = sortedV[right_visible];
+        if (right_visible == offset or right_collinear) {
+            right_intersection.p = V[right_visible];
             right_intersection.isIntersection = false;
         } else {
             right_intersection.isIntersection = true;
             right_intersection.i.a = right_parent;
             right_intersection.i.b = right_child;
-            right_intersection.i.c = sortedV[right_visible];
-            right_intersection.i.d = sortedV[right_visible-1];
+            right_intersection.i.c = V[right_visible];
+            right_intersection.i.d = V[right_visible > 0 ? right_visible-1 : S-1];
         }
 
-        if (Orient(this->mesh_vertices[left_parent].p,
-                   this->mesh_vertices[left_child].p,
-                   this->mesh_vertices[sortedV[left_visible]].p, useRobustOrientatation)
-                                ==
-            robustOrientation::kCollinear) {
+        if (left_visible == (offset+S-1) % S or left_collinear) {
+            left_intersection.p = V[left_visible];
             left_intersection.isIntersection = false;
         } else {
             left_intersection.isIntersection = true;
             left_intersection.i.a = left_parent;
             left_intersection.i.b = left_child;
-            left_intersection.i.c = sortedV[left_visible];
-            left_intersection.i.d = sortedV[left_visible+1];
+            left_intersection.i.c = V[left_visible];
+            left_intersection.i.d = V[(left_visible+1)% S];
         }
 
 
@@ -104,26 +265,26 @@ namespace edgevis{
             temp.transitionR = right_intersection;
         }
         while(i < left_visible){
-            temp.transitionL.p = sortedV[i + 1];
+            temp.transitionL.p = V[(i + 1 + offset) % S];
             temp.transitionL.isIntersection = false;
-            temp.nextPolygon = sortedP[i + 1];
-            temp.leftVertex = sortedV[i + 1];
-            temp.rightVertex = sortedV[i];
+            temp.nextPolygon = P[(i + 1 + offset) % S];
+            temp.leftVertex = V[(i + 1 + offset) % S];
+            temp.rightVertex = V[(i + offset) % S];
             newNodes[count++] = temp;
             i++;
-            temp.transitionR.p = sortedV[i];
+            temp.transitionR.p = V[(i + offset) % S];
             temp.transitionR.isIntersection = false;
         }
 
         if(left_intersection.isIntersection) {
             temp.transitionL = left_intersection;
-            temp.nextPolygon = sortedP[i + 1];
-            temp.leftVertex = sortedV[i + 1];
-            temp.rightVertex = sortedV[i];
+            temp.nextPolygon = P[(i + 1 + offset) % S];
+            temp.leftVertex = V[(i + 1 + offset) % S];
+            temp.rightVertex = V[(i + offset) % S];
             newNodes[count++] = temp;
         }
         return count;
-    }
+    }*/
 
     void
     Mesh::back_propagation(edgevis::SearchNode &node) {
@@ -202,12 +363,12 @@ namespace edgevis{
         temp.transitionR.isIntersection = false;
         temp.transitionL.isIntersection = false;
         int count = 0;
-        int S;
+        int S, offset;
         if(side) {
             if(edge.rightPoly == -1) return 0;
             expander = this->mesh_polygons[edge.rightPoly];
             S = expander.vertices.size();
-            normalise(expander, edge.parent, sortedV, sortedP);
+            offset = normalise(expander, edge.parent);
             temp.rootR.p = edge.parent;
             temp.rootL.p = edge.child;
             temp.rightRootVertex = edge.parent;
@@ -217,7 +378,7 @@ namespace edgevis{
             if(edge.leftPoly == -1) return 0;
             expander = this->mesh_polygons[edge.leftPoly];
             S = expander.vertices.size();
-            normalise(expander, edge.child, sortedV, sortedP);
+            offset = normalise(expander, edge.child);
             temp.rootR.p = edge.child;
             temp.rootL.p = edge.parent;
             temp.rightRootVertex = edge.child;
@@ -226,11 +387,11 @@ namespace edgevis{
         }
 
         for(int i = 0; i < S-1; i++){
-            temp.transitionR.p = sortedV[i];
-            temp.transitionL.p = sortedV[i + 1];
-            temp.rightVertex = sortedV[i];
-            temp.leftVertex = sortedV[i + 1];
-            temp.nextPolygon = sortedP[i + 1];
+            temp.transitionR.p = expander.vertices[(i + offset) % S];
+            temp.transitionL.p = expander.vertices[(i + 1 + offset) % S];
+            temp.rightVertex = expander.vertices[(i + offset) % S];
+            temp.leftVertex = expander.vertices[(i + 1 + offset) % S];
+            temp.nextPolygon = expander.polygons[(i + 1 + offset) % S];
             initNodes[count++] = temp;
         }
         return count;

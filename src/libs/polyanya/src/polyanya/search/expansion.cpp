@@ -29,7 +29,7 @@ int expand(SearchNode &node, const Point &start, const Mesh &mesh, Successor *su
 {
     // If the next polygon is -1 we dont have any successors (we shouldnt even look for them)
     if(node.next_polygon == -1) return 0;
-    bool useRobustGeom = robust;
+    bool useRobustGeom = true;
 
     const Polygon& polygon = mesh.mesh_polygons[node.next_polygon];
     const std::vector<Vertex>& mesh_vertices = mesh.mesh_vertices;

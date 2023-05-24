@@ -12,6 +12,8 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
+#include "edgevis/libs/clipper/clipper.hpp"
+
 #ifndef INPUT_MAPS_DIR
 #define INPUT_MAPS_DIR "."
 #endif
@@ -188,7 +190,7 @@ int body(ProgramOptionVariables pov) {
     time = clock.TimeInSeconds();
     std::cout << pov.n_random_samples << " random points generated in: " << time << " seconds." << std::endl;
 
-    if(false)
+    if(true)
     {
         clock.Restart();
         EdgeVis.precompute_edges_searchnodes();
@@ -222,7 +224,6 @@ int body(ProgramOptionVariables pov) {
             verticesPoly = EdgeVis.find_point_visibility_optim1(pos, debug, steps, debugEdge);
         }
 
-
         time = clock.TimeInSeconds();
         std::cout << "EdgeVis v1: " << "\n";
         std::cout << "Total computation time: " << time << " seconds.\n";
@@ -250,6 +251,74 @@ int body(ProgramOptionVariables pov) {
         std::cout << "Total computation time: " << time << " seconds.\n";
         std::cout << "Mean computation time: " << time / pov.n_random_samples << " seconds/point.\n";
         std::cout << std::endl;
+        /*
+        double mem = 0;
+        for (auto pos: points) {
+            //EdgeVis.reset_visu();
+            verticesPoly = EdgeVis.find_point_visibility_optim1(pos, debug, steps, debugEdge);
+            auto polymem = verticesPoly;
+            ClipperLib::Path p1, p2, p3;
+            for (const auto& point : verticesPoly) {
+                p1.push_back(ClipperLib::IntPoint(static_cast<long>(point.x),
+                                                  static_cast<long>(point.y )));
+            }
+            //EdgeVis.visualise_polygon(verticesPoly, 0, false);
+
+            verticesPoly = EdgeVis.find_point_visibility_optim2(pos, debug, steps, debugEdge);
+            for (const auto& point : verticesPoly) {
+                p2.push_back(ClipperLib::IntPoint(static_cast<long>(point.x),
+                                                  static_cast<long>(point.y )));
+            }
+            //EdgeVis.visualise_polygon(verticesPoly, 1, false);
+
+            verticesPoly = EdgeVis.find_point_visibility_optim3(pos, debug, steps, debugEdge);
+            for (const auto& point : verticesPoly) {
+                p3.push_back(ClipperLib::IntPoint(static_cast<long>(point.x),
+                                                  static_cast<long>(point.y )));
+            }
+            //EdgeVis.visualise_polygon(verticesPoly, 2, false);
+
+            ClipperLib::Paths diff_p1_p2, diff_p1_p3, diff_p2_p3;
+            ClipperLib::Clipper clipper;
+            clipper.AddPath(p1, ClipperLib::ptSubject, true);
+            clipper.AddPath(p2, ClipperLib::ptClip, true);
+            clipper.Execute(ClipperLib::ctDifference, diff_p1_p2);
+
+            clipper.Clear();
+            clipper.AddPath(p1, ClipperLib::ptSubject, true);
+            clipper.AddPath(p3, ClipperLib::ptClip, true);
+            clipper.Execute(ClipperLib::ctDifference, diff_p1_p3);
+
+            clipper.Clear();
+            clipper.AddPath(p2, ClipperLib::ptSubject, true);
+            clipper.AddPath(p3, ClipperLib::ptClip, true);
+            clipper.Execute(ClipperLib::ctDifference, diff_p2_p3);
+
+// Calculate the areas of the differences
+            double area_diff_p1_p2 = 0.0;
+            double area_diff_p1_p3 = 0.0;
+            double area_diff_p2_p3 = 0.0;
+
+            for (const auto& path : diff_p1_p2) {
+                area_diff_p1_p2 += ClipperLib::Area(path);
+            }
+
+            for (const auto& path : diff_p1_p3) {
+                area_diff_p1_p3 += ClipperLib::Area(path);
+            }
+
+            for (const auto& path : diff_p2_p3) {
+                area_diff_p2_p3 += ClipperLib::Area(path);
+            }
+
+// Output the areas of the differences
+
+            double top_diff = std::max(area_diff_p1_p3, std::max(area_diff_p2_p3, area_diff_p1_p2));
+            double top_area = std::max(ClipperLib::Area(p1), std::max(ClipperLib::Area(p2), ClipperLib::Area(p3)));
+            mem = std::max(mem, top_diff/top_area);
+
+        }
+         */
     }
 
     if(false)
@@ -323,7 +392,7 @@ int body(ProgramOptionVariables pov) {
     }
 
 
-    if(true)
+    if(false)
     {
 
         polyanya::PolyVis polyvis(geomMeshPoly);

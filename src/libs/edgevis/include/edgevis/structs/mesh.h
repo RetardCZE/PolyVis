@@ -199,6 +199,7 @@ namespace edgevis {
         double min_x, max_x, min_y, max_y;
         int* sortedV;
         int* sortedP;
+        Point r, l ,b;
         int visSize = 0;
         SearchNode temp;
         std::vector<Point> vis;

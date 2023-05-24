@@ -6,13 +6,16 @@ namespace edgevis{
         std::vector<SearchNode> r_v;
         std::vector<SearchNode> l_v;
         int edge = 0;
+        if(max_poly_sides != 3) {std::cerr << "Need triangular mesh!" << std::endl; return;}
         for (Edge& e : this->mesh_edges){
             if(e.leftPoly == -1 or e.rightPoly == -1){
                 edge++;
                 continue;
             }
             r_v.clear(); l_v.clear();
+            //std::cout << "someshit right" << std::endl;
             r_v = this->find_edge_visibility(edge, true, false);
+            //std::cout << "someshit left" << std::endl;
             l_v = this->find_edge_visibility(edge, false, false);
             e.right_nodes.reserve(r_v.size());
             e.left_nodes.reserve(l_v.size());

@@ -4,8 +4,7 @@
 namespace edgevis
 {
     int
-    normalise(const Polygon& P, int transition_R, int *sorted_vertices, int *sorted_polygons){
-        int S = P.vertices.size();
+    normalise(const Polygon &P, int transition_R) {
         int offset = 0;
         int current = P.vertices[offset];
         while(current != transition_R){

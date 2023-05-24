@@ -403,7 +403,7 @@ namespace edgevis {
         visSize = 0;
         vis.clear();
         SearchPoint tmp;
-        SearchNode* nodes = new edgevis::SearchNode[this->max_poly_sides + 2];
+        SearchNode* nodes = new edgevis::SearchNode[3];
         num = get_point_init_nodes(p, nodes);
         visSize = vis.size();
         for(int i = 0; i < num; i++){
@@ -422,7 +422,7 @@ namespace edgevis {
         visSize = 0;
         vis.clear();
         SearchPoint tmp;
-        SearchNode* nodes = new edgevis::SearchNode[this->max_poly_sides + 2];
+        SearchNode* nodes = new edgevis::SearchNode[this->max_poly_sides];
         num = get_point_init_nodes(p, nodes);
         for(int i = 0; i < num; i++){
             expand_PEA(nodes[i]);
@@ -436,11 +436,11 @@ namespace edgevis {
 
     void Mesh::expand_TEA(SearchNode &n) {
         if(n.nextPolygon == -1){
-            Point r, l;
             r = this->evaluate_intersection(n.transitionR);
             l = this->evaluate_intersection(n.transitionL);
-            if(r != vis.back()) vis.push_back(r);
-            if(l != vis.back()) vis.push_back(l);
+            b = vis.back();
+            if(r != b) vis.push_back(r);
+            if(l != b) vis.push_back(l);
             return;
         }
         int num;
@@ -455,16 +455,16 @@ namespace edgevis {
     }
     void Mesh::expand_PEA(SearchNode &n) {
         if(n.nextPolygon == -1){
-            Point r, l;
             r = this->evaluate_intersection(n.transitionR);
             l = this->evaluate_intersection(n.transitionL);
-            if(r != vis.back()) vis.push_back(r);
-            if(l != vis.back()) vis.push_back(l);
+            b = vis.back();
+            if(r != b) vis.push_back(r);
+            if(l != b) vis.push_back(l);
             return;
         }
-        int num;
-        SearchNode* nodes = new edgevis::SearchNode[this->max_poly_sides - 1];
-        if(mesh_polygons[n.nextPolygon].vertices.size() == 3){
+        int num = mesh_polygons[n.nextPolygon].vertices.size();
+        SearchNode* nodes = new edgevis::SearchNode[num - 1];
+        if(num == 3){
             num = this->expand_TEA_once(n, nodes);
         }else{
             num = this->expand_PEA_once(n, nodes);
@@ -653,7 +653,7 @@ namespace edgevis {
         int S = expander.vertices.size();
 
         int offset;
-        offset = normalise(expander, node.rightVertex, sortedV, sortedP);
+        offset = normalise(expander, node.rightVertex);
 
         int i;
         uint8_t rCheck = 0;
