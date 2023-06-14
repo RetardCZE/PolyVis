@@ -4,6 +4,31 @@
 
 namespace edgevis
 {
+    struct OptimNode
+    {
+        SearchPoint root_R, root_L;  // root
+        SearchPoint P;
+        bool isAlwaysVisible;
+        float root_R_order, root_L_order;
+
+        bool operator==(OptimNode& A) const {
+            if (P == A.P && root_R == A.root_R && root_L == A.root_L) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        bool operator!=(OptimNode& A) const {
+            if (P == A.P && root_R == A.root_R && root_L == A.root_L) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+    };
+
+
     struct OptimNodeV1
     {
         SearchPoint root_R, root_L;  // root
@@ -97,6 +122,6 @@ namespace edgevis
 
     typedef OptimNodeV1* OptimNodeV1Ptr;
     typedef OptimNodeV2* OptimNodeV2Ptr;
-    typedef OptimNodeV2* OptimNodeV3Ptr;
+    typedef OptimNodeV3* OptimNodeV3Ptr;
 
 }

@@ -251,6 +251,17 @@ int body(ProgramOptionVariables pov) {
         std::cout << "Total computation time: " << time << " seconds.\n";
         std::cout << "Mean computation time: " << time / pov.n_random_samples << " seconds/point.\n";
         std::cout << std::endl;
+
+        clock.Restart();
+        for (auto pos: points) {
+            verticesPoly = EdgeVis.find_point_visibility_optim4(pos);
+        }
+
+        time = clock.TimeInSeconds();
+        std::cout << "EdgeVis v4: " << "\n";
+        std::cout << "Total computation time: " << time << " seconds.\n";
+        std::cout << "Mean computation time: " << time / pov.n_random_samples << " seconds/point.\n";
+        std::cout << std::endl;
         /*
         double mem = 0;
         for (auto pos: points) {

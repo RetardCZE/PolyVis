@@ -227,11 +227,10 @@ namespace edgevis {
         /********************************************
          * edgevis_preprocessing.cpp
          */
-        std::vector<OptimNodeV1> compute_side_optimnodesV1(Edge &edge, bool right=true);
-        void compute_optimnodesv1(SearchNode &node, OptimNodeV1 &o1, OptimNodeV1 &o2);
-        bool check_visibility_on2(Point &a, OptimNodeV2 &on, Edge &e, bool right);
-        std::vector<OptimNodeV3> compute_side_optimnodesV3(Edge &edge, bool right=true);
-        bool optimnodeV3_is_further(OptimNodeV3 &base, OptimNodeV3 &compared, bool right);
+        std::vector<OptimNode> compute_side_optimnodesV1(Edge &edge, bool right=true);
+        void compute_optimnodesv1(SearchNode &node, OptimNode &o1, OptimNode &o2);
+        bool check_visibility_on2(Point &a, OptimNode &on, Edge &e, bool right);
+        void compute_side_optimnodesV3(Edge &edge, bool right=true);
         /********************************************/
 
         /********************************************
@@ -310,6 +309,7 @@ namespace edgevis {
         std::vector<Point> find_point_visibility_optim1(Point p, bool debug, double &steps, int &debugEdge);
         std::vector<Point> find_point_visibility_optim2(Point p, bool debug, double &steps, int &debugEdge);
         std::vector<Point> find_point_visibility_optim3(Point p, bool debug, double &steps, int &debugEdge);
+        std::vector<Point> find_point_visibility_optim4(Point p);
         std::vector<Point> find_point_visibility_TEA(Point p, bool debug);
         std::vector<Point> find_point_visibility_PEA(Point p, bool debug);
         /********************************************/

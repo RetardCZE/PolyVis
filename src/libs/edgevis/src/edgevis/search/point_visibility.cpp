@@ -86,13 +86,13 @@ namespace edgevis {
         Point last_point;
         Point I;
         Point segment_holder[2];
-        std::vector<OptimNodeV1> *vec;
+        std::vector<OptimNode> *vec;
 
         for (Edge* e :edges) {
-            if (pl.poly1 == e->rightPoly && e->leftOptimNodesV1.size() > 0) {
-                vec = &e->leftOptimNodesV1;
-            }else if((pl.poly1 == e->leftPoly && e->rightOptimNodesV1.size() > 0)) {
-                vec = &e->rightOptimNodesV1;
+            if (pl.poly1 == e->rightPoly && e->leftOptNodes.size() > 0) {
+                vec = &e->leftOptNodes;
+            }else if((pl.poly1 == e->leftPoly && e->rightOptNodes.size() > 0)) {
+                vec = &e->rightOptNodes;
             }
             for(auto node : *vec){
                 steps++;
@@ -172,14 +172,14 @@ namespace edgevis {
         Point last_point;
         Point I;
         Point segment_holder[2];
-        std::vector<OptimNodeV2> *vec;
+        std::vector<OptimNode> *vec;
 
 
         for (Edge* e :edges) {
-            if (pl.poly1 == e->rightPoly && e->leftOptimNodesV2.size() > 0) {
-                vec = &e->leftOptimNodesV2;
-            }else if((pl.poly1 == e->leftPoly && e->rightOptimNodesV2.size() > 0)) {
-                vec = &e->rightOptimNodesV2;
+            if (pl.poly1 == e->rightPoly && e->leftOptNodes.size() > 0) {
+                vec = &e->leftOptNodes;
+            }else if((pl.poly1 == e->leftPoly && e->rightOptNodes.size() > 0)) {
+                vec = &e->rightOptNodes;
             }
             for(auto node : *vec){
                 if(node.isAlwaysVisible){
@@ -264,9 +264,9 @@ namespace edgevis {
         Point last_point;
         Point I;
         Point segment_holder[2];
-        std::vector<OptimNodeV3> *vec;
-        std::vector<OptimNodeV3> debugger;
-        OptimNodeV3 node, last_node;
+        std::vector<OptimNode> *vec;
+        std::vector<OptimNode> debugger;
+        OptimNode node, last_node;
 
         int lastRight, lastLeft;
         int l,r;
@@ -278,12 +278,12 @@ namespace edgevis {
             debugEdge = debugEdge % edges.size();
         bool skip = false;
         for (Edge* e :edges) {
-            if (pl.poly1 == e->rightPoly && e->leftOptimNodesV1.size() > 0) {
-                vec = &e->leftOptimNodesV3;
+            if (pl.poly1 == e->rightPoly && e->leftOptNodes.size() > 0) {
+                vec = &e->leftOptNodes;
                 l = e->parent;
                 r = e->child;
-            }else if((pl.poly1 == e->leftPoly && e->rightOptimNodesV1.size() > 0)) {
-                vec = &e->rightOptimNodesV3;
+            }else if((pl.poly1 == e->leftPoly && e->rightOptNodes.size() > 0)) {
+                vec = &e->rightOptNodes;
                 l = e->child;
                 r = e->parent;
             }
@@ -321,6 +321,158 @@ namespace edgevis {
                         current_state = STATE::RIGHT;
                     } else {
                         current_state = STATE::LEFT;
+                    }
+                }
+
+                if(current_state != last_state){
+                    if(last_state == STATE::RIGHT){
+                        // leaving RIGHT causes triggering of intersection
+                        LineLineIntersectionNotCollinear(p, last_visible, last_point, this->evaluate_intersection(node.P), I);
+                        out.push_back(I);
+                    }
+                    if(current_state == STATE::RIGHT and last_state == STATE::VISIBLE){
+                        Point n = this->evaluate_intersection(last_node.P);
+                        Point i;
+                        LineLineIntersectionNotCollinear(p,
+                                                         n,
+                                                         this->mesh_vertices[e->parent].p,
+                                                         this->mesh_vertices[e->child].p,
+                                                         i);
+                        Point vector = i - this->mesh_vertices[r].p;
+                        if(vector.x != 0){
+                            currentLimitation = abs(vector.x / right2left.x);
+                        }else if(vector.y != 0){
+                            currentLimitation = abs(vector.y / right2left.y);
+                        }else{
+                            currentLimitation = 0;
+                        }
+                        while(currentLimitation < iterator->root_R_order){
+                            iterator++;
+                        }
+                        iterator--;
+                    }
+                    if(current_state == STATE::LEFT){
+                        // entering left causes hanging intersection
+                        segment_holder[0] = last_point;
+                        segment_holder[1] = this->evaluate_intersection(node.P);
+                        if(last_state == STATE::VISIBLE){
+                            Point n = this->evaluate_intersection(last_node.P);
+                            Point i;
+                            LineLineIntersectionNotCollinear(p,
+                                                             n,
+                                                             this->mesh_vertices[e->parent].p,
+                                                             this->mesh_vertices[e->child].p,
+                                                             i);
+                            Point vector = i - this->mesh_vertices[l].p;
+                            if(vector.x != 0){
+                                currentLimitation = abs(vector.x / left2right.x);
+                            }else if(vector.y != 0){
+                                currentLimitation = abs(vector.y / left2right.y);
+                            }else{
+                                currentLimitation = 0;
+                            }
+                            while(currentLimitation < iterator->root_L_order){
+                                iterator++;
+                            }
+                            iterator--;
+                        }
+                    }
+                    if(last_state == STATE::LEFT && current_state == STATE::VISIBLE){
+                        // leaving LEFT will trigger intersection with segment in memory
+                        LineLineIntersectionNotCollinear(p, this->evaluate_intersection(node.P), segment_holder[0], segment_holder[1], I);
+                        out.push_back(I);
+                    }
+                }
+
+                if(current_state == STATE::VISIBLE){
+                    last_visible = this->evaluate_intersection(node.P);
+                    out.push_back(last_visible);
+                }
+                last_point = this->evaluate_intersection(iterator->P);
+                last_node = *iterator;
+                last_state = current_state;
+                iterator++;
+            }
+        }
+        return out;
+    }
+
+    std::vector<Point>
+    Mesh::find_point_visibility_optim4(Point p){
+        std::vector<Point> out;
+        PointLocation pl = this->get_point_location(p);
+        std::vector<Edge*> edges = this->get_init_edges(pl);
+        std::string saving;
+        if(edges.size() == 0) {
+            out.clear();
+            return out;
+        }
+        STATE last_state = STATE::VISIBLE;
+        STATE current_state;
+        int left_parent, left_child, right_parent, right_child;
+        Point last_visible;
+        Point last_point;
+        Point I;
+        Point segment_holder[2];
+        std::vector<OptimNode> *vec;
+        std::vector<OptimNode> debugger;
+        OptimNode node, last_node;
+
+        int lastRight, lastLeft;
+        int l,r;
+        Point right2left;
+        Point left2right;
+        float currentLimitation;
+
+        bool skip = false;
+        for (Edge* e :edges) {
+            if (pl.poly1 == e->rightPoly && e->leftOptNodes.size() > 0) {
+                vec = &e->leftOptNodes;
+                l = e->parent;
+                r = e->child;
+            }else if((pl.poly1 == e->leftPoly && e->rightOptNodes.size() > 0)) {
+                vec = &e->rightOptNodes;
+                l = e->child;
+                r = e->parent;
+            }
+            right2left = this->mesh_vertices[l].p - this->mesh_vertices[r].p;
+            left2right = this->mesh_vertices[r].p - this->mesh_vertices[l].p;
+            auto iterator = vec->begin();
+            while(iterator != vec->end()){
+
+                node = *iterator;
+                if(node.isAlwaysVisible) {
+                    current_state = STATE::VISIBLE;
+                }else {
+
+                    if (node.root_L.isIntersection) {
+                        left_parent = node.root_L.i.a;
+                        left_child = node.P.isIntersection ? node.root_L.i.b : node.P.p;
+                    } else {
+                        left_parent = node.root_L.p;
+                        left_child = node.P.isIntersection ? node.P.i.b : node.P.p;
+                    }
+                    if (node.root_R.isIntersection) {
+                        right_parent = node.root_R.i.a;
+                        right_child = node.P.isIntersection ? node.root_R.i.b : node.P.p;
+                    } else {
+                        right_parent = node.root_R.p;
+                        right_child = node.P.isIntersection ? node.P.i.b : node.P.p;
+                    }
+                    robustOrientation rightOri = Orient(this->mesh_vertices[right_child].p,
+                                                        this->mesh_vertices[right_parent].p,
+                                                        p, useRobustOrientatation);
+                    robustOrientation leftOri = Orient(this->mesh_vertices[left_child].p,
+                                                       this->mesh_vertices[left_parent].p,
+                                                       p, useRobustOrientatation);
+                    if (rightOri != robustOrientation::kLeftTurn && leftOri != robustOrientation::kRightTurn) {
+                        current_state = STATE::VISIBLE;
+                    } else {
+                        if (rightOri == robustOrientation::kLeftTurn) {
+                            current_state = STATE::RIGHT;
+                        } else {
+                            current_state = STATE::LEFT;
+                        }
                     }
                 }
 
