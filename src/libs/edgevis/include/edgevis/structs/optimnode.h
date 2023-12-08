@@ -10,6 +10,9 @@ namespace edgevis
         SearchPoint P;
         bool isAlwaysVisible;
         float root_R_order, root_L_order;
+        bool TESTER = false;
+        bool OT1 = false;
+        bool OT2 = false;
 
         bool operator==(OptimNode& A) const {
             if (P == A.P && root_R == A.root_R && root_L == A.root_L) {

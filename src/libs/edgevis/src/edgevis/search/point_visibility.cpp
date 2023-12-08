@@ -1,4 +1,5 @@
 #include "edgevis/structs/mesh.h"
+#include <stdlib.h>
 
 namespace edgevis {
     std::vector<Edge*>
@@ -249,9 +250,12 @@ namespace edgevis {
     std::vector<Point>
     Mesh::find_point_visibility_optim3(Point p, bool debug, double &steps, int &debugEdge) {
         steps = 0;
+        if(!optimnodes3_precomputed) this->precompute_edges_optimnodesV3();
+
         std::vector<Point> out;
         PointLocation pl = this->get_point_location(p);
         std::vector<Edge*> edges = this->get_init_edges(pl);
+
         std::string saving;
         if(edges.size() == 0) {
             out.clear();
@@ -278,6 +282,7 @@ namespace edgevis {
             debugEdge = debugEdge % edges.size();
         bool skip = false;
         for (Edge* e :edges) {
+            //std::cout << "---------------------------------"<<std::endl;
             if (pl.poly1 == e->rightPoly && e->leftOptNodes.size() > 0) {
                 vec = &e->leftOptNodes;
                 l = e->parent;
@@ -292,7 +297,6 @@ namespace edgevis {
             auto iterator = vec->begin();
             while(iterator != vec->end()){
                 node = *iterator;
-
                 steps++;
                 if (node.root_L.isIntersection) {
                     left_parent = node.root_L.i.a;
@@ -327,10 +331,13 @@ namespace edgevis {
                 if(current_state != last_state){
                     if(last_state == STATE::RIGHT){
                         // leaving RIGHT causes triggering of intersection
+                        //std::cout << "leving right" <<std::endl;
                         LineLineIntersectionNotCollinear(p, last_visible, last_point, this->evaluate_intersection(node.P), I);
                         out.push_back(I);
                     }
                     if(current_state == STATE::RIGHT and last_state == STATE::VISIBLE){
+                        //std::cout << "leving to right " << int(iterator.base() - vec->begin().base()) << std::endl;
+
                         Point n = this->evaluate_intersection(last_node.P);
                         Point i;
                         LineLineIntersectionNotCollinear(p,
@@ -339,19 +346,23 @@ namespace edgevis {
                                                          this->mesh_vertices[e->child].p,
                                                          i);
                         Point vector = i - this->mesh_vertices[r].p;
-                        if(vector.x != 0){
+                        if(abs(vector.x) > 1e-16){
                             currentLimitation = abs(vector.x / right2left.x);
-                        }else if(vector.y != 0){
+                        }else if(abs(vector.y) > 1e-16){
                             currentLimitation = abs(vector.y / right2left.y);
                         }else{
                             currentLimitation = 0;
                         }
                         while(currentLimitation < iterator->root_R_order){
+                            //std::cout << ":  " << iterator->OT1 << " | "<< iterator->OT2<< std::endl;
+                            //std::cout << currentLimitation << " < " << iterator->TESTER << " | "<< e->INITED3<< std::endl;
+                            //this->visualise_point(this->evaluate_intersection(iterator->P), 2, true);
                             iterator++;
                         }
                         iterator--;
                     }
                     if(current_state == STATE::LEFT){
+                        //std::cout << "entering left" <<std::endl;
                         // entering left causes hanging intersection
                         segment_holder[0] = last_point;
                         segment_holder[1] = this->evaluate_intersection(node.P);
@@ -364,20 +375,24 @@ namespace edgevis {
                                                              this->mesh_vertices[e->child].p,
                                                              i);
                             Point vector = i - this->mesh_vertices[l].p;
-                            if(vector.x != 0){
+                            if(abs(vector.x) > 1e-16){
                                 currentLimitation = abs(vector.x / left2right.x);
-                            }else if(vector.y != 0){
+                            }else if(abs(vector.y) > 1e-16){
                                 currentLimitation = abs(vector.y / left2right.y);
                             }else{
                                 currentLimitation = 0;
                             }
+
                             while(currentLimitation < iterator->root_L_order){
+                                //std::cout << currentLimitation << " < " << iterator->TESTER << std::endl;
+                                //this->visualise_point(this->evaluate_intersection(iterator->P), 2, true);
                                 iterator++;
                             }
                             iterator--;
                         }
                     }
                     if(last_state == STATE::LEFT && current_state == STATE::VISIBLE){
+                        //std::cout << "leving left" <<std::endl;
                         // leaving LEFT will trigger intersection with segment in memory
                         LineLineIntersectionNotCollinear(p, this->evaluate_intersection(node.P), segment_holder[0], segment_holder[1], I);
                         out.push_back(I);
@@ -385,9 +400,11 @@ namespace edgevis {
                 }
 
                 if(current_state == STATE::VISIBLE){
+                    //std::cout << "visible" <<std::endl;
                     last_visible = this->evaluate_intersection(node.P);
                     out.push_back(last_visible);
                 }
+
                 last_point = this->evaluate_intersection(iterator->P);
                 last_node = *iterator;
                 last_state = current_state;
@@ -551,6 +568,7 @@ namespace edgevis {
 
     std::vector<Point>
     Mesh::find_point_visibility_TEA(Point p, bool debug) {
+        //std::cout << "NEWPOINT" << std::endl;
         int num;
         visSize = 0;
         vis.clear();
@@ -559,7 +577,7 @@ namespace edgevis {
         num = get_point_init_nodes(p, nodes);
         visSize = vis.size();
         for(int i = 0; i < num; i++){
-            expand_TEA(nodes[i]);
+            expand_TEA(nodes[i], 0);
         }
         std::vector<Point> result(vis);
         vis.clear();
@@ -577,7 +595,7 @@ namespace edgevis {
         SearchNode* nodes = new edgevis::SearchNode[this->max_poly_sides];
         num = get_point_init_nodes(p, nodes);
         for(int i = 0; i < num; i++){
-            expand_PEA(nodes[i]);
+            expand_PEA(nodes[i], 0);
         }
         std::vector<Point> result(vis);
         vis.clear();
@@ -586,7 +604,8 @@ namespace edgevis {
         return result;
     }
 
-    void Mesh::expand_TEA(SearchNode &n) {
+    void Mesh::expand_TEA(SearchNode &n, int level) {
+
         if(n.nextPolygon == -1){
             r = this->evaluate_intersection(n.transitionR);
             l = this->evaluate_intersection(n.transitionL);
@@ -595,17 +614,35 @@ namespace edgevis {
             if(l != b) vis.push_back(l);
             return;
         }
-        int num;
-        SearchNode* nodes = new edgevis::SearchNode[2];
-        num = this->expand_TEA_once(n, nodes);
 
-        for(int i = 0; i < num; i++){
-            expand_TEA(nodes[i]);
+        int num;
+        if(level == TEAItems){
+            TEAItems = TEAItems + 100;
+            //std::cout << "memTrigger TEA " << TEAItems << std::endl;
+            realloc_TEA_mem(TEAItems);
         }
-        delete nodes;
+        std::vector<SearchNode>& nodes = allocTEA[level].SearchNodes;
+        //std::cout << "cannot_find                        : "<< level << std::endl;
+        num = this->expand_TEA_once(n, nodes);
+        //std::cout << "after exp "<< num  << std::endl;
+        //for(int i = 0; i < num; i++){
+        //    int right_child_int = nodes[i].transitionR.isIntersection ? nodes[i].transitionR.i.b : nodes[i].transitionR.p;
+        //    int left_child_int = nodes[i].transitionL.isIntersection ? nodes[i].transitionL.i.b : nodes[i].transitionL.p;
+        //    std::cout << left_child_int <<" | " << right_child_int<< std::endl;
+        //}
+        if(num == 2) leveller = level;
+        for(int i = 0; i < num; i++){
+            //if(i==1){std::cout << "______----------__________--------___________" <<std::endl;}
+            //std::cout << i << " " << num << "                            : " << level << std::endl;
+            //int right_child_int = nodes[i].transitionR.isIntersection ? nodes[i].transitionR.i.b : nodes[i].transitionR.p;
+            //int left_child_int = nodes[i].transitionL.isIntersection ? nodes[i].transitionL.i.b : nodes[i].transitionL.p;
+            //std::cout << left_child_int <<" | " << right_child_int<< std::endl;
+            expand_TEA(nodes[i], level+1);
+        }
         return;
     }
-    void Mesh::expand_PEA(SearchNode &n) {
+
+    void Mesh::expand_PEA(SearchNode &n, int level) {
         if(n.nextPolygon == -1){
             r = this->evaluate_intersection(n.transitionR);
             l = this->evaluate_intersection(n.transitionL);
@@ -614,25 +651,36 @@ namespace edgevis {
             if(l != b) vis.push_back(l);
             return;
         }
+        if(level == PEAItems){
+            PEAItems = PEAItems + 100;
+            //std::cout << "memTrigger PEA " << PEAItems << std::endl;
+            realloc_PEA_mem(PEAItems);
+        }
+
         int num = mesh_polygons[n.nextPolygon].vertices.size();
-        SearchNode* nodes = new edgevis::SearchNode[num - 1];
+        //SearchNode* nodes = new edgevis::SearchNode[num - 1];
+        std::vector<SearchNode>& nodes = allocPEA[level].SearchNodes;
         if(num == 3){
             num = this->expand_TEA_once(n, nodes);
         }else{
             num = this->expand_PEA_once(n, nodes);
         }
         for(int i = 0; i < num; i++){
-            expand_PEA(nodes[i]);
+            expand_PEA(nodes[i], level+1);
         }
-        delete nodes;
+        //delete nodes;
         return;
     }
-    int Mesh::expand_TEA_once(SearchNode &node, SearchNode *newNodes){
+
+    int Mesh::expand_TEA_once(SearchNode &node, std::vector<SearchNode> &newNodes){
+
         init_temp_node(node);
         Point parent, right_child, left_child;
         int right_child_int, left_child_int;
+
         right_child_int = node.transitionR.isIntersection ? node.transitionR.i.b : node.transitionR.p;
         left_child_int = node.transitionL.isIntersection ? node.transitionL.i.b : node.transitionL.p;
+        //std::cout << left_child_int << "("<< node.transitionL.isIntersection <<  ") | " << right_child_int << std::endl;
         right_child = this->mesh_vertices[right_child_int].p;
         left_child = this->mesh_vertices[left_child_int].p;
         parent = this->free_points[-node.rootR.p - 1];
@@ -645,7 +693,6 @@ namespace edgevis {
         //offset = normalise(expander, node.rightVertex, sortedV, sortedP);
         int a, b, c, A, B, C, num;
         num = 0;
-
         if (expander.vertices[0] == node.rightVertex)
         {
             // t1 = V[0], t2 = V[1], t3 = V[2]
@@ -687,10 +734,12 @@ namespace edgevis {
         SearchPoint rightIntersection, leftIntersection;
 
         robustOrientation rOri = Orient(parent, right_child, mesh_vertices[c].p, useRobustOrientatation);
+
         if(rOri == robustOrientation::kLeftTurn) {
             robustOrientation lOri = Orient(parent, left_child, mesh_vertices[c].p, useRobustOrientatation);
             if (lOri == robustOrientation::kRightTurn) {
                 // In between
+                //std::cout << " debug in"<<std::endl;
                 if (node.transitionR.isIntersection) {
                     rightIntersection.isIntersection = true;
                     rightIntersection.i.a = node.rootR.p;
@@ -728,6 +777,7 @@ namespace edgevis {
                 newNodes[num++] = temp;
             } else {
                 // Left
+                //std::cout << " debug left"<<std::endl;
                 if (node.transitionR.isIntersection) {
                     rightIntersection.isIntersection = true;
                     rightIntersection.i.a = node.rootR.p;
@@ -757,6 +807,7 @@ namespace edgevis {
             }
         } else {
             // Right
+            //std::cout << " debug right"<<std::endl;
             if (rOri == robustOrientation::kCollinear) {
                 rightIntersection.isIntersection = false;
                 rightIntersection.p = c;
@@ -766,6 +817,7 @@ namespace edgevis {
                 rightIntersection.i.b = right_child_int;
                 rightIntersection.i.c = c;
                 rightIntersection.i.d = a;
+                //std::cout << "r1" << std::endl;
             }
             if (node.transitionL.isIntersection) {
                 leftIntersection.isIntersection = true;
@@ -773,9 +825,11 @@ namespace edgevis {
                 leftIntersection.i.b = left_child_int;
                 leftIntersection.i.c = c;
                 leftIntersection.i.d = a;
+                //std::cout << "r3" <<std::endl;
             } else {
                 leftIntersection.isIntersection = false;
                 leftIntersection.p = a;
+                //std::cout << "r2" << std::endl;
             }
 
             temp.transitionR = rightIntersection;
@@ -789,7 +843,7 @@ namespace edgevis {
         return num;
     }
 
-    int Mesh::expand_PEA_once(SearchNode& node, SearchNode *newNodes){
+    int Mesh::expand_PEA_once(SearchNode& node, std::vector<SearchNode> &newNodes){
         // Temporary searchnode object for creating new nodes
         init_temp_node(node);
         int right_child, left_child;
@@ -814,7 +868,7 @@ namespace edgevis {
         int right_visible, left_visible, visible;
         bool right_collinear, left_collinear;
 
-        visible = find_visible_binary_tree(node, offset, &right_visible, &left_visible, &right_collinear, &left_collinear);
+        find_visible_binary_tree(node, offset, &right_visible, &left_visible, &right_collinear, &left_collinear);
 
         SearchPoint right_intersection, left_intersection;
         int count = 0;
@@ -877,5 +931,25 @@ namespace edgevis {
             newNodes[count++] = temp;
         }
         return count;
+    }
+
+    void
+    Mesh::realloc_TEA_mem(int items){
+        int currentSize = allocTEA.capacity();
+        allocTEA.resize(items);
+        for(int i = currentSize; i<items; i++){
+            allocTEA[i].SearchNodes.resize(2);
+        }
+        return;
+    }
+
+    void
+    Mesh::realloc_PEA_mem(int items){
+        int currentSize = allocPEA.capacity();
+        allocPEA.resize(items);
+        for(int i = currentSize; i<items; i++){
+            allocPEA[i].SearchNodes.resize(max_poly_sides);
+        }
+        return;
     }
 }

@@ -190,7 +190,7 @@ int body(ProgramOptionVariables pov) {
     time = clock.TimeInSeconds();
     std::cout << pov.n_random_samples << " random points generated in: " << time << " seconds." << std::endl;
 
-    if(true)
+    if(false)
     {
         clock.Restart();
         EdgeVis.precompute_edges_searchnodes();
@@ -332,20 +332,109 @@ int body(ProgramOptionVariables pov) {
          */
     }
 
+    if(false){
+
+        EdgeVis.precompute_edges_searchnodes();
+        EdgeVis.precompute_edges_optimnodesV1();
+        EdgeVis.precompute_edges_optimnodesV2();
+        EdgeVis.precompute_edges_optimnodesV3();
+
+        bool debug = false;
+        double steps;
+        int debugEdge = 0;
+        clock.Restart();
+        double mem = 0;
+        int ctr = 0;
+        for (auto pos: points) {
+            ctr++;
+            //EdgeVis.reset_visu();
+            //std::cout << pos << std::endl;
+            //EdgeVis.visualise_point(pos, 0, true);
+
+            verticesPoly = EdgeVis.find_point_visibility_optim1(pos, debug, steps, debugEdge);
+
+            auto polymem = verticesPoly;
+            ClipperLib::Path p1, p2, p3;
+            for (const auto& point : verticesPoly) {
+                p1.push_back(ClipperLib::IntPoint(static_cast<long>(point.x),
+                                                  static_cast<long>(point.y )));
+            }
+
+            verticesPoly = EdgeVis.find_point_visibility_optim2(pos, debug, steps, debugEdge);
+            for (const auto& point : verticesPoly) {
+                p2.push_back(ClipperLib::IntPoint(static_cast<long>(point.x),
+                                                  static_cast<long>(point.y )));
+            }
+
+            verticesPoly = EdgeVis.find_point_visibility_optim3(pos, debug, steps, debugEdge);
+            for (const auto& point : verticesPoly) {
+                p3.push_back(ClipperLib::IntPoint(static_cast<long>(point.x),
+                                                  static_cast<long>(point.y )));
+            }
+
+            ClipperLib::Paths diff_p1_p2, diff_p1_p3, diff_p2_p3;
+            ClipperLib::Clipper clipper;
+            clipper.AddPath(p1, ClipperLib::ptSubject, true);
+            clipper.AddPath(p2, ClipperLib::ptClip, true);
+            clipper.Execute(ClipperLib::ctDifference, diff_p1_p2);
+
+            clipper.Clear();
+            clipper.AddPath(p1, ClipperLib::ptSubject, true);
+            clipper.AddPath(p3, ClipperLib::ptClip, true);
+            clipper.Execute(ClipperLib::ctDifference, diff_p1_p3);
+
+            clipper.Clear();
+            clipper.AddPath(p2, ClipperLib::ptSubject, true);
+            clipper.AddPath(p3, ClipperLib::ptClip, true);
+            clipper.Execute(ClipperLib::ctDifference, diff_p2_p3);
+
+            double area_diff_p1_p2 = 0.0;
+            double area_diff_p1_p3 = 0.0;
+            double area_diff_p2_p3 = 0.0;
+
+            for (const auto& path : diff_p1_p2) {
+                area_diff_p1_p2 += ClipperLib::Area(path);
+            }
+
+            for (const auto& path : diff_p1_p3) {
+                area_diff_p1_p3 += ClipperLib::Area(path);
+            }
+
+            for (const auto& path : diff_p2_p3) {
+                area_diff_p2_p3 += ClipperLib::Area(path);
+            }
+
+            // Output the areas of the differences
+
+            double top_diff = std::max(area_diff_p1_p3, std::max(area_diff_p2_p3, area_diff_p1_p2));
+            double top_area = std::max(ClipperLib::Area(p1), std::max(ClipperLib::Area(p2), ClipperLib::Area(p3)));
+            std::cout << ctr << " - " << top_diff/top_area << std::endl;
+            mem = std::max(mem, top_diff/top_area);
+
+        }
+        std::cout << mem << std::endl;
+
+    }
+
     if(false)
     {
         edgevis::Mesh EdgeVis3(geomMesh);
         EdgeVis3.useRobustOrientatation = pov.robust;
         clock.Restart();
+        EdgeVis3.TEAItems = 200;
+        EdgeVis3.realloc_TEA_mem(EdgeVis3.TEAItems);
+        int ctr = 0;
         for (auto pos: points) {
             //EdgeVis3.reset_visu();
+            //EdgeVis3.visualise_point(pos, 0, true);
+            //getchar();
+            //std::cout << ++ctr << std::endl;
             verticesPoly = EdgeVis3.find_point_visibility_TEA(pos, debug);
 
             //EdgeVis3.visualise_polygon(verticesPoly, 2, false);
-            //EdgeVis3.visualise_point(pos, 0, true);
-            //getchar();
-        }
 
+        }
+        EdgeVis3.allocTEA.clear();
         time = clock.TimeInSeconds();
         std::cout << "TEA: " << "\n";
         std::cout << "Total computation time: " << time << " seconds.\n";
@@ -361,15 +450,18 @@ int body(ProgramOptionVariables pov) {
         edgevis::Mesh EdgeVis2(geomMeshPoly);
         EdgeVis2.useRobustOrientatation = pov.robust;
         clock.Restart();
+        EdgeVis2.PEAItems = 200;
+        EdgeVis2.realloc_PEA_mem(EdgeVis2.PEAItems);
         for (auto pos: points) {
-            //EdgeVis2.reset_visu();
+            EdgeVis2.reset_visu();
             verticesPoly = EdgeVis2.find_point_visibility_PEA(pos, debug);
 
-            //EdgeVis2.visualise_polygon(verticesPoly, 2, false);
-            //EdgeVis2.visualise_point(pos, 0, true);
-            //getchar();
+            std::cout <<"size: " << verticesPoly.size()<<std::endl;
+            EdgeVis2.visualise_polygon(verticesPoly, 2, false);
+            EdgeVis2.visualise_point(pos, 0, true);
+            getchar();
         }
-
+        EdgeVis2.allocPEA.clear();
         time = clock.TimeInSeconds();
         std::cout << "PEA: " << "\n";
         std::cout << "Total computation time: " << time << " seconds.\n";

@@ -108,11 +108,9 @@ namespace edgevis{
             this->precompute_edges_optimnodesV1();
         }
 
-        int edge = 0;
         for (Edge &e: this->mesh_edges) {
             this->compute_side_optimnodesV3(e, true);
             this->compute_side_optimnodesV3(e, false);
-            edge++;
         }
         optimnodes3_precomputed = true;
         return;
@@ -135,11 +133,14 @@ namespace edgevis{
         }
         on1.root_R.isIntersection = false;
         on1.root_L.isIntersection = false;
+        on1.OT1 = true;
         v.push_back(on1);
         std::vector <SearchNode> *vec = right ? &edge.right_nodes : &edge.left_nodes;
         if (vec->size() > 0) {
             for (auto sn: *vec) {
                 this->compute_optimnodesv1(sn, on1, on2);
+                on1.OT1 = true;
+                on2.OT1 = true;
                 if (!(on1.P == v.back().P)) {
                     v.push_back(on1);
                 }
@@ -161,6 +162,7 @@ namespace edgevis{
         }
         on1.root_R.isIntersection = false;
         on1.root_L.isIntersection = false;
+        on1.OT1 = true;
         v.push_back(on1);
         return v;
     }
@@ -219,6 +221,7 @@ namespace edgevis{
 
     bool
     Mesh::check_visibility_on2(Point &a, OptimNode &on, Edge &e, bool right) {
+        on.OT2 = true;
         if(this->evaluate_intersection(on.root_L).distance(this->mesh_vertices[e.parent].p) > 1e-3 ){
             return false;
         }
@@ -240,12 +243,7 @@ namespace edgevis{
 
     void
     Mesh::compute_side_optimnodesV3(Edge &edge, bool right){
-        std::vector<OptimNode> side;
-        if(right){
-            side = edge.rightOptNodes;
-        }else{
-            side = edge.leftOptNodes;
-        }
+        std::vector<OptimNode> *vec = right ? &edge.rightOptNodes : &edge.leftOptNodes;
 
         int l,r;
         if(right){
@@ -257,33 +255,37 @@ namespace edgevis{
         }
         Point right2left = this->mesh_vertices[l].p - this->mesh_vertices[r].p;
         Point left2right = this->mesh_vertices[r].p - this->mesh_vertices[l].p;
+        edge.INITED3 = true;
 
-        for(auto on : side){
+        for(auto &on : *vec){
+            on.TESTER = true;
             if(!on.root_L.isIntersection){
                 if(on.root_L.p != r) on.root_L_order = 0;
                 if(on.root_L.p == r) on.root_L_order = 1;
             }else{
                 Point vector = this->evaluate_intersection(on.root_L) - this->mesh_vertices[l].p;
-                if(vector.x != 0){
+                if(abs(vector.x) > 1e-8){
                     on.root_L_order = vector.x / left2right.x;
-                }else if(vector.y != 0){
+                }else if(abs(vector.y) > 1e-8){
                     on.root_L_order = vector.y / left2right.y;
                 }else{
                     on.root_L_order = 0;
                 }
+                if(on.root_L_order < 1e-16) on.root_L_order = 0;
             }
             if(!on.root_R.isIntersection){
                 if(on.root_R.p != l) on.root_R_order = 0;
                 if(on.root_R.p == l) on.root_R_order = 1;
             }else{
                 Point vector = this->evaluate_intersection(on.root_R) - this->mesh_vertices[r].p;
-                if(vector.x != 0){
+                if(abs(vector.x) > 1e-8){
                     on.root_R_order = vector.x / right2left.x;
-                }else if(vector.y != 0){
+                }else if(abs(vector.y) > 1e-8){
                     on.root_R_order = vector.y / right2left.y;
                 }else{
                     on.root_R_order = 0;
                 }
+                if(on.root_R_order < 1e-16) on.root_R_order = 0;
             }
         }
         return;

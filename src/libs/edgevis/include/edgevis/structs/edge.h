@@ -11,6 +11,7 @@ struct Edge
 {
     int parent, child;
     int rightPoly, leftPoly;
+    bool INITED3=false;
     // std::vector<Point> right_visibility, left_visibility;
     std::vector<SearchNode> right_nodes, left_nodes;
     std::vector<OptimNode> rightOptNodes, leftOptNodes;

@@ -20,6 +20,14 @@
 
 namespace cgm = cairo_geom_drawer;
 namespace edgevis {
+    struct TEAExpansion{
+        std::vector<SearchNode> SearchNodes;
+    };
+
+    struct PEAExpansion {
+        std::vector<SearchNode> SearchNodes;
+    };
+
     struct PolyContainment {
         enum Type {
             // Does not use any ints.
@@ -212,6 +220,7 @@ namespace edgevis {
         bool optimnodes2_precomputed = false;
         bool optimnodes3_precomputed = false;
 
+        int leveller;
         bool debug = false;
         Edge current_edge;
         std::vector<SearchNode*> deleteQueue;
@@ -251,10 +260,10 @@ namespace edgevis {
          * point_visibility.cpp
          */
         std::vector<Edge*> get_init_edges(PointLocation pl);
-        void expand_TEA(SearchNode &n);
-        void expand_PEA(SearchNode &n);
-        int expand_TEA_once(SearchNode &node, SearchNode *newNodes);
-        int expand_PEA_once(SearchNode& node, SearchNode *newNodes);
+        void expand_TEA(SearchNode &n, int level);
+        void expand_PEA(SearchNode &n, int level);
+        int expand_TEA_once(SearchNode &node, std::vector<SearchNode> &newNodes);
+        int expand_PEA_once(SearchNode& node, std::vector<SearchNode> &newNodes);
         /********************************************/
 
         /********************************************
@@ -272,6 +281,13 @@ namespace edgevis {
         std::vector<Edge> mesh_edges;
         int max_poly_sides;
         bool useRobustOrientatation = true;
+
+        std::vector<TEAExpansion> allocTEA;
+        int TEAItems = 100;
+        std::vector<PEAExpansion> allocPEA;
+        int PEAItems = 100;
+        void realloc_TEA_mem(int items);
+        void realloc_PEA_mem(int items);
 
         /********************************************
          * mesh.cpp
