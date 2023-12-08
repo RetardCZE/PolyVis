@@ -25,6 +25,44 @@ Orientation get_orientation_switchable(const Point& a, const Point& b, const Poi
     }
 }
 
+
+template<typename Type, typename Pred>
+inline int binary_search(const std::vector<int>& arr, const int N,
+                         const std::vector<Type>& objects, int lower, int upper,
+                         const Pred pred, const bool is_upper_bound){
+    if (lower == upper) return lower;
+    int best_so_far = -1;
+    while (lower <= upper)
+    {
+        const int mid = lower + (upper - lower) / 2;
+        const bool matches_pred = pred(objects[arr[normalise(mid)]]);
+        if (matches_pred)
+        {
+            best_so_far = mid;
+        }
+        // If we're looking for an upper bound:
+        // If we match the predicate, go higher.
+        // If not, go lower.
+        // If we're looking for a lower bound:
+        // If we match the predicate, go lower.
+        // If not, go higher.
+        if (matches_pred == is_upper_bound)
+        {
+            // Either "upper bound AND matches pred"
+            // or "lower bound AND doesn't match pred"
+            // We should go higher, so increase the lower bound.
+            lower = mid + 1;
+        }
+        else
+        {
+            // The opposite.
+            // Decrease the upper bound.
+            upper = mid - 1;
+        }
+    }
+    return best_so_far;
+}
+
 int expand(SearchNode &node, const Point &start, const Mesh &mesh, Successor *successors, bool robust)
 {
     // If the next polygon is -1 we dont have any successors (we shouldnt even look for them)
@@ -248,17 +286,28 @@ int expand(SearchNode &node, const Point &start, const Mesh &mesh, Successor *su
 
     const Point root_right = node.right - root;
 
-    int A = 0;
-    int i = 1;
-    while(i != N){
-        auto o = get_orientation_switchable(root, node.right, index2point(normalise(i+right_ind)) ,useRobustGeom);
-        if(o == Orientation::CCW){
-            break;
+    const int A = [&]()
+    {
+        if (right_lies_vertex)
+        {
+            // Check whether root-right-right+1 is collinear or CCW.
+            if (root_right *
+                (index2point(normalise(right_ind + 1)) - node.right) >
+                -EPSILON)
+            {
+                // Intersects at right, so...
+                // we should use right_ind+1!
+                return right_ind + 1;
+            }
         }
-        i++;
-    }
-    A = right_ind + i;
-
+        return binary_search(V, N, mesh_vertices, right_ind + 1, left_ind,
+                             [&root_right, &node](const Vertex& v)
+                             {
+                                 // STRICTLY CCW.
+                                 return root_right * (v.p - node.right) > EPSILON;
+                             }, false
+        );
+    }();
     assert(A != -1);
     const int normalised_A = normalise(A),
               normalised_Am1 = normalise(A-1);
@@ -274,17 +323,29 @@ int expand(SearchNode &node, const Point &start, const Mesh &mesh, Successor *su
     // upper bound is left-1, as we don't want root-left-left.
     // the "transition" will lie in the range (B, B+1]
 
-    int B = N-1;
-    i = 1;
-    while(i != N){
-        auto o = get_orientation_switchable(root, node.left, index2point(normalise(left_ind-i)) ,useRobustGeom);
-        if(o == Orientation::CW){
-            break;
+    const Point root_left = node.left - root;
+    const int B = [&]()
+    {
+        if (left_lies_vertex)
+        {
+            // Check whether root-left-left-1 is collinear or CW.
+            if (root_left *
+                (index2point(normalise(left_ind - 1)) - node.left) <
+                EPSILON)
+            {
+                // Intersects at left, so...
+                // we should use left_ind-1!
+                return left_ind - 1;
+            }
         }
-        i++;
-    }
-    B = left_ind - i;
-
+        return binary_search(V, N, mesh_vertices, A - 1, left_ind - 1,
+                             [&root_left, &node](const Vertex& v)
+                             {
+                                 // STRICTLY CW.
+                                 return root_left * (v.p - node.left) < -EPSILON;
+                             }, true
+        );
+    }();
     assert(B != -1);
     const int normalised_B = normalise(B),
               normalised_Bp1 = normalise(B+1);

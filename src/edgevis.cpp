@@ -190,7 +190,7 @@ int body(ProgramOptionVariables pov) {
     time = clock.TimeInSeconds();
     std::cout << pov.n_random_samples << " random points generated in: " << time << " seconds." << std::endl;
 
-    if(false)
+    if(true)
     {
         clock.Restart();
         EdgeVis.precompute_edges_searchnodes();
@@ -233,6 +233,10 @@ int body(ProgramOptionVariables pov) {
         clock.Restart();
         for (auto pos: points) {
             verticesPoly = EdgeVis.find_point_visibility_optim2(pos, debug, steps, debugEdge);
+            //EdgeVis.reset_visu();
+            //EdgeVis.visualise_point(pos, 0, false);
+            //EdgeVis.visualise_polygon(verticesPoly, 2, true);
+            //getchar();
         }
 
         time = clock.TimeInSeconds();
@@ -416,7 +420,7 @@ int body(ProgramOptionVariables pov) {
 
     }
 
-    if(false)
+    if(true)
     {
         edgevis::Mesh EdgeVis3(geomMesh);
         EdgeVis3.useRobustOrientatation = pov.robust;
@@ -425,14 +429,13 @@ int body(ProgramOptionVariables pov) {
         EdgeVis3.realloc_TEA_mem(EdgeVis3.TEAItems);
         int ctr = 0;
         for (auto pos: points) {
-            //EdgeVis3.reset_visu();
-            //EdgeVis3.visualise_point(pos, 0, true);
-            //getchar();
+
             //std::cout << ++ctr << std::endl;
             verticesPoly = EdgeVis3.find_point_visibility_TEA(pos, debug);
-
-            //EdgeVis3.visualise_polygon(verticesPoly, 2, false);
-
+            //EdgeVis3.reset_visu();
+            //EdgeVis3.visualise_point(pos, 0, false);
+            //EdgeVis3.visualise_polygon(verticesPoly, 2, true);
+            //getchar();
         }
         EdgeVis3.allocTEA.clear();
         time = clock.TimeInSeconds();
@@ -453,13 +456,13 @@ int body(ProgramOptionVariables pov) {
         EdgeVis2.PEAItems = 200;
         EdgeVis2.realloc_PEA_mem(EdgeVis2.PEAItems);
         for (auto pos: points) {
-            EdgeVis2.reset_visu();
+            //EdgeVis2.reset_visu();
             verticesPoly = EdgeVis2.find_point_visibility_PEA(pos, debug);
 
-            std::cout <<"size: " << verticesPoly.size()<<std::endl;
-            EdgeVis2.visualise_polygon(verticesPoly, 2, false);
-            EdgeVis2.visualise_point(pos, 0, true);
-            getchar();
+            //std::cout <<"size: " << verticesPoly.size()<<std::endl;
+            //EdgeVis2.visualise_polygon(verticesPoly, 2, false);
+            //EdgeVis2.visualise_point(pos, 0, true);
+            //getchar();
         }
         EdgeVis2.allocPEA.clear();
         time = clock.TimeInSeconds();

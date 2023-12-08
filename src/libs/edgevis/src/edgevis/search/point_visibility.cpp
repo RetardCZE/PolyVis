@@ -860,7 +860,6 @@ namespace edgevis {
 
         int offset;
         offset = normalise(expander, node.rightVertex);
-
         int i;
         uint8_t rCheck = 0;
         uint8_t lCheck = 0;

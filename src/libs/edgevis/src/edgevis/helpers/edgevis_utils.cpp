@@ -33,75 +33,59 @@ namespace edgevis
 
         if (node.rootR.p < 0) {
             right_parent = this->free_points[-node.rootL.p - 1];
-        } else {
-            right_parent = this->mesh_vertices[node.rootL.isIntersection ? node.rootL.i.a : node.rootL.p].p;
-        }
-        if (node.rootR.p < 0) {
             left_parent = this->free_points[-node.rootR.p - 1];
         } else {
+            right_parent = this->mesh_vertices[node.rootL.isIntersection ? node.rootL.i.a : node.rootL.p].p;
             left_parent = this->mesh_vertices[node.rootR.isIntersection ? node.rootR.i.a : node.rootR.p].p;
         }
 
-        int r,m,l;
+        int r,m,l,best;
         r = 0;
         l = S - 1;
-        m = r + (l-r)/2;
+        best = l;
         robustOrientation Ori;
-        int ctr = 0;
-        while( l != r + 1){
+        *right_collinear = false;
+        while(r <= l){
+            m = r + (l-r)/2;
+            //std::cout << l << " | " << m << " | " << r << std::endl;
             Ori = Orient(right_parent,
                          right_child,
                          this->mesh_vertices[V[(m+offset) % S]].p, useRobustOrientatation);
             if(Ori == robustOrientation::kCollinear){
-                *right_visible = (m+offset) % S;
+                best = m;
+                *right_collinear = true;
                 break;
             }else if(Ori == robustOrientation::kRightTurn){
-                r = m;
-                m = r + (l-r)/2;
+                r = m + 1;
             }else{
-                l = m;
-                m = r + (l-r)/2;
+                l = m - 1;
+                best = m;
             }
         }
-        Ori = Orient(right_parent,
-                     right_child,
-                     this->mesh_vertices[V[(m+offset) % S]].p, useRobustOrientatation);
-        if(Ori == robustOrientation::kRightTurn){
-            *right_visible = (m+1+offset) % S;
-
-        }else{
-            *right_visible = (m+offset) % S;
-        }
-        *right_collinear = Ori == robustOrientation::kCollinear;
+        *right_visible = (best+offset) % S;
 
         r = 0;
         l = S - 1;
-        m = r + (l-r)/2;
-        ctr = 0;
-        while( l != r + 1){
+        best = r;
+        *left_collinear = false;
+        while( r <= l){
+            m = r + (l-r)/2;
             Ori = Orient(left_parent,
                          left_child,
                          this->mesh_vertices[V[(m+offset) % S]].p, useRobustOrientatation);
             if(Ori == robustOrientation::kCollinear){
-                *left_visible = (m+offset) % S;
+                best = m;
+                *left_collinear = true;
                 break;
             }else if(Ori == robustOrientation::kRightTurn){
-                r = m;
-                m = l - (l-r)/2;
+                r = m+1;
+                best = m;
             }else{
-                l = m;
-                m = l - (l-r)/2;
+                l = m-1;
             }
         }
-        Ori = Orient(left_parent,
-                     left_child,
-                     this->mesh_vertices[V[(m+offset) % S]].p, useRobustOrientatation);
-        if(Ori == robustOrientation::kLeftTurn){
-            *left_visible = (m-1+offset) % S;
-        }else{
-            *left_visible = (m+offset) % S;
-        }
-        *left_collinear = Ori == robustOrientation::kCollinear;
+        *left_visible = (best+offset) % S;
+
         return *left_visible - *right_visible;
     }
 
