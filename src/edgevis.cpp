@@ -4,7 +4,7 @@
 
 #include "geomMesh/parsers/map_parser.h"
 
-#include "utils/simple_clock.h"
+// #include "utils/simple_clock.h"
 
 #include <iomanip>
 #include <boost/program_options.hpp>
@@ -39,8 +39,9 @@ struct ProgramOptionVariables {
     bool debug = false;
     bool save = false;
     bool robust = false;
-    bool machine = true;
+    bool compare = false;
     int n_random_samples = 1;
+    int algorithm = 0;
     unsigned random_seed = std::random_device{}();
 };
 
@@ -77,9 +78,12 @@ void AddProgramOptions(
             ("robust ,r",
              po::bool_switch(&pov.robust)->default_value(pov.robust),
              "Turn on robust orientation test by Shewchuk.")
-            ("machine",
-             po::bool_switch(&pov.machine)->default_value(pov.machine),
-             "Save output in format dedicated for further SW processing.");
+            ("compare",
+             po::bool_switch(&pov.compare)->default_value(pov.compare),
+             "Ignore other arguments and runs comparison for local logs. Need all logs from 0 to 4.")
+            ("algorithm, a",
+             po::value(&pov.algorithm)->default_value(pov.algorithm),
+             "Select computation algorithm [T - 0, E1 - 1, E2 - 2, E3 - 3, E4 - 4].");
 }
 
 char ParseProgramOptions(
@@ -115,6 +119,345 @@ char ParseProgramOptions(
         pov.input_map_dir = aux.parent_path().string();
     }
     return '0';
+}
+
+parsers::GeomMesh
+load_mesh(std::string map_full_path, bool polygonal){
+    parsers::MapParser mapParser;
+    parsers::Fade2DMesh fade2DMesh;
+    parsers::MergedMesh mergedMesh;
+    parsers::GeomMesh result;
+    int obstacles;
+    double time;
+    custom::utils::SimpleClock clock;
+    clock.Restart();
+    if(!polygonal){
+        mapParser.convertMapToFade2DMesh(map_full_path, fade2DMesh, obstacles);
+        mapParser.convertFade2DMeshToGeomMesh(fade2DMesh, result);
+        time = clock.TimeInSeconds();
+        std::cout << "[M-CDT]-" << time << std::endl;
+    }else{
+        mapParser.convertMapToMergedMesh(map_full_path, mergedMesh);
+        mapParser.convertMergedMeshToGeomMesh(mergedMesh, result);
+        time = clock.TimeInSeconds();
+        std::cout << "[CDT]-" << time << std::endl;
+    }
+    return result;
+}
+
+std::vector<edgevis::Point>
+generate_random_points(edgevis::Mesh &mesh, int count, std::mt19937 seed){
+    std::vector<edgevis::Point> points;
+    edgevis::Point p;
+    for (int i = 0; i < count; i++) {
+        auto rp = mesh.random_point(seed);
+        p.x = rp.x;
+        p.y = rp.y;
+        points.push_back(p);
+    }
+    return points;
+}
+
+void
+test_edgevis_basic(edgevis::Mesh &mesh, std::vector<edgevis::Point> &observers, bool save){
+    double time_preprocess;
+    custom::utils::SimpleClock clock;
+    clock.Restart();
+    mesh.precompute_edges_optimnodesV1();
+    time_preprocess = clock.TimeInSeconds();
+
+    double T1, T2, T3;
+    std::vector<edgevis::Point> results;
+
+    for (auto pos: observers) {
+        results = mesh.find_point_visibility_optim1(pos, T1, T2, T3);
+
+    }
+
+    return;
+}
+
+void
+test_edgevis_precompute_always_visible(edgevis::Mesh &mesh, std::vector<edgevis::Point> &observers, bool save){
+    double time;
+    custom::utils::SimpleClock clock;
+    clock.Restart();
+    mesh.precompute_edges_optimnodesV2();
+    time = clock.TimeInSeconds();
+    if(!save) std::cout << "[E2-prep]-" << time << std::endl;
+    bool debug;
+    double steps;
+    int debugEdge;
+    std::vector<edgevis::Point> results;
+    clock.Restart();
+    for (auto pos: observers) {
+        results = mesh.find_point_visibility_optim2(pos);
+        if(save){
+            std::cout << "S--" << pos << "---" << results.size() << "\n";
+            for(auto p : results){
+                std::cout << p << "\n";
+            }
+        }
+    }
+    time = clock.TimeInSeconds();
+    if(!save) std::cout << "[E2-prep]-" << time << std::endl;
+    return;
+}
+
+void
+test_edgevis_online_prunning(edgevis::Mesh &mesh, std::vector<edgevis::Point> &observers, bool save){
+    double time;
+    custom::utils::SimpleClock clock;
+    clock.Restart();
+    mesh.precompute_edges_optimnodesV3();
+    time = clock.TimeInSeconds();
+    if(!save) std::cout << "[E3-prep]-" << time << std::endl;
+    bool debug;
+    double steps;
+    int debugEdge;
+    std::vector<edgevis::Point> results;
+    clock.Restart();
+    for (auto pos: observers) {
+        results = mesh.find_point_visibility_optim3(pos);
+        if(save){
+            std::cout << "S--" << pos << "---" << results.size() << "\n";
+            for(auto p : results){
+                std::cout << p << "\n";
+            }
+        }
+    }
+    time = clock.TimeInSeconds();
+    if(!save) std::cout << "[E3-time]-" << time << std::endl;
+    return;
+}
+
+void
+test_edgevis_online_prunning_and_precompute_visible(edgevis::Mesh &mesh, std::vector<edgevis::Point> &observers, bool save){
+    double time;
+    custom::utils::SimpleClock clock;
+    clock.Restart();
+    mesh.precompute_edges_optimnodesV2();
+    mesh.precompute_edges_optimnodesV3();
+    time = clock.TimeInSeconds();
+    if(!save) std::cout << "[E4-prep]-" << time << std::endl;
+    std::vector<edgevis::Point> results;
+    clock.Restart();
+    for (auto pos: observers) {
+        results = mesh.find_point_visibility_optim4(pos);
+        if(save){
+            std::cout << "S--" << pos << "---" << results.size() << "\n";
+            for(auto p : results){
+                std::cout << p << "\n";
+            }
+        }
+    }
+    time = clock.TimeInSeconds();
+    if(!save) std::cout << "[E4-time]-" << time << std::endl;
+    return;
+}
+
+void
+test_TEA(edgevis::Mesh &mesh, std::vector<edgevis::Point> &observers, bool save){
+
+    mesh.TEAItems = 200;
+    mesh.realloc_TEA_mem(mesh.TEAItems);
+    std::vector<edgevis::Point> results;
+    double T1, T2, T3;
+    for (auto pos: observers) {
+        results = mesh.find_point_visibility_TEA(pos, T1, T2, T3);
+
+    }
+    mesh.allocTEA.clear();
+    return;
+}
+
+void
+test_PEA(edgevis::Mesh &mesh, std::vector<edgevis::Point> &observers, bool save){
+
+    mesh.PEAItems = 200;
+    mesh.realloc_TEA_mem(mesh.PEAItems);
+    std::vector<edgevis::Point> results;
+
+    double T1, T2, T3;
+    for (auto pos: observers) {
+        results = mesh.find_point_visibility_PEA(pos, T1, T2, T3);
+    }
+    mesh.allocPEA.clear();
+    return;
+}
+
+void
+compare_polygons(std::vector<std::vector<edgevis::Point>> &visibilityPolygons){
+    ClipperLib::Clipper clipper;
+    std::vector<ClipperLib::Path> paths;
+    paths.resize(visibilityPolygons.size());
+    int path = 0;
+    for(auto polygon : visibilityPolygons){
+        for(auto point: polygon){
+            paths[path].push_back(ClipperLib::IntPoint(static_cast<long>(point.x),
+                                                       static_cast<long>(point.y )));
+        }
+        path++;
+    }
+
+    ClipperLib::Paths difference;
+
+    std::vector<double> results; // first is area of reference then relative error of other polygons
+    results.resize(paths.size());
+    results[0] = ClipperLib::Area(paths[0]);
+    double area;
+    path = 0;
+    for(auto p : paths){
+        if(path++ == 0) continue; // skip first 'reference' path
+        clipper.Clear();
+        difference.clear();
+        area = 0;
+        clipper.AddPath(paths[0], ClipperLib::ptSubject, true);
+        clipper.AddPath(p, ClipperLib::ptClip, true);
+        clipper.Execute(ClipperLib::ctDifference, difference);
+        for (const auto& dPath : difference) {
+            area += ClipperLib::Area(dPath);
+        }
+        results[path] = area; // /results[0]; //difference between visibility polygons normalized to area of the map
+        path++;
+    }
+    std::cout << results[0] << " | " << results[1] << " | " << results[2] << " | " << results[3] << " | " << results[4] << std::endl;
+    return;
+}
+
+std::vector<edgevis::Point> read_one_point(std::ifstream& file) {
+    std::vector<edgevis::Point> polygon;
+    std::string line;
+    edgevis::Point p;
+    // Find the line that starts with "S--("
+    while (std::getline(file, line)) {
+        if (line.find("S--(") != std::string::npos) {
+            break;
+        }
+    }
+
+    // Extract seeker point and number of points
+    double seekerX, seekerY;
+    int numberOfPoints;
+    if (sscanf(line.c_str(), "S--(%lf, %lf)---%d", &seekerX, &seekerY, &numberOfPoints) != 3) {
+        std::cerr << "Invalid format for seeker line." << std::endl;
+        return polygon;  // Return an empty polygon if the format is invalid
+    }
+
+
+    // Read the points
+    for (int i = 0; i < numberOfPoints; i++) {
+        if (!std::getline(file, line)) {
+            std::cerr << "Unexpected end of file." << std::endl;
+            return polygon;  // Return what has been read so far if unexpected end of file
+        }
+
+        // Extract x and y coordinates
+        double x, y;
+        if (sscanf(line.c_str(), "(%lf, %lf)", &x, &y) != 2) {
+            std::cerr << "Invalid format for point line." << std::endl;
+            return polygon;  // Return what has been read so far if invalid format
+        }
+        // Convert to edgevis::Point and add to the polygon
+
+        p.x = x;
+        p.y = y;
+        polygon.push_back(p);
+    }
+    return polygon;
+}
+
+void
+comparison_mode(){
+    std::vector<std::ifstream> files;
+    files.resize(5);
+    int points;
+    for (int i = 0; i <= 4; i++) {
+        // Construct the file name
+        std::string fileName = "results" + std::to_string(i) + ".log";
+
+        // Open the file
+        files[i].open(fileName);
+
+        // Check if the file is successfully opened
+        if (files[i].is_open()) {
+            // Read the first three lines
+            for (int lineNum = 0; lineNum < 4; lineNum++) {
+                std::string line;
+                std::getline(files[i], line);
+                if(lineNum == 2) { points = std::stoi(line); }
+                // Check if it's the second line and if it contains "AREAS"
+                if (lineNum == 1 && !(line.find("AREAS") != std::string::npos)) {
+                    std::cerr << "At least one file is invalid, ending comparisson." << std::endl;
+                    return;
+                }
+            }
+
+        } else {
+            std::cerr << "Unable to open file: " << fileName << std::endl;
+            return;
+        }
+    }
+    std::cout << points << std::endl;
+    std::vector<std::vector<edgevis::Point>> visibilityPolygons;
+    visibilityPolygons.resize(5);
+    for(int j = 0; j < points; j++) {
+        for (int i = 0; i <= 4; i++) {
+            visibilityPolygons[i] = read_one_point(files[i]);
+        }
+        compare_polygons(visibilityPolygons);
+    }
+    for (int i = 0; i <= 4; i++) {
+        files[i].close();
+    }
+    return;
+}
+
+int new_body(ProgramOptionVariables pov){
+    if(pov.compare){
+        comparison_mode();
+        return 0;
+    }
+    std::string mapName = pov.input_map_converted_full_path;
+    bool polygonal = false;
+    // Redirect standard output to a file named "results"
+    std::ofstream outputFile("results" + std::to_string(pov.algorithm) + ".log");
+    std::streambuf *coutBuffer = std::cout.rdbuf(); // Save cout's buffer
+    std::cout.rdbuf(outputFile.rdbuf()); // Redirect cout to the file
+
+    std::cout << "---DATA-START---" << std::endl;
+    if(pov.save){
+        if(pov.n_random_samples > 10000){
+            std::cout << "Dont save more than 10K polygons! Ending the script." << std::endl;
+            return 1;
+        }
+        std::cout << "AREAS" << std::endl;
+    }else{
+        std::cout << "TIMES" << std::endl;
+    }
+    std::cout << pov.n_random_samples << std::endl;
+    parsers::GeomMesh gMesh = load_mesh(mapName, polygonal);
+    std::mt19937 rng(pov.random_seed);
+    edgevis::Mesh mesh(gMesh);
+    std::vector<edgevis::Point> observers = generate_random_points(mesh, pov.n_random_samples, rng);
+    mesh.useRobustOrientatation = pov.robust;
+
+    switch(pov.algorithm){
+        case 0:
+            test_TEA(mesh, observers, pov.save);
+            break;
+        case 1:
+            test_edgevis_basic(mesh, observers, pov.save);
+            break;
+        case 2:
+            test_PEA(mesh, observers, pov.save);
+            break;
+        default:
+            break;
+    }
+    std::cout << "---DATA-END---" << std::endl;
+    std::cout.rdbuf(coutBuffer);
+    return 0;
 }
 
 int body(ProgramOptionVariables pov) {
@@ -190,7 +533,7 @@ int body(ProgramOptionVariables pov) {
     time = clock.TimeInSeconds();
     std::cout << pov.n_random_samples << " random points generated in: " << time << " seconds." << std::endl;
 
-    if(true)
+    if(false)
     {
         clock.Restart();
         EdgeVis.precompute_edges_searchnodes();
@@ -221,7 +564,7 @@ int body(ProgramOptionVariables pov) {
         int debugEdge = 0;
         clock.Restart();
         for (auto pos: points) {
-            verticesPoly = EdgeVis.find_point_visibility_optim1(pos, debug, steps, debugEdge);
+            verticesPoly = EdgeVis.find_point_visibility_optim1(pos, <#initializer#>, <#initializer#>, <#initializer#>);
         }
 
         time = clock.TimeInSeconds();
@@ -232,7 +575,7 @@ int body(ProgramOptionVariables pov) {
 
         clock.Restart();
         for (auto pos: points) {
-            verticesPoly = EdgeVis.find_point_visibility_optim2(pos, debug, steps, debugEdge);
+            verticesPoly = EdgeVis.find_point_visibility_optim2(pos);
             //EdgeVis.reset_visu();
             //EdgeVis.visualise_point(pos, 0, false);
             //EdgeVis.visualise_polygon(verticesPoly, 2, true);
@@ -247,7 +590,7 @@ int body(ProgramOptionVariables pov) {
 
         clock.Restart();
         for (auto pos: points) {
-            verticesPoly = EdgeVis.find_point_visibility_optim3(pos, debug, steps, debugEdge);
+            verticesPoly = EdgeVis.find_point_visibility_optim3(pos);
         }
 
         time = clock.TimeInSeconds();
@@ -355,7 +698,7 @@ int body(ProgramOptionVariables pov) {
             //std::cout << pos << std::endl;
             //EdgeVis.visualise_point(pos, 0, true);
 
-            verticesPoly = EdgeVis.find_point_visibility_optim1(pos, debug, steps, debugEdge);
+            verticesPoly = EdgeVis.find_point_visibility_optim1(pos, <#initializer#>, <#initializer#>, <#initializer#>);
 
             auto polymem = verticesPoly;
             ClipperLib::Path p1, p2, p3;
@@ -364,13 +707,13 @@ int body(ProgramOptionVariables pov) {
                                                   static_cast<long>(point.y )));
             }
 
-            verticesPoly = EdgeVis.find_point_visibility_optim2(pos, debug, steps, debugEdge);
+            verticesPoly = EdgeVis.find_point_visibility_optim2(pos);
             for (const auto& point : verticesPoly) {
                 p2.push_back(ClipperLib::IntPoint(static_cast<long>(point.x),
                                                   static_cast<long>(point.y )));
             }
 
-            verticesPoly = EdgeVis.find_point_visibility_optim3(pos, debug, steps, debugEdge);
+            verticesPoly = EdgeVis.find_point_visibility_optim3(pos);
             for (const auto& point : verticesPoly) {
                 p3.push_back(ClipperLib::IntPoint(static_cast<long>(point.x),
                                                   static_cast<long>(point.y )));
@@ -431,7 +774,7 @@ int body(ProgramOptionVariables pov) {
         for (auto pos: points) {
 
             //std::cout << ++ctr << std::endl;
-            verticesPoly = EdgeVis3.find_point_visibility_TEA(pos, debug);
+            verticesPoly = EdgeVis3.find_point_visibility_TEA(pos, <#initializer#>, <#initializer#>, <#initializer#>);
             //EdgeVis3.reset_visu();
             //EdgeVis3.visualise_point(pos, 0, false);
             //EdgeVis3.visualise_polygon(verticesPoly, 2, true);
@@ -457,7 +800,7 @@ int body(ProgramOptionVariables pov) {
         EdgeVis2.realloc_PEA_mem(EdgeVis2.PEAItems);
         for (auto pos: points) {
             //EdgeVis2.reset_visu();
-            verticesPoly = EdgeVis2.find_point_visibility_PEA(pos, debug);
+            verticesPoly = EdgeVis2.find_point_visibility_PEA(pos, <#initializer#>, <#initializer#>, <#initializer#>);
 
             //std::cout <<"size: " << verticesPoly.size()<<std::endl;
             //EdgeVis2.visualise_polygon(verticesPoly, 2, false);
@@ -475,7 +818,7 @@ int body(ProgramOptionVariables pov) {
         EdgeVis2.visualise_point(points.back(), 0, true);
     }
 
-    if(false)
+    if(true)
     {
 
         polyanya::PolyVis polyvis(geomMesh);
@@ -498,7 +841,7 @@ int body(ProgramOptionVariables pov) {
     }
 
 
-    if(false)
+    if(true)
     {
 
         polyanya::PolyVis polyvis(geomMeshPoly);
@@ -534,6 +877,6 @@ int main(
     } else if (c == 'e') {
         return EXIT_FAILURE;
     } else {
-        return body(pov);
+        return new_body(pov);
     }
 }

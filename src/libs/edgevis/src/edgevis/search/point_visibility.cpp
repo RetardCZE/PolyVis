@@ -4,6 +4,15 @@
 namespace edgevis {
     std::vector<Edge*>
     Mesh::get_init_edges(PointLocation pl) {
+        /**
+         * @brief Return edges of polygon containing given point.
+         *
+         * Initial edges are all edges that are visible from query point without looking over obstacle or another edge.
+         * Currently most common position inside one polygon is implemeted, but on edge or mesh vertex should be added.
+         *
+         * @param pl 2D point in PointLocation structure - it has relation to underlying mesh.
+         * @return Vector of edges directly visible from the point (without looking over another edge).
+         */
         std::vector<Edge*> edges;
         switch(pl.type){
             case PointLocation::NOT_ON_MESH:
@@ -26,18 +35,34 @@ namespace edgevis {
     }
 
     int
-    Mesh::get_point_init_nodes(Point root, edgevis::SearchNode *initNodes) {
+    Mesh::get_point_init_nodes(Point root, edgevis::SearchNode *initNodes, double &T1) {
+        /**
+         * @brief Return initial search nodes for given point in 2D space.
+         *
+         * First gets all initial edges that are fully visible from given point.
+         * From every edge a search node is created so that search nodes are sorted in
+         * CCW order (arbitrary origin) and oriented in the same direction (also CCW).
+         *
+         * @param root 2D point in the map.
+         * @param initNodes pointer to prepared container for initial search nodes.
+         * @return Number if initial edges.
+         */
         // side - true = transitionR, false = transitionL
+        clock.Restart();
+        PointLocation pl = this->get_point_location(root);
+        T1 = clock.TimeInSeconds();
+        clock.Restart();
         int num = 0;
         free_points.clear();
         free_points.push_back(root);
 
-        PointLocation pl = this->get_point_location(root);
+
         if(pl.type != PointLocation::Type::IN_POLYGON){
-            std::cout << "WARNING POINT not in POLYGON" << std::endl;
+            //std::cout << "WARNING POINT not computable " << std::endl;
+            return -1;
         }
         std::vector<Edge*> edges = this->get_init_edges(pl);
-        Polygon& poly = this->mesh_polygons[pl.poly1];
+        //Polygon& poly = this->mesh_polygons[pl.poly1];
         SearchNode temp;
         temp.predecessor = NULL;
         temp.rootL.isIntersection = false;
@@ -69,10 +94,21 @@ namespace edgevis {
     }
 
     std::vector<Point>
-    Mesh::find_point_visibility_optim1(Point p, bool debug, double &steps, int &debugEdge) {
-        steps = 0;
+    Mesh::find_point_visibility_optim1(Point p, double &T1, double &T2, double &T3) {
+        /**
+         * @brief short desription.
+         *
+         * long description
+         *
+         * @param param1 param description.
+         * @return return value description.
+         */
+
         std::vector<Point> out;
+        clock.Restart();
         PointLocation pl = this->get_point_location(p);
+        T1 = clock.TimeInSeconds();
+        clock.Restart();
         std::vector<Edge*> edges = this->get_init_edges(pl);
         std::string saving;
         if(edges.size() == 0) {
@@ -96,7 +132,7 @@ namespace edgevis {
                 vec = &e->rightOptNodes;
             }
             for(auto node : *vec){
-                steps++;
+
                 if(node.root_L.isIntersection){
                     left_parent = node.root_L.i.a;
                     left_child = node.P.isIntersection ? node.root_L.i.b : node.P.p;
@@ -126,6 +162,7 @@ namespace edgevis {
                         current_state = STATE::LEFT;
                     }
                 }
+
                 if(current_state != last_state){
                     if(last_state == STATE::RIGHT){
                         // leaving RIGHT causes triggering of intersection
@@ -152,12 +189,23 @@ namespace edgevis {
                 last_state = current_state;
             }
         }
+        T2 = clock.TimeInSeconds();
+        clock.Restart();
+        T3 = -1;
         return out;
     }
 
     std::vector<Point>
-    Mesh::find_point_visibility_optim2(Point p, bool debug, double &steps, int &debugEdge) {
-        steps = 0;
+    Mesh::find_point_visibility_optim2(Point p) {
+        /**
+         * @brief short desription.
+         *
+         * long description
+         *
+         * @param param1 param description.
+         * @return return value description.
+         */
+
         std::vector<Point> out;
         PointLocation pl = this->get_point_location(p);
         std::vector<Edge*> edges = this->get_init_edges(pl);
@@ -186,7 +234,6 @@ namespace edgevis {
                 if(node.isAlwaysVisible){
                     current_state = STATE::VISIBLE;
                 }else{
-                    steps++;
                     if(node.root_L.isIntersection){
                         left_parent = node.root_L.i.a;
                         left_child = node.P.isIntersection ? node.root_L.i.b : node.P.p;
@@ -248,8 +295,15 @@ namespace edgevis {
     }
 
     std::vector<Point>
-    Mesh::find_point_visibility_optim3(Point p, bool debug, double &steps, int &debugEdge) {
-        steps = 0;
+    Mesh::find_point_visibility_optim3(Point p) {
+        /**
+         * @brief short desription.
+         *
+         * long description
+         *
+         * @param param1 param description.
+         * @return return value description.
+         */
         if(!optimnodes3_precomputed) this->precompute_edges_optimnodesV3();
 
         std::vector<Point> out;
@@ -278,8 +332,7 @@ namespace edgevis {
         Point left2right;
         float currentLimitation;
 
-        if(debug)
-            debugEdge = debugEdge % edges.size();
+
         bool skip = false;
         for (Edge* e :edges) {
             //std::cout << "---------------------------------"<<std::endl;
@@ -297,7 +350,6 @@ namespace edgevis {
             auto iterator = vec->begin();
             while(iterator != vec->end()){
                 node = *iterator;
-                steps++;
                 if (node.root_L.isIntersection) {
                     left_parent = node.root_L.i.a;
                     left_child = node.P.isIntersection ? node.root_L.i.b : node.P.p;
@@ -416,6 +468,14 @@ namespace edgevis {
 
     std::vector<Point>
     Mesh::find_point_visibility_optim4(Point p){
+        /**
+         * @brief short desription.
+         *
+         * long description
+         *
+         * @param param1 param description.
+         * @return return value description.
+         */
         std::vector<Point> out;
         PointLocation pl = this->get_point_location(p);
         std::vector<Edge*> edges = this->get_init_edges(pl);
@@ -567,19 +627,42 @@ namespace edgevis {
     }
 
     std::vector<Point>
-    Mesh::find_point_visibility_TEA(Point p, bool debug) {
+    Mesh::find_point_visibility_TEA(Point p, double &T1, double &T2, double &T3) {
+        /**
+         * @brief Top-level function for finding point visibility using TEA.
+         *
+         * @param p 2D point - seeker/observer.
+         * @param debug flag for possible debug mode.
+         * @return List of points defining visibility polygon in CCW order.
+         */
         //std::cout << "NEWPOINT" << std::endl;
         int num;
+        std::vector<Point> result;
         visSize = 0;
         vis.clear();
         SearchPoint tmp;
         SearchNode* nodes = new edgevis::SearchNode[3];
-        num = get_point_init_nodes(p, nodes);
+        num = get_point_init_nodes(p, nodes, T1);
+        if( num == -1){
+            result.clear();
+            return result;
+        }
         visSize = vis.size();
         for(int i = 0; i < num; i++){
             expand_TEA(nodes[i], 0);
         }
-        std::vector<Point> result(vis);
+
+        T2 = clock.TimeInSeconds();
+        clock.Restart();
+
+        b = this->evaluate_intersection(vis[0]); //not optimal 1st intersection is calculated twice
+        for(auto n : vis){
+            r = this->evaluate_intersection(n);
+            if(b != r) result.push_back(r);
+            b = r;
+        }
+        T3 = clock.TimeInSeconds();
+        clock.Restart();
         vis.clear();
         free_points.clear();
         delete[] nodes;
@@ -587,17 +670,34 @@ namespace edgevis {
     }
 
     std::vector<Point>
-    Mesh:: find_point_visibility_PEA(Point p, bool debug) {
+    Mesh::find_point_visibility_PEA(Point p, double &T1, double &T2, double &T3) {
+        /**
+         * @brief Top-level function for finding point visibility using PEA.
+         *
+         * @param p 2D point - seeker/observer.
+         * @param debug flag for possible debug mode.
+         * @return List of points defining visibility polygon in CCW order.
+         */
         int num;
         visSize = 0;
         vis.clear();
         SearchPoint tmp;
         SearchNode* nodes = new edgevis::SearchNode[this->max_poly_sides];
-        num = get_point_init_nodes(p, nodes);
+        num = get_point_init_nodes(p, nodes, T1);
         for(int i = 0; i < num; i++){
             expand_PEA(nodes[i], 0);
         }
-        std::vector<Point> result(vis);
+        T2 = clock.TimeInSeconds();
+        clock.Restart();
+        std::vector<Point> result;
+        b = this->evaluate_intersection(vis[0]); //not optimal 1st intersection is calculated twice
+        for(auto n : vis){
+            r = this->evaluate_intersection(n);
+            if(b != r) result.push_back(r);
+            b = r;
+        }
+        T3 = clock.TimeInSeconds();
+        clock.Restart();
         vis.clear();
         free_points.clear();
         delete[] nodes;
@@ -605,50 +705,55 @@ namespace edgevis {
     }
 
     void Mesh::expand_TEA(SearchNode &n, int level) {
-
+        /**
+         * @brief Recursive method for DFS-like TEA search algorithm.
+         *
+         * Given a single search node, we either return new points defining visibility polygon, or we
+         * expand the visibility. Currently recursion stops only at obstacles. When expanding visibility
+         * we look through the search node (from point over edge) for new search nodes which are then
+         * processed in CCW order -> DFS (always take right most search node)
+         *
+         * @param n reference to current search node.
+         * @param level counter for keeping track of recursion depth.
+         * @return null - visibility is stored in class container.
+         */
         if(n.nextPolygon == -1){
-            r = this->evaluate_intersection(n.transitionR);
-            l = this->evaluate_intersection(n.transitionL);
-            b = vis.back();
-            if(r != b) vis.push_back(r);
-            if(l != b) vis.push_back(l);
+            vis.push_back(n.transitionR);
+            vis.push_back(n.transitionL);
             return;
         }
 
         int num;
         if(level == TEAItems){
             TEAItems = TEAItems + 100;
-            //std::cout << "memTrigger TEA " << TEAItems << std::endl;
             realloc_TEA_mem(TEAItems);
         }
         std::vector<SearchNode>& nodes = allocTEA[level].SearchNodes;
-        //std::cout << "cannot_find                        : "<< level << std::endl;
         num = this->expand_TEA_once(n, nodes);
-        //std::cout << "after exp "<< num  << std::endl;
-        //for(int i = 0; i < num; i++){
-        //    int right_child_int = nodes[i].transitionR.isIntersection ? nodes[i].transitionR.i.b : nodes[i].transitionR.p;
-        //    int left_child_int = nodes[i].transitionL.isIntersection ? nodes[i].transitionL.i.b : nodes[i].transitionL.p;
-        //    std::cout << left_child_int <<" | " << right_child_int<< std::endl;
-        //}
-        if(num == 2) leveller = level;
+        //if(num == 2) leveller = level;
         for(int i = 0; i < num; i++){
-            //if(i==1){std::cout << "______----------__________--------___________" <<std::endl;}
-            //std::cout << i << " " << num << "                            : " << level << std::endl;
-            //int right_child_int = nodes[i].transitionR.isIntersection ? nodes[i].transitionR.i.b : nodes[i].transitionR.p;
-            //int left_child_int = nodes[i].transitionL.isIntersection ? nodes[i].transitionL.i.b : nodes[i].transitionL.p;
-            //std::cout << left_child_int <<" | " << right_child_int<< std::endl;
             expand_TEA(nodes[i], level+1);
         }
         return;
     }
 
     void Mesh::expand_PEA(SearchNode &n, int level) {
+        /**
+         * @brief Recursive method for DFS-like PEA search algorithm.
+         *
+         * Given a single search node, we either return new points defining visibility polygon, or we
+         * expand the visibility. Currently recursion stops only at obstacles. When expanding visibility
+         * we look through the search node (from point over edge) for new search nodes which are then
+         * processed in CCW order -> DFS (always take right most search node)
+         * Uses TEA expansion if expanding to triangle.
+         *
+         * @param n reference to current search node.
+         * @param level counter for keeping track of recursion depth.
+         * @return null - visibility is stored in class container.
+         */
         if(n.nextPolygon == -1){
-            r = this->evaluate_intersection(n.transitionR);
-            l = this->evaluate_intersection(n.transitionL);
-            b = vis.back();
-            if(r != b) vis.push_back(r);
-            if(l != b) vis.push_back(l);
+            vis.push_back(n.transitionR);
+            vis.push_back(n.transitionL);
             return;
         }
         if(level == PEAItems){
@@ -673,7 +778,6 @@ namespace edgevis {
     }
 
     int Mesh::expand_TEA_once(SearchNode &node, std::vector<SearchNode> &newNodes){
-
         init_temp_node(node);
         Point parent, right_child, left_child;
         int right_child_int, left_child_int;

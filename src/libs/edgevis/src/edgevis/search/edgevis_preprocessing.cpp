@@ -6,7 +6,7 @@ namespace edgevis{
         std::vector<SearchNode> r_v;
         std::vector<SearchNode> l_v;
         int edge = 0;
-        if(max_poly_sides != 3) {std::cerr << "Need triangular mesh!" << std::endl; return;}
+        // if(max_poly_sides != 3) {std::cerr << "Need triangular mesh!" << std::endl; return;}
         for (Edge& e : this->mesh_edges){
             if(e.leftPoly == -1 or e.rightPoly == -1){
                 edge++;

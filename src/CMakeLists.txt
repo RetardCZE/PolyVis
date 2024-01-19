@@ -46,16 +46,18 @@ set(${PROJECT_NAME}_COMPILE_DEFINITIONS
         )
 
 FILE(GLOB SRC src/*.cpp)
-set(SOURCES ${SRC})
+set(SOURCES ${SRC}
+        measurements.cpp)
 
-add_executable(EdgeVis_example
-        edgevis.cpp
+
+add_executable(Edgevis_measure
+        measurements.cpp
         ${SOURCES}
         ${${PROJECT_NAME}_SRC})
 
-target_compile_definitions(EdgeVis_example PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
+target_compile_definitions(Edgevis_measure PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
 
-target_link_libraries(EdgeVis_example
+target_link_libraries(Edgevis_measure
         cairo
         ${OpenCV_LIBS}
         EdgeVis
@@ -63,6 +65,23 @@ target_link_libraries(EdgeVis_example
         GeomMesh
         ${FADE2D_LIBRARY}
         ${Boost_LIBRARIES})
+
+
+# add_executable(EdgeVis_example
+#         edgevis.cpp
+#         ${SOURCES}
+#         ${${PROJECT_NAME}_SRC})
+#
+# target_compile_definitions(EdgeVis_example PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
+#
+# target_link_libraries(EdgeVis_example
+#         cairo
+#         ${OpenCV_LIBS}
+#         EdgeVis
+#         PolyAnya
+#         GeomMesh
+#         ${FADE2D_LIBRARY}
+#         ${Boost_LIBRARIES})
 
 # add_executable(EdgeVis_arbitrary_edge
 #         edgevis_arbitrary_edge.cpp

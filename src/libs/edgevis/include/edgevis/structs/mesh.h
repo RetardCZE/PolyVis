@@ -7,6 +7,7 @@
 #include "edgevis/helpers/edgevis_utils.h"
 
 #include "geomMesh/parsers/utils.h"
+#include "utils/simple_clock.h"
 
 #include "draw/colors.h"
 #include "draw/cairo_geom_drawer.h"
@@ -210,7 +211,7 @@ namespace edgevis {
         Point r, l ,b;
         int visSize = 0;
         SearchNode temp;
-        std::vector<Point> vis;
+        std::vector<SearchPoint> vis;
 
         // 1 for PEA and TEA, 2 for edges (only arbitrary ones)
         std::vector<Point> free_points;
@@ -249,7 +250,7 @@ namespace edgevis {
                                            edgevis::SearchNode *initLeftNodes,
                                            edgevis::SearchNode *initRightNodes);
         int get_edge_init_nodes(Edge edge, bool side, SearchNode *initNodes);
-        int get_point_init_nodes(Point root, SearchNode *initNodes);
+        int get_point_init_nodes(Point root, edgevis::SearchNode *initNodes, double &T1);
         void expand(SearchNode &node, std::vector<SearchNode> &visibility, bool side, int level, bool draw);
 
         int expand_forward(SearchNode &node, SearchNode *newNodes);
@@ -276,6 +277,7 @@ namespace edgevis {
         /********************************************/
     public:
         int T, P;
+        custom::utils::SimpleClock clock;
         std::vector<Vertex> mesh_vertices;
         std::vector<Polygon> mesh_polygons;
         std::vector<Edge> mesh_edges;
@@ -322,12 +324,12 @@ namespace edgevis {
         /********************************************
          * point_visibility.cpp
          */
-        std::vector<Point> find_point_visibility_optim1(Point p, bool debug, double &steps, int &debugEdge);
-        std::vector<Point> find_point_visibility_optim2(Point p, bool debug, double &steps, int &debugEdge);
-        std::vector<Point> find_point_visibility_optim3(Point p, bool debug, double &steps, int &debugEdge);
+        std::vector<Point> find_point_visibility_optim1(Point p, double &T1, double &T2, double &T3);
+        std::vector<Point> find_point_visibility_optim2(Point p);
+        std::vector<Point> find_point_visibility_optim3(Point p);
         std::vector<Point> find_point_visibility_optim4(Point p);
-        std::vector<Point> find_point_visibility_TEA(Point p, bool debug);
-        std::vector<Point> find_point_visibility_PEA(Point p, bool debug);
+        std::vector<Point> find_point_visibility_TEA(Point p, double &T1, double &T2, double &T3);
+        std::vector<Point> find_point_visibility_PEA(Point p, double &T1, double &T2, double &T3);
         /********************************************/
 
         void set_visual_mesh(const parsers::GeomMesh &gmesh);
