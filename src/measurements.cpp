@@ -43,12 +43,12 @@ load_mesh(std::string map_full_path, bool polygonal){
         mapParser.convertMapToFade2DMesh(map_full_path, fade2DMesh, obstacles);
         mapParser.convertFade2DMeshToGeomMesh(fade2DMesh, result);
         time = clock.TimeInSeconds();
-        std::cout << "[CDT]-" << time << std::endl;
+        //std::cout << "[CDT]-" << time << std::endl;
     }else{
         mapParser.convertMapToMergedMesh(map_full_path, mergedMesh);
         mapParser.convertMergedMeshToGeomMesh(mergedMesh, result);
         time = clock.TimeInSeconds();
-        std::cout << "[M-CDT]-" << time << std::endl;
+        //std::cout << "[M-CDT]-" << time << std::endl;
     }
     return result;
 }
@@ -75,7 +75,7 @@ int body(){
         for(auto mapName: mapNames){
             counter++;
             for(auto pointFile : pointTypes){
-                mapName = "scene_mp_2p_01";
+                //mapName = "scene_sp_rus_02";
                 std::string pointPath = pointDir + mapName + pointFile + ".txt";
                 std::ifstream inputFile(pointPath);
 
@@ -97,6 +97,7 @@ int body(){
                 }
                 inputFile.close();
                 {
+                    std::cout << mapName << " | " << pointFile << " | TEA" <<std::endl;
                     std::string output = resultsDir + mapName + pointFile + "_Rosol_TEA_visibility.txt";
                     std::ofstream outputFile(output);
                     outputFile << std::fixed << std::setprecision(17);
@@ -131,6 +132,7 @@ int body(){
                 }
 
                 {
+                    std::cout << mapName << " | " << pointFile << " | PEA" <<std::endl;
                     std::string output = resultsDir + mapName + pointFile + "_Rosol_PEA_visibility.txt";
                     std::ofstream outputFile(output);
                     outputFile << std::fixed << std::setprecision(17);
@@ -152,6 +154,7 @@ int body(){
                     std::vector<edgevis::Point> visibility;
 
                     for (int j = 0; j < points.size(); j++) {
+                        //std::cout << j << std::endl;
                         visibility = mesh.find_point_visibility_PEA(points[j], T1, T2, T3);
                         outputFile << j << " times" << " 3" << " " << T1 << " " << T2 << " " << T3;
                         outputFile << " polygon " << visibility.size();
@@ -165,7 +168,8 @@ int body(){
                 }
 
                 {
-                    std::string output = resultsDir + mapName + pointFile + "_Rosol_triangleEdgeVis_visibility.txt";
+                    std::cout << mapName << " | " << pointFile << " | EdgeVis" <<std::endl;
+                    std::string output = resultsDir + mapName + pointFile + "_Rosol_EdgeVis_visibility.txt";
                     std::ofstream outputFile(output);
                     outputFile << std::fixed << std::setprecision(17);
 
@@ -198,7 +202,7 @@ int body(){
                     outputFile.close();
                 }
             }
-            //if(counter >= 3) break;
+            if(counter >= 5) break;
         }
     } catch (const fs::filesystem_error& ex) {
         std::cerr << "Error: " << ex.what() << std::endl;

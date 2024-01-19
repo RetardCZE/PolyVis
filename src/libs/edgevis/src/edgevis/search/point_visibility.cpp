@@ -107,6 +107,12 @@ namespace edgevis {
         std::vector<Point> out;
         clock.Restart();
         PointLocation pl = this->get_point_location(p);
+        if(pl.type != PointLocation::Type::IN_POLYGON){
+            //std::cout << "WARNING POINT not computable " << std::endl;
+            T1 = clock.TimeInSeconds();
+            T2 = clock.TimeInSeconds();
+            return out;
+        }
         T1 = clock.TimeInSeconds();
         clock.Restart();
         std::vector<Edge*> edges = this->get_init_edges(pl);
@@ -644,6 +650,8 @@ namespace edgevis {
         SearchNode* nodes = new edgevis::SearchNode[3];
         num = get_point_init_nodes(p, nodes, T1);
         if( num == -1){
+            T2 = T1;
+            T3 = T1;
             result.clear();
             return result;
         }
@@ -679,17 +687,37 @@ namespace edgevis {
          * @return List of points defining visibility polygon in CCW order.
          */
         int num;
+        std::vector<Point> result;
         visSize = 0;
         vis.clear();
         SearchPoint tmp;
         SearchNode* nodes = new edgevis::SearchNode[this->max_poly_sides];
         num = get_point_init_nodes(p, nodes, T1);
+        if( num == -1){
+            T2 = T1;
+            T3 = T1;
+            result.clear();
+            return result;
+        }
+        //std::cout << "s" <<std::endl;
+        //this->reset_visu();
+        //this->visualise_point(p, 0, true);
+        //std::cout << p << std::endl;
         for(int i = 0; i < num; i++){
+            //std::cout << i << std::endl;
+            //if(i==2){
+            //    this->reset_visu();
+            //    this->visualise_point(p, 0, true);
+            //    this->visualise_segment(this->evaluate_intersection(nodes[i].transitionR),
+            //                            this->evaluate_intersection(nodes[i].transitionL), 0, 0.5);
+            //    getchar();
+            //}
             expand_PEA(nodes[i], 0);
         }
+        //std::cout << "e" <<std::endl;
         T2 = clock.TimeInSeconds();
         clock.Restart();
-        std::vector<Point> result;
+
         b = this->evaluate_intersection(vis[0]); //not optimal 1st intersection is calculated twice
         for(auto n : vis){
             r = this->evaluate_intersection(n);
@@ -765,11 +793,18 @@ namespace edgevis {
         int num = mesh_polygons[n.nextPolygon].vertices.size();
         //SearchNode* nodes = new edgevis::SearchNode[num - 1];
         std::vector<SearchNode>& nodes = allocPEA[level].SearchNodes;
+        //std::cout << num << std::endl;
         if(num == 3){
             num = this->expand_TEA_once(n, nodes);
         }else{
             num = this->expand_PEA_once(n, nodes);
         }
+        //for(int i = 0; i < num; i++){
+        //    this->visualise_segment(this->evaluate_intersection(nodes[i].transitionR),
+        //                            this->evaluate_intersection(nodes[i].transitionL), 0, 0.5);
+        //    getchar();
+        //}
+
         for(int i = 0; i < num; i++){
             expand_PEA(nodes[i], level+1);
         }
@@ -972,6 +1007,7 @@ namespace edgevis {
         bool right_collinear, left_collinear;
 
         find_visible_binary_tree(node, offset, &right_visible, &left_visible, &right_collinear, &left_collinear);
+        //std::cout << right_visible << " | " << left_visible << std::endl;
 
         SearchPoint right_intersection, left_intersection;
         int count = 0;

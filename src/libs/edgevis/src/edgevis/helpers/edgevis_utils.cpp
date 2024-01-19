@@ -46,7 +46,11 @@ namespace edgevis
         robustOrientation Ori;
         *right_collinear = false;
         while(r <= l){
-            m = r + (l-r)/2;
+            if (l == 1 && r == 0) {
+                m = 1;  // Set m to 1 for this specific case
+            } else {
+                m = r + (l - r) / 2;
+            }
             //std::cout << l << " | " << m << " | " << r << std::endl;
             Ori = Orient(right_parent,
                          right_child,
@@ -69,7 +73,11 @@ namespace edgevis
         best = r;
         *left_collinear = false;
         while( r <= l){
-            m = r + (l-r)/2;
+            if (l == S - 1 && r == S - 2) {
+                m = S - 2;  // Set m to 1 for this specific case
+            } else {
+                m = r + (l - r) / 2;
+            }
             Ori = Orient(left_parent,
                          left_child,
                          this->mesh_vertices[V[(m+offset) % S]].p, useRobustOrientatation);
