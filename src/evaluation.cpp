@@ -98,7 +98,7 @@ int body(){
                 inputFile.close();
                 {
                     std::cout << mapName << " | " << pointFile << " | TEA" <<std::endl;
-                    std::string output = resultsDir + mapName + pointFile + "_TEA.txt";
+                    std::string output = resultsDir + mapName + pointFile + "_Rosol_TEA_visibility.txt";
                     std::ofstream outputFile(output);
                     outputFile << std::fixed << std::setprecision(17);
 
@@ -133,7 +133,7 @@ int body(){
 
                 {
                     std::cout << mapName << " | " << pointFile << " | PEA" <<std::endl;
-                    std::string output = resultsDir + mapName + pointFile + "_PEA.txt";
+                    std::string output = resultsDir + mapName + pointFile + "_Rosol_PEA_visibility.txt";
                     std::ofstream outputFile(output);
                     outputFile << std::fixed << std::setprecision(17);
 
@@ -169,7 +169,7 @@ int body(){
 
                 {
                     std::cout << mapName << " | " << pointFile << " | EdgeVis" <<std::endl;
-                    std::string output = resultsDir + mapName + pointFile + "_Edgevis.txt";
+                    std::string output = resultsDir + mapName + pointFile + "_Rosol_EdgeVis_visibility.txt";
                     std::ofstream outputFile(output);
                     outputFile << std::fixed << std::setprecision(17);
 

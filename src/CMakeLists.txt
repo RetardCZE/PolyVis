@@ -66,6 +66,23 @@ target_link_libraries(Edgevis_measure
         ${FADE2D_LIBRARY}
         ${Boost_LIBRARIES})
 
+add_executable(Edgevis_eval
+        measurements.cpp
+        ${SOURCES}
+        ${${PROJECT_NAME}_SRC}
+        evaluation.cpp)
+
+target_compile_definitions(Edgevis_eval PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
+
+target_link_libraries(Edgevis_eval
+        cairo
+        ${OpenCV_LIBS}
+        EdgeVis
+        PolyAnya
+        GeomMesh
+        ${FADE2D_LIBRARY}
+        ${Boost_LIBRARIES})
+
 
 # add_executable(EdgeVis_example
 #         edgevis.cpp
