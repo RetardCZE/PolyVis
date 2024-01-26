@@ -7,6 +7,7 @@ endif()
 
 find_library(FADE2D_LIBRARY NAMES fade2d PATHS ../dependencies/)
 # Check if fade2d library was found
+# Add Fade2d .so to root/dependencies
 if (NOT FADE2D_LIBRARY)
     MESSAGE(STATUS "WARNING: Library FADE2D not found! Running script '${CMAKE_SOURCE_DIR}/pathfinding/polyanya/utils/scripts/install_fade2d.sh' solve the problem.")
 else ()
