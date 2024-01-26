@@ -62,8 +62,11 @@ int body(){
                                            // "_points_close_to_nodes",
                                            // "_points_edge_mid_points",
                                            // "_points_on_nodes",
-                                           "_points_random",
+                                           //"_points_random",
                                            "_points_random_interior"};
+    std::vector<std::string> algorithms = {"_TEA",
+                                           "_PEA",
+                                           "_Edgevis"};
 
     int counter = 0;
     try {
@@ -74,11 +77,11 @@ int body(){
         }
         for(auto mapName: mapNames){
             counter++;
+            std::cout << mapName <<std::endl;
             for(auto pointFile : pointTypes){
-                //mapName = "scene_sp_rus_02";
+
                 std::string pointPath = pointDir + mapName + pointFile + ".txt";
                 std::ifstream inputFile(pointPath);
-
                 std::string line;
                 std::string word;
                 std::getline(inputFile, line);
@@ -95,114 +98,120 @@ int body(){
                     p.y = std::stod(word);
                     points.push_back(p);
                 }
+
                 inputFile.close();
-                {
-                    std::cout << mapName << " | " << pointFile << " | TEA" <<std::endl;
-                    std::string output = resultsDir + mapName + pointFile + "_Rosol_TEA_visibility.txt";
-                    std::ofstream outputFile(output);
-                    outputFile << std::fixed << std::setprecision(17);
+                std::vector<std::ifstream> results(algorithms.size());
+                std::vector<double> time_init;
+                std::vector<double> time_preprocess;
+                std::istringstream iss;
+                for( int a = 0; a < algorithms.size(); a++){
+                    results[a].open(resultsDir + mapName + pointFile + algorithms[a] + ".txt");
+                    std::getline(results[a], line); // time init
+                    iss.str(line);
+                    iss >> word;
+                    iss >> word;
+                    time_init.push_back(std::stod(word));
+                    iss.clear();
+                    std::getline(results[a], line); // time preprocess
+                    iss.str(line);
+                    iss >> word;
+                    iss >> word;
+                    time_preprocess.push_back(std::stod(word));
+                    iss.clear();
+                    std::getline(results[a], line); // point count
+                }
+                //std::cout << mapName << " " << time_preprocess[0] << " " << time_preprocess[1] << " " << time_preprocess[2] << std::endl;
+                std::vector<std::vector<edgevis::Point>> polygons(algorithms.size()); //add more for more options
+                // std::vector<double> time;
+                ClipperLib::Clipper clipper;
+                std::vector<ClipperLib::Path> paths(algorithms.size());
+                ClipperLib::IntPoint cp;
+                int cntr;
+                for(int i = 0; i<pointCount; i++){
+                    for( int a = 0; a < algorithms.size(); a++){
+                        polygons[a].clear();
+                        paths[a].clear();
+                        std::getline(results[a], line);
+                        iss.str(line);
+                        iss >> word; // point id
+                        iss >> word; // times
+                        iss >> word; // num of times
+                        cntr = std::stoi(word);
+                        for(int j = 0; j<cntr; j++) {
+                            iss >> word; // times 1 to n
+                        }
+                        iss >> word; // polygon
+                        iss >> word; // num of points in polygon
+                        cntr = std::stoi(word);
+                        for(int j = 0; j<cntr; j++) {
+                            iss >> word; // x
+                            p.x = std::stod(word);
+                            iss >> word; // y
+                            p.y = std::stod(word);
+                            polygons[a].push_back(p);
+                            cp.X = p.x;
+                            cp.Y = p.y;
+                            paths[a].push_back(cp);
+                        }
+                        iss.clear();
+                    }
+                    ClipperLib::Paths xorPath;
 
-                    custom::utils::SimpleClock clock;
-                    double time_init, time_preprocess, T1, T2, T3;
+                    std::vector<double> areas(algorithms.size()); // first is area of reference then relative error of other polygons
+                    std::vector<double> XOR_areas(algorithms.size());
+                    for( int a = 0; a < algorithms.size(); a++) {
+                        areas[a] = ClipperLib::Area(paths[a]);
+                    }
+
+                    clipper.Clear();
+                    xorPath.clear();
+                    clipper.AddPath(paths[0], ClipperLib::ptSubject, true);
+                    clipper.AddPath(paths[1], ClipperLib::ptClip, true);
+                    clipper.Execute(ClipperLib::ctXor, xorPath);
+                    for (const auto& dPath : xorPath) {
+                        XOR_areas[0] += ClipperLib::Area(dPath);
+                    }
+
+                    clipper.Clear();
+                    xorPath.clear();
+                    clipper.AddPath(paths[1], ClipperLib::ptSubject, true);
+                    clipper.AddPath(paths[2], ClipperLib::ptClip, true);
+                    clipper.Execute(ClipperLib::ctXor, xorPath);
+                    for (const auto& dPath : xorPath) {
+                        XOR_areas[1] += ClipperLib::Area(dPath);
+                    }
+
+                    clipper.Clear();
+                    xorPath.clear();
+                    clipper.AddPath(paths[2], ClipperLib::ptSubject, true);
+                    clipper.AddPath(paths[0], ClipperLib::ptClip, true);
+                    clipper.Execute(ClipperLib::ctXor, xorPath);
+                    for (const auto& dPath : xorPath) {
+                        XOR_areas[2] += ClipperLib::Area(dPath);
+                    }
+                    std::cout << "___________________________________________________________________" << std::endl;
+                    std::cout << "polygon: " << i << std::endl;
+                    std::cout << areas[0] << " | " << areas[1] << " | " << areas[2] << std::endl;
+                    std::cout << XOR_areas[0] << " | " << XOR_areas[1] << " | " << XOR_areas[2] << std::endl;
+                    std::cout << "___________________________________________________________________" << std::endl;
+
                     parsers::GeomMesh gMesh = load_mesh(mapsDir + mapName + ".txt", false);
-                    clock.Restart();
                     edgevis::Mesh mesh(gMesh);
-                    mesh.TEAItems = 200;
-                    mesh.realloc_TEA_mem(mesh.TEAItems);
-                    mesh.useRobustOrientatation = true;
-                    time_init = clock.TimeInSeconds();
-                    time_preprocess = 0.0;
-                    outputFile << "time_init " << time_init << '\n';
-                    outputFile << "time_preprocess " << time_preprocess << '\n';
-                    outputFile << points.size() << std::endl;
-                    clock.Restart();
-                    std::vector<edgevis::Point> visibility;
-
-                    for (int j = 0; j < points.size(); j++) {
-                        visibility = mesh.find_point_visibility_TEA(points[j], T1, T2, T3);
-                        outputFile << j << " times" << " 3" << " " << T1 << " " << T2 << " " << T3;
-                        outputFile << " polygon " << visibility.size();
-                        for (auto &p: visibility) {
-                            outputFile << " " << p.x << " " << p.y;
-                        }
-                        outputFile << "\n";
+                    mesh.reset_visu();
+                    if(polygons[0].size()>0){
+                        mesh.visualise_polygon(polygons[0], 0, false);
+                        mesh.visualise_polygon(polygons[1], 1, false);
+                        mesh.visualise_polygon(polygons[2], 2, false);
+                        mesh.visualise_point(points[i], 0, true);
                     }
-                    mesh.allocTEA.clear();
-                    outputFile.close();
+                    getchar();
                 }
-
-                {
-                    std::cout << mapName << " | " << pointFile << " | PEA" <<std::endl;
-                    std::string output = resultsDir + mapName + pointFile + "_Rosol_PEA_visibility.txt";
-                    std::ofstream outputFile(output);
-                    outputFile << std::fixed << std::setprecision(17);
-
-                    custom::utils::SimpleClock clock;
-                    double time_init, time_preprocess, T1, T2, T3;
-                    parsers::GeomMesh gMesh = load_mesh(mapsDir + mapName + ".txt", true);
-                    clock.Restart();
-                    edgevis::Mesh mesh(gMesh);
-                    mesh.PEAItems = 200;
-                    mesh.realloc_PEA_mem(mesh.PEAItems);
-                    mesh.useRobustOrientatation = true;
-                    time_init = clock.TimeInSeconds();
-                    time_preprocess = 0.0;
-                    outputFile << "time_init " << time_init << '\n';
-                    outputFile << "time_preprocess " << time_preprocess << '\n';
-                    outputFile << points.size() << std::endl;
-                    clock.Restart();
-                    std::vector<edgevis::Point> visibility;
-
-                    for (int j = 0; j < points.size(); j++) {
-                        //std::cout << j << std::endl;
-                        visibility = mesh.find_point_visibility_PEA(points[j], T1, T2, T3);
-                        outputFile << j << " times" << " 3" << " " << T1 << " " << T2 << " " << T3;
-                        outputFile << " polygon " << visibility.size();
-                        for (auto &p: visibility) {
-                            outputFile << " " << p.x << " " << p.y;
-                        }
-                        outputFile << "\n";
-                    }
-                    mesh.allocPEA.clear();
-                    outputFile.close();
+                for( int a = 0; a < algorithms.size(); a++){
+                    results[a].close();
                 }
-
-                {
-                    std::cout << mapName << " | " << pointFile << " | EdgeVis" <<std::endl;
-                    std::string output = resultsDir + mapName + pointFile + "_Rosol_EdgeVis_visibility.txt";
-                    std::ofstream outputFile(output);
-                    outputFile << std::fixed << std::setprecision(17);
-
-                    custom::utils::SimpleClock clock;
-                    double time_init, time_preprocess, T1, T2, T3;
-                    parsers::GeomMesh gMesh = load_mesh(mapsDir + mapName + ".txt", false);
-                    clock.Restart();
-                    edgevis::Mesh mesh(gMesh);
-                    mesh.useRobustOrientatation = true;
-                    time_init = clock.TimeInSeconds();
-                    clock.Restart();
-                    mesh.precompute_edges_searchnodes();
-                    mesh.precompute_edges_optimnodesV1();
-                    time_preprocess = clock.TimeInSeconds();
-                    outputFile << "time_init " << time_init << '\n';
-                    outputFile << "time_preprocess " << time_preprocess << '\n';
-                    outputFile << points.size() << std::endl;
-                    clock.Restart();
-                    std::vector<edgevis::Point> visibility;
-
-                    for (int j = 0; j < points.size(); j++) {
-                        visibility = mesh.find_point_visibility_optim1(points[j], T1, T2, T3);
-                        outputFile << j << " times" << " 2" << " " << T1 << " " << T2;
-                        outputFile << " polygon " << visibility.size();
-                        for (auto &p: visibility) {
-                            outputFile << " " << p.x << " " << p.y;
-                        }
-                        outputFile << "\n";
-                    }
-                    outputFile.close();
-                }
+                break;
             }
-            if(counter >= 5) break;
+            break;
         }
     } catch (const fs::filesystem_error& ex) {
         std::cerr << "Error: " << ex.what() << std::endl;

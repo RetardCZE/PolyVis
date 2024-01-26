@@ -657,7 +657,9 @@ namespace edgevis {
         }
         visSize = vis.size();
         for(int i = 0; i < num; i++){
+            vis.push_back(nodes[i].transitionR); // push first point
             expand_TEA(nodes[i], 0);
+            vis.push_back(nodes[i].transitionL); // push last point
         }
 
         T2 = clock.TimeInSeconds();
@@ -712,7 +714,9 @@ namespace edgevis {
             //                            this->evaluate_intersection(nodes[i].transitionL), 0, 0.5);
             //    getchar();
             //}
+            vis.push_back(nodes[i].transitionR); // push first point
             expand_PEA(nodes[i], 0);
+            vis.push_back(nodes[i].transitionL); // push last point
         }
         //std::cout << "e" <<std::endl;
         T2 = clock.TimeInSeconds();

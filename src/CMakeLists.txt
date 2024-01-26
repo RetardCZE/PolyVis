@@ -46,8 +46,8 @@ set(${PROJECT_NAME}_COMPILE_DEFINITIONS
         )
 
 FILE(GLOB SRC src/*.cpp)
-set(SOURCES ${SRC}
-        measurements.cpp)
+#set(SOURCES ${SRC}
+#        measurements.cpp)
 
 
 add_executable(Edgevis_measure
@@ -67,10 +67,9 @@ target_link_libraries(Edgevis_measure
         ${Boost_LIBRARIES})
 
 add_executable(Edgevis_eval
-        measurements.cpp
+        evaluation.cpp
         ${SOURCES}
-        ${${PROJECT_NAME}_SRC}
-        evaluation.cpp)
+        ${${PROJECT_NAME}_SRC})
 
 target_compile_definitions(Edgevis_eval PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
 
