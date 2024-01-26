@@ -58,10 +58,10 @@ int body(){
     const std::string pointDir = "../data/points/";
     const std::string resultsDir = "../data/results/";
     std::vector<std::string> mapNames;
-    std::vector<std::string> pointTypes = {// "_points_close_to_edge_mid_points",
-                                           // "_points_close_to_nodes",
-                                           // "_points_edge_mid_points",
-                                           // "_points_on_nodes",
+    std::vector<std::string> pointTypes = {"_points_close_to_edge_mid_points",
+                                           "_points_close_to_nodes",
+                                           "_points_edge_mid_points",
+                                           "_points_on_nodes",
                                            "_points_random",
                                            "_points_random_interior"};
 
@@ -85,6 +85,7 @@ int body(){
                 std::vector<edgevis::Point> points;
                 edgevis::Point p;
                 int pointCount = std::stoi(line);
+                pointCount = pointCount > 1000 ? 1000 : pointCount;
                 for(int i = 0; i<pointCount; i++){
                     std::getline(inputFile, line);
                     std::istringstream iss(line);
