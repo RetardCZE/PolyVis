@@ -108,7 +108,7 @@ int body(){
                     parsers::GeomMesh gMesh = load_mesh(mapsDir + mapName + ".txt", false);
                     clock.Restart();
                     edgevis::Mesh mesh(gMesh);
-                    mesh.TEAItems = 200;
+                    mesh.TEAItems = 500;
                     mesh.realloc_TEA_mem(mesh.TEAItems);
                     mesh.useRobustOrientatation = true;
                     time_init = clock.TimeInSeconds();
@@ -203,8 +203,7 @@ int body(){
                     outputFile.close();
                 }
             }
-            if(counter >= 5) break;
-        }
+        }std::cout << counter << std::endl;
     } catch (const fs::filesystem_error& ex) {
         std::cerr << "Error: " << ex.what() << std::endl;
     }

@@ -21,6 +21,14 @@ namespace edgevis {
 
     Mesh::~Mesh(){
         delete sortedV, sortedP;
+        allocTEA.clear();
+        allocPEA.clear();
+        mesh_vertices.clear();
+        mesh_polygons.clear();
+        mesh_edges.clear();
+        cgm_drawer.Close();
+        slabs.clear();
+        vis.clear();
         for(auto n : deleteQueue){
             delete n;
         }
