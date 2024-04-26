@@ -6,7 +6,7 @@
  * E-mail:  jan.mikula@cvut.cz
  *
  */
-
+#pragma once
 #include <ctime>
 #include <chrono>
 

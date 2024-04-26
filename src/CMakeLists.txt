@@ -63,6 +63,7 @@ target_link_libraries(Edgevis_measure
         ${OpenCV_LIBS}
         EdgeVis
         PolyAnya
+        OGPolyAnya
         GeomMesh
         ${FADE2D_LIBRARY}
         ${Boost_LIBRARIES})
@@ -79,31 +80,34 @@ target_link_libraries(Edgevis_eval
         ${OpenCV_LIBS}
         EdgeVis
         PolyAnya
+        OGPolyAnya
         GeomMesh
         ${FADE2D_LIBRARY}
         ${Boost_LIBRARIES})
 
 
-# add_executable(EdgeVis_example
-#         edgevis.cpp
-#         ${SOURCES}
-#         ${${PROJECT_NAME}_SRC})
-#
-# target_compile_definitions(EdgeVis_example PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
-#
-# target_link_libraries(EdgeVis_example
-#         cairo
-#         ${OpenCV_LIBS}
-#         EdgeVis
-#         PolyAnya
-#         GeomMesh
-#         ${FADE2D_LIBRARY}
-#         ${Boost_LIBRARIES})
+ add_executable(EdgeVis_example
+         edgevis.cpp
+         ${SOURCES}
+         ${${PROJECT_NAME}_SRC})
+
+ target_compile_definitions(EdgeVis_example PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
+
+ target_link_libraries(EdgeVis_example
+         cairo
+         ${OpenCV_LIBS}
+         EdgeVis
+         PolyAnya
+         OGPolyAnya
+         GeomMesh
+         ${FADE2D_LIBRARY}
+         ${Boost_LIBRARIES})
 
 # add_executable(EdgeVis_arbitrary_edge
 #         edgevis_arbitrary_edge.cpp
 #         ${SOURCES}
 #         ${${PROJECT_NAME}_SRC})
+#
 # target_compile_definitions(EdgeVis_arbitrary_edge PRIVATE ${${PROJECT_NAME}_COMPILE_DEFINITIONS})
 # target_link_libraries(EdgeVis_arbitrary_edge
 #         cairo

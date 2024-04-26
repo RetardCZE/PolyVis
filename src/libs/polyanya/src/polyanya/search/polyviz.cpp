@@ -22,6 +22,7 @@ PolyVis::~PolyVis(){
 }
 
 void PolyVis::expand_edge(SearchNodePtr n, Point root, int level){
+    //std::cout << *n << std::endl;
     if(n->next_polygon == -1){
         this->vertices.push_back(n->right);
         this->vertices.push_back(n->left);

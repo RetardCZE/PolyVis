@@ -164,7 +164,6 @@ int expand(SearchNode &node, const Point &start, const Mesh &mesh, Successor *su
                     p1 // a 1-2 successor
                 };
 
-
                 return 1;
             }
 

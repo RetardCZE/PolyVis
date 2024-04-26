@@ -121,6 +121,7 @@ std::vector<SearchNodePtr> SearchInstance::getInitNodes(Point &start)
         // iterate over poly, throwing away vertices if needed
         const std::vector<int>& vertices =
             mesh->mesh_polygons[poly].vertices;
+
         Successor* successors = new Successor [vertices.size()];
         int last_vertex = vertices.back();
         int num_succ = 0;

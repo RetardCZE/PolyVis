@@ -64,9 +64,11 @@ int body(){
                                            // "_points_on_nodes",
                                            //"_points_random",
                                            "_points_random_interior"};
-    std::vector<std::string> algorithms = {"_TEA",
-                                           "_PEA",
-                                           "_Edgevis"};
+    std::vector<std::string> algorithms = {//"_TEA",
+                                           //"_PEA",
+                                           "_Edgevis",
+                                           "_OGTEA",
+                                           "_OGPEA"};
 
     int counter = 0;
     try {

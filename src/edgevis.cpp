@@ -1,7 +1,8 @@
 // === THIS PROJECT INCLUDES ===
 #include "edgevis/structs/mesh.h"
 #include "polyanya/search/polyviz.h"
-
+#include "OG_poly/structs/mesh.h"
+#include "OG_poly/search/searchinstance.h"
 #include "geomMesh/parsers/map_parser.h"
 
 // #include "utils/simple_clock.h"
@@ -532,8 +533,8 @@ int body(ProgramOptionVariables pov) {
     }
     time = clock.TimeInSeconds();
     std::cout << pov.n_random_samples << " random points generated in: " << time << " seconds." << std::endl;
-
-    if(false)
+    bool timeM = true;
+    if(timeM)
     {
         clock.Restart();
         EdgeVis.precompute_edges_searchnodes();
@@ -561,10 +562,11 @@ int body(ProgramOptionVariables pov) {
 
         bool debug = false;
         double steps;
+        double T1, T2, T3;
         int debugEdge = 0;
         clock.Restart();
         for (auto pos: points) {
-            verticesPoly = EdgeVis.find_point_visibility_optim1(pos, <#initializer#>, <#initializer#>, <#initializer#>);
+            verticesPoly = EdgeVis.find_point_visibility_optim1(pos, T1, T2, T3);
         }
 
         time = clock.TimeInSeconds();
@@ -679,7 +681,10 @@ int body(ProgramOptionVariables pov) {
          */
     }
 
-    if(false){
+    if(!timeM){
+        OG_poly::Mesh PolyanyaMesh(geomMesh);
+        OG_poly::SearchInstance Polyanya(&PolyanyaMesh);
+        std::vector<OG_poly::Point> pvis;
 
         EdgeVis.precompute_edges_searchnodes();
         EdgeVis.precompute_edges_optimnodesV1();
@@ -692,13 +697,14 @@ int body(ProgramOptionVariables pov) {
         clock.Restart();
         double mem = 0;
         int ctr = 0;
+        double T1, T2, T3;
         for (auto pos: points) {
             ctr++;
             //EdgeVis.reset_visu();
             //std::cout << pos << std::endl;
             //EdgeVis.visualise_point(pos, 0, true);
 
-            verticesPoly = EdgeVis.find_point_visibility_optim1(pos, <#initializer#>, <#initializer#>, <#initializer#>);
+            verticesPoly = EdgeVis.find_point_visibility_optim1(pos, T1, T2, T3);
 
             auto polymem = verticesPoly;
             ClipperLib::Path p1, p2, p3;
@@ -713,10 +719,17 @@ int body(ProgramOptionVariables pov) {
                                                   static_cast<long>(point.y )));
             }
 
-            verticesPoly = EdgeVis.find_point_visibility_optim3(pos);
-            for (const auto& point : verticesPoly) {
-                p3.push_back(ClipperLib::IntPoint(static_cast<long>(point.x),
-                                                  static_cast<long>(point.y )));
+//            verticesPoly = EdgeVis.find_point_visibility_optim3(pos);
+//            for (const auto& point : verticesPoly) {
+//                p3.push_back(ClipperLib::IntPoint(static_cast<long>(point.x),
+//                                                  static_cast<long>(point.y )));
+//            }
+
+            double T1, T2, T3;
+            pvis = Polyanya.get_point_visibility({pos.x, pos.y}, T1, T2, T3);
+            for(auto p : pvis){
+                p3.push_back(ClipperLib::IntPoint(static_cast<long>(p.x),
+                                                  static_cast<long>(p.y )));
             }
 
             ClipperLib::Paths diff_p1_p2, diff_p1_p3, diff_p2_p3;
@@ -763,7 +776,7 @@ int body(ProgramOptionVariables pov) {
 
     }
 
-    if(true)
+    if(timeM)
     {
         edgevis::Mesh EdgeVis3(geomMesh);
         EdgeVis3.useRobustOrientatation = pov.robust;
@@ -771,10 +784,11 @@ int body(ProgramOptionVariables pov) {
         EdgeVis3.TEAItems = 200;
         EdgeVis3.realloc_TEA_mem(EdgeVis3.TEAItems);
         int ctr = 0;
+        double T1, T2, T3;
         for (auto pos: points) {
 
             //std::cout << ++ctr << std::endl;
-            verticesPoly = EdgeVis3.find_point_visibility_TEA(pos, <#initializer#>, <#initializer#>, <#initializer#>);
+            verticesPoly = EdgeVis3.find_point_visibility_TEA(pos, T1, T2, T3);
             //EdgeVis3.reset_visu();
             //EdgeVis3.visualise_point(pos, 0, false);
             //EdgeVis3.visualise_polygon(verticesPoly, 2, true);
@@ -791,16 +805,17 @@ int body(ProgramOptionVariables pov) {
         EdgeVis3.visualise_point(points.back(), 0, true);
     }
 
-    if(true)
+    if(timeM)
     {
         edgevis::Mesh EdgeVis2(geomMeshPoly);
         EdgeVis2.useRobustOrientatation = pov.robust;
         clock.Restart();
         EdgeVis2.PEAItems = 200;
         EdgeVis2.realloc_PEA_mem(EdgeVis2.PEAItems);
+        double T1, T2, T3;
         for (auto pos: points) {
             //EdgeVis2.reset_visu();
-            verticesPoly = EdgeVis2.find_point_visibility_PEA(pos, <#initializer#>, <#initializer#>, <#initializer#>);
+            verticesPoly = EdgeVis2.find_point_visibility_PEA(pos, T1, T2, T3);
 
             //std::cout <<"size: " << verticesPoly.size()<<std::endl;
             //EdgeVis2.visualise_polygon(verticesPoly, 2, false);
@@ -818,7 +833,7 @@ int body(ProgramOptionVariables pov) {
         EdgeVis2.visualise_point(points.back(), 0, true);
     }
 
-    if(true)
+    if(timeM)
     {
 
         polyanya::PolyVis polyvis(geomMesh);
@@ -834,14 +849,14 @@ int body(ProgramOptionVariables pov) {
         }
 
         time = clock.TimeInSeconds();
-        std::cout << "TEA original: " << "\n";
+        std::cout << "TEA initial - bad: " << "\n";
         std::cout << "Total computation time: " << time << " seconds.\n";
         std::cout << "Mean computation time: " << time / pov.n_random_samples << " seconds/point.\n";
         std::cout << std::endl;
     }
 
 
-    if(true)
+    if(timeM)
     {
 
         polyanya::PolyVis polyvis(geomMeshPoly);
@@ -857,7 +872,62 @@ int body(ProgramOptionVariables pov) {
         }
 
         time = clock.TimeInSeconds();
-        std::cout << "PEA original: " << "\n";
+        std::cout << "PEA initial - bad: " << "\n";
+        std::cout << "Total computation time: " << time << " seconds.\n";
+        std::cout << "Mean computation time: " << time / pov.n_random_samples << " seconds/point.\n";
+        std::cout << std::endl;
+    }
+
+    if(timeM)
+    {
+        edgevis::Mesh EdgeVis3(geomMesh);
+        OG_poly::Mesh PolyanyaMesh(geomMesh);
+        OG_poly::SearchInstance Polyanya(&PolyanyaMesh);
+        std::vector<OG_poly::Point> pointsP = Polyanya.generate_points(pov.n_random_samples);
+        pointsP.clear();
+        for(auto pos : points){
+            pointsP.push_back({pos.x, pos.y});
+        }
+        std::vector<OG_poly::Point> results;
+        clock.Restart();
+        double T1, T2, T3;
+        for (auto pos: pointsP) {
+            results = Polyanya.get_point_visibility(pos, T1, T2, T3);
+//            verticesPoly.clear();
+//            for(auto p : results){
+//                verticesPoly.push_back({p.x, p.y});
+//            }
+//            EdgeVis3.reset_visu();
+//            EdgeVis3.visualise_point({pos.x, pos.y}, 0, false);
+//            EdgeVis3.visualise_polygon(verticesPoly, 2, true);
+//            getchar();
+        }
+
+        time = clock.TimeInSeconds();
+        std::cout << "TEA very original: " << "\n";
+        std::cout << "Total computation time: " << time << " seconds.\n";
+        std::cout << "Mean computation time: " << time / pov.n_random_samples << " seconds/point.\n";
+        std::cout << std::endl;
+    }
+
+    if(timeM)
+    {
+        OG_poly::Mesh PolyanyaMesh(geomMeshPoly);
+        OG_poly::SearchInstance Polyanya(&PolyanyaMesh);
+        std::vector<OG_poly::Point> pointsP = Polyanya.generate_points(pov.n_random_samples);
+        pointsP.clear();
+        for(auto pos : points){
+            pointsP.push_back({pos.x, pos.y});
+        }
+        std::vector<OG_poly::Point> results;
+        clock.Restart();
+        double T1, T2, T3;
+        for (auto pos: pointsP) {
+            results = Polyanya.get_point_visibility(pos, T1, T2, T3);
+        }
+
+        time = clock.TimeInSeconds();
+        std::cout << "PEA very original: " << "\n";
         std::cout << "Total computation time: " << time << " seconds.\n";
         std::cout << "Mean computation time: " << time / pov.n_random_samples << " seconds/point.\n";
         std::cout << std::endl;
@@ -877,6 +947,6 @@ int main(
     } else if (c == 'e') {
         return EXIT_FAILURE;
     } else {
-        return new_body(pov);
+        return body(pov);
     }
 }

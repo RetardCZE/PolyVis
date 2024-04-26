@@ -1,10 +1,10 @@
 //
 // Created by jakub on 19.1.24.
 //
-// === THIS PROJECT INCLUDES ===
 #include "edgevis/structs/mesh.h"
 #include "polyanya/search/polyviz.h"
-
+#include "OG_poly/structs/mesh.h"
+#include "OG_poly/search/searchinstance.h"
 #include "geomMesh/parsers/map_parser.h"
 
 // #include "utils/simple_clock.h"
@@ -58,11 +58,11 @@ int body(){
     const std::string pointDir = "../data/points/";
     const std::string resultsDir = "../data/results/";
     std::vector<std::string> mapNames;
-    std::vector<std::string> pointTypes = {"_points_close_to_edge_mid_points",
-                                           "_points_close_to_nodes",
-                                           "_points_edge_mid_points",
-                                           "_points_on_nodes",
-                                           "_points_random",
+    std::vector<std::string> pointTypes = {//"_points_close_to_edge_mid_points",
+                                           //"_points_close_to_nodes",
+                                           //"_points_edge_mid_points",
+                                           //"_points_on_nodes",
+                                           //"_points_random",
                                            "_points_random_interior"};
 
     int counter = 0;
@@ -194,6 +194,72 @@ int body(){
                     for (int j = 0; j < points.size(); j++) {
                         visibility = mesh.find_point_visibility_optim1(points[j], T1, T2, T3);
                         outputFile << j << " times" << " 2" << " " << T1 << " " << T2;
+                        outputFile << " polygon " << visibility.size();
+                        for (auto &p: visibility) {
+                            outputFile << " " << p.x << " " << p.y;
+                        }
+                        outputFile << "\n";
+                    }
+                    outputFile.close();
+                }
+
+                {
+                    std::cout << mapName << " | " << pointFile << " | OGTEA" <<std::endl;
+                    std::string output = resultsDir + mapName + pointFile + "_OGTEA.txt";
+                    std::ofstream outputFile(output);
+                    outputFile << std::fixed << std::setprecision(17);
+
+                    custom::utils::SimpleClock clock;
+                    double time_init, time_preprocess, T1, T2, T3;
+                    parsers::GeomMesh gMesh = load_mesh(mapsDir + mapName + ".txt", false);
+                    clock.Restart();
+                    OG_poly::Mesh mesh(gMesh);
+                    OG_poly::SearchInstance Polyanya(&mesh);
+
+                    time_init = clock.TimeInSeconds();
+                    time_preprocess = 0.0;
+                    outputFile << "time_init " << time_init << '\n';
+                    outputFile << "time_preprocess " << time_preprocess << '\n';
+                    outputFile << points.size() << std::endl;
+                    clock.Restart();
+                    std::vector<OG_poly::Point> visibility;
+
+                    for (int j = 0; j < points.size(); j++) {
+                        visibility = Polyanya.get_point_visibility({points[j].x, points[j].y}, T1, T2, T3);
+                        outputFile << j << " times" << " 3" << " " << T1 << " " << T2 << " " << T3;
+                        outputFile << " polygon " << visibility.size();
+                        for (auto &p: visibility) {
+                            outputFile << " " << p.x << " " << p.y;
+                        }
+                        outputFile << "\n";
+                    }
+                    outputFile.close();
+                }
+
+                {
+                    std::cout << mapName << " | " << pointFile << " | OGPEA" <<std::endl;
+                    std::string output = resultsDir + mapName + pointFile + "_OGPEA.txt";
+                    std::ofstream outputFile(output);
+                    outputFile << std::fixed << std::setprecision(17);
+
+                    custom::utils::SimpleClock clock;
+                    double time_init, time_preprocess, T1, T2, T3;
+                    parsers::GeomMesh gMesh = load_mesh(mapsDir + mapName + ".txt", true);
+                    clock.Restart();
+                    OG_poly::Mesh mesh(gMesh);
+                    OG_poly::SearchInstance Polyanya(&mesh);
+
+                    time_init = clock.TimeInSeconds();
+                    time_preprocess = 0.0;
+                    outputFile << "time_init " << time_init << '\n';
+                    outputFile << "time_preprocess " << time_preprocess << '\n';
+                    outputFile << points.size() << std::endl;
+                    clock.Restart();
+                    std::vector<OG_poly::Point> visibility;
+
+                    for (int j = 0; j < points.size(); j++) {
+                        visibility = Polyanya.get_point_visibility({points[j].x, points[j].y}, T1, T2, T3);
+                        outputFile << j << " times" << " 3" << " " << T1 << " " << T2 << " " << T3;
                         outputFile << " polygon " << visibility.size();
                         for (auto &p: visibility) {
                             outputFile << " " << p.x << " " << p.y;
